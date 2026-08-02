@@ -1,5 +1,8 @@
 // 스키마는 콘텐츠 설계(S4)와 기능 정의(S5)가 끝난 뒤에 확정한다.
 // 지금은 기동 경로만 검증하기 위해 비워둔다.
+//
+// Prisma 7부터 datasource 블록에 url을 둘 수 없다.
+// 연결 문자열은 prisma.config.ts가, 실제 연결은 클라이언트의 어댑터가 맡는다.
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -7,5 +10,4 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
