@@ -58,10 +58,71 @@ model Collection {
   updatedAt DateTime   @updatedAt
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  orders  Order[]
 
   /// "한 해에 한 권"이라는 규칙을 문장이 아니라 DB에 새긴다.
   /// 화면에서 막는 것만으로는 두 번 눌리면 두 권이 생긴다.
   @@unique([profileId, year])
+}
+
+/// 접수 → 인쇄 → 배송. 세 단계다.
+///
+/// "배송완료"를 넣지 않았다. 요구사항이 세 단계이고, 넷째 단계는 실제 배송사
+/// 연동 없이는 누가 언제 바꾸는지 설명할 수 없다. 설명 못 하는 상태는 만들지 않는다.
+enum OrderStatus {
+  RECEIVED
+  PRINTING
+  SHIPPING
+}
+
+/// 책 한 권에 대한 주문.
+///
+/// 가격·쪽수·배송일 필드가 없다. 그 숫자들은 제작 사양(판형·인쇄·제본)에
+/// 달려 있는데 그 사양이 정해지지 않았다. 모르는 값을 그럴듯하게 지어내면
+/// 화면은 채워지지만 아무 근거가 없다.
+model Order {
+  id String @id @default(cuid())
+
+  /// 사람이 읽고 부를 수 있는 번호. cuid는 주문 확인 화면에 띄울 수 없다.
+  orderNo String @unique
+
+  collectionId String
+
+  /// 지금 어디까지 왔나. 아래 OrderEvent가 있는데도 이 칸을 따로 두는 이유는
+  /// 목록 때문이다. 이벤트만 있으면 목록 10건마다 최신 이벤트를 찾아야 한다.
+  /// 대신 상태를 바꾸는 경로를 한 곳으로 몰아 둘이 어긋나지 않게 한다.
+  status OrderStatus @default(RECEIVED)
+
+  recipientName  String
+  recipientPhone String
+  address        String
+
+  origin    DataOrigin @default(USER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  collection Collection   @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  events     OrderEvent[]
+
+  @@index([collectionId])
+  @@index([origin])
+}
+
+/// 상태가 언제 어떻게 바뀌었는지.
+///
+/// 주문 화면에서 사용자가 가장 알고 싶은 건 "지금 상태"가 아니라
+/// "언제부터 그 상태였나"다. 현재 상태만 덮어쓰면 그 답이 사라진다.
+model OrderEvent {
+  id      String @id @default(cuid())
+  orderId String
+
+  status     OrderStatus
+  note       String?
+  occurredAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, occurredAt])
 }
 
 /// 작품 = 사진 한 장 + 아이가 한 말 + 만든 날.
