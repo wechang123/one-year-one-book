@@ -1,0 +1,11 @@
+// 스키마는 콘텐츠 설계(S4)와 기능 정의(S5)가 끝난 뒤에 확정한다.
+// 지금은 기동 경로만 검증하기 위해 비워둔다.
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

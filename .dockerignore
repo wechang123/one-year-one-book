@@ -1,0 +1,11 @@
+node_modules
+.next
+generated
+.git
+.gitignore
+docs
+.memsearch
+.claude
+CLAUDE.md
+.env
+*.md
