@@ -16,7 +16,15 @@ import { getNow } from "@/lib/now";
  *   앞의 것은 실수를 줄이려고, 뒤의 것은 데이터가 깨지지 않게.
  */
 
-/** next.config.ts의 serverActions.bodySizeLimit과 같은 값이어야 한다. */
+/**
+ * 사진 한 장의 상한.
+ *
+ * 🔑 next.config.ts의 bodySizeLimit보다 **작아야 한다 — 같으면 이 분기가 죽는다.**
+ *   bodySizeLimit은 파일이 아니라 요청 본문 전체(multipart 경계·다른 필드 포함)에 걸린다.
+ *   두 값이 같으면 상한을 넘는 파일은 본문 단계에서 먼저 잘려 이 함수가 실행되지 않고,
+ *   아래 "사진이 너무 큽니다"는 절대 도달할 수 없는 코드가 된다.
+ *   실제로 그 상태였다 — 화면은 8MB까지라고 안내하면서 8MB를 넘기면 빈 오류만 났다.
+ */
 const MAX_BYTES = 8 * 1024 * 1024;
 
 export type NewArtworkState = {

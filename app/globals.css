@@ -359,6 +359,11 @@ a {
   align-items: center;
 }
 
+/* .blank는 가운데 정렬이라 그 안의 버튼 줄도 따라가야 한다. */
+.form__actions--center {
+  justify-content: center;
+}
+
 /*
  * 편집 화면의 썸네일. 어떤 작품을 고치는 중인지 알려주는 것이 전부라 작다.
  * 여기서 크게 보여주면 폼이 화면 밖으로 밀려 정작 고칠 칸이 안 보인다.
