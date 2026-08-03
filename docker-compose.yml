@@ -1,5 +1,7 @@
 # 폴더 이름과 무관하게 프로젝트 이름을 고정한다.
-name: kid-archive
+# 저장소명과 같게 둔다 — clone한 폴더명과 `docker compose ps`에 뜨는 이름이 어긋나면
+# 지금 보고 있는 게 이 프로젝트가 맞는지 한 번 더 확인하게 된다.
+name: one-year-one-book
 
 services:
   db:
