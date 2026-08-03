@@ -489,6 +489,28 @@ a {
   font-size: 0.8125rem;
 }
 
+/*
+ * 범위를 밝히는 안내. 오류(.form__error)와 달리 붉지 않다 —
+ * 잘못된 것이 아니라 "여기까지"라는 사실이라, 경고처럼 보이면 안 된다.
+ */
+.notice {
+  margin: 0 0 1.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink-soft);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.form__note {
+  display: inline-block;
+  margin-top: 0.3rem;
+  font-size: 0.875rem;
+}
+
 /* ───────────────────────── 저장 직후 ───────────────────────── */
 
 .saved {

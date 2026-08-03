@@ -49,7 +49,7 @@ export function EditArtworkForm({
            * 🔑 defaultValue다. value로 두면 매 글자마다 리렌더가 필요한 제어 컴포넌트가 되고,
            *   그 상태를 관리할 이유가 없다 — 이 폼은 제출할 때 한 번만 값을 읽는다.
            */
-          defaultValue={childQuote}
+          defaultValue={state.values?.childQuote ?? childQuote}
           placeholder="이건 뭐야? 하고 물어보고, 대답을 그대로 적어보세요."
           aria-describedby="quote-help"
         />
@@ -68,7 +68,7 @@ export function EditArtworkForm({
           name="madeOn"
           type="date"
           className="field__input field__input--date"
-          defaultValue={madeOn}
+          defaultValue={state.values?.madeOn || madeOn}
           max={today}
           aria-describedby="date-help"
         />

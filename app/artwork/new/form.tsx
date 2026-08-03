@@ -149,6 +149,7 @@ export function NewArtworkForm({ today }: { today: string }) {
           name="childQuote"
           rows={3}
           className="field__input"
+          defaultValue={state.values?.childQuote ?? ""}
           placeholder="이건 뭐야? 하고 물어보고, 대답을 그대로 적어보세요."
           aria-describedby="quote-help"
         />
@@ -171,7 +172,7 @@ export function NewArtworkForm({ today }: { today: string }) {
           name="madeOn"
           type="date"
           className="field__input field__input--date"
-          defaultValue={today}
+          defaultValue={state.values?.madeOn || today}
           max={today}
           aria-describedby="date-help"
         />

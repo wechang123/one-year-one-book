@@ -31,6 +31,14 @@ export type NewArtworkState = {
   error?: string;
   /** 어느 칸이 문제인지. 폼이 그 칸으로 초점을 옮기는 데 쓴다. */
   field?: "photo" | "madeOn";
+  /**
+   * 🔑 사용자가 방금 친 값을 그대로 돌려보낸다.
+   *   React 19는 폼 액션이 끝나면 입력칸을 비운다. 성공 뒤에는 맞는 동작이지만
+   *   오류로 되돌아왔을 때는 **아이 말과 날짜가 같이 지워진다.**
+   *   사진은 어차피 다시 골라야 하지만(브라우저가 file 입력을 채워줄 수 없다),
+   *   손으로 친 글자는 남아야 한다.
+   */
+  values?: { childQuote: string; madeOn: string };
 };
 
 /** 브라우저가 보낸 원본 크기. 화면 표시용이라 못 믿을 값이면 그냥 버린다. */
@@ -48,15 +56,21 @@ export async function createArtwork(
   const quoteRaw = formData.get("childQuote");
   const madeOnRaw = formData.get("madeOn");
 
+  const values = {
+    childQuote: typeof quoteRaw === "string" ? quoteRaw : "",
+    madeOn: typeof madeOnRaw === "string" ? madeOnRaw : "",
+  };
+
   // ── 사진 ─────────────────────────────────────────────
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "사진을 한 장 골라주세요. 이 서비스는 사진이 있어야 성립합니다.", field: "photo" };
+    return { error: "사진을 한 장 골라주세요. 이 서비스는 사진이 있어야 성립합니다.", field: "photo", values };
   }
 
   if (file.size > MAX_BYTES) {
     return {
       error: `사진이 너무 큽니다 (${formatBytes(file.size)}). ${formatBytes(MAX_BYTES)}까지 올릴 수 있어요.`,
       field: "photo",
+      values,
     };
   }
 
@@ -72,13 +86,14 @@ export async function createArtwork(
     return {
       error: "JPG · PNG · WebP만 올릴 수 있어요. 아이폰의 HEIC는 브라우저가 못 그려서 받지 않습니다.",
       field: "photo",
+      values,
     };
   }
 
   // ── 만든 날 ───────────────────────────────────────────
   const madeOn = typeof madeOnRaw === "string" ? parseDateInputValue(madeOnRaw) : null;
   if (!madeOn) {
-    return { error: "만든 날을 확인해주세요. 없는 날짜입니다.", field: "madeOn" };
+    return { error: "만든 날을 확인해주세요. 없는 날짜입니다.", field: "madeOn", values };
   }
 
   /**
@@ -88,7 +103,7 @@ export async function createArtwork(
    */
   const today = parseDateInputValue(todayInputValue(getNow()));
   if (today && madeOn > today) {
-    return { error: "아직 오지 않은 날짜예요. 만든 날을 다시 확인해주세요.", field: "madeOn" };
+    return { error: "아직 오지 않은 날짜예요. 만든 날을 다시 확인해주세요.", field: "madeOn", values };
   }
 
   // ── 아이 말 ───────────────────────────────────────────
@@ -101,7 +116,7 @@ export async function createArtwork(
   const prisma = getPrisma();
   const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
   if (!profile) {
-    return { error: "아이 정보를 찾지 못했습니다. 컨테이너를 다시 시작하면 초기 데이터가 만들어집니다." };
+    return { error: "아이 정보를 찾지 못했습니다. 컨테이너를 다시 시작하면 초기 데이터가 만들어집니다.", values };
   }
 
   /**

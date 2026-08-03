@@ -26,6 +26,8 @@ import { getNow } from "@/lib/now";
 export type EditArtworkState = {
   error?: string;
   field?: "madeOn";
+  /** 오류로 되돌아왔을 때 고치던 값이 지워지지 않게 그대로 돌려보낸다. */
+  values?: { childQuote: string; madeOn: string };
 };
 
 export async function updateArtwork(
@@ -38,15 +40,20 @@ export async function updateArtwork(
   }
 
   const madeOnRaw = formData.get("madeOn");
+  const quotePeek = formData.get("childQuote");
+  const values = {
+    childQuote: typeof quotePeek === "string" ? quotePeek : "",
+    madeOn: typeof madeOnRaw === "string" ? madeOnRaw : "",
+  };
   const madeOn = typeof madeOnRaw === "string" ? parseDateInputValue(madeOnRaw) : null;
   if (!madeOn) {
-    return { error: "만든 날을 확인해주세요. 없는 날짜입니다.", field: "madeOn" };
+    return { error: "만든 날을 확인해주세요. 없는 날짜입니다.", field: "madeOn", values };
   }
 
   // 등록과 같은 규칙이다. 여기만 느슨하면 편집으로 우회해 미래 날짜를 넣을 수 있다.
   const today = parseDateInputValue(todayInputValue(getNow()));
   if (today && madeOn > today) {
-    return { error: "아직 오지 않은 날짜예요. 만든 날을 다시 확인해주세요.", field: "madeOn" };
+    return { error: "아직 오지 않은 날짜예요. 만든 날을 다시 확인해주세요.", field: "madeOn", values };
   }
 
   const quoteRaw = formData.get("childQuote");
@@ -69,7 +76,7 @@ export async function updateArtwork(
       select: { id: true },
     });
   } catch {
-    return { error: "이미 지워진 작품입니다. 목록에서 다시 확인해주세요." };
+    return { error: "이미 지워진 작품입니다. 목록에서 다시 확인해주세요.", values };
   }
 
   // 고친 결과를 바로 보여준다. 저장했다고 말만 하면 반영됐는지 확인하러 또 눌러야 한다.
