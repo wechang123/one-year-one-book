@@ -23,6 +23,48 @@ export function formatMadeOn(date: Date): string {
   return KO.format(date);
 }
 
+/**
+ * 🔑 여기서부터는 madeOn과 다루는 값이 다르다.
+ *   madeOn은 date 컬럼이라 시각이 없고, 그래서 위쪽을 UTC로 고정했다.
+ *   반면 createdAt·occurredAt은 **진짜 시각**이다. 이걸 UTC로 보여주면
+ *   한국 사용자에게 9시간 전으로 보이고, 자정 근처에서는 날짜까지 하루 밀린다.
+ *   그래서 시간대를 Asia/Seoul로 **명시**한다 — 컨테이너 TZ에 기대지 않는다.
+ *   기대면 다른 환경에서 조용히 다른 값이 나오고, 그건 화면에서 티가 안 난다.
+ */
+const KO_MOMENT = new Intl.DateTimeFormat("ko-KR", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  /**
+   * 🔑 24시간제로 고정한 이유는 취향이 아니다.
+   *   12시간제로 두면 오전/오후를 로케일 데이터가 붙이는데, Node의 ICU 구성에 따라
+   *   한글 날짜 옆에 "PM"이 영문으로 나온다 — 실제로 "2026년 8월 3일 PM 5:54"가 찍혔다.
+   *   실행 환경마다 다른 글자가 나오는 것을 화면에서 알아채기 어렵다.
+   *   24시간제는 그 변수를 없애고, 이력처럼 순서를 읽는 자리에서는 더 잘 읽힌다.
+   */
+  hour12: false,
+  timeZone: "Asia/Seoul",
+});
+
+const KO_DAY = new Intl.DateTimeFormat("ko-KR", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "Asia/Seoul",
+});
+
+/** "2026년 8월 3일 오후 5:55" — 이력처럼 언제인지가 중요한 자리에 쓴다. */
+export function formatMoment(date: Date): string {
+  return KO_MOMENT.format(date);
+}
+
+/** "2026년 8월 3일" — 시각까지는 필요 없는 자리에 쓴다. */
+export function formatDay(date: Date): string {
+  return KO_DAY.format(date);
+}
+
 /** <input type="date">가 요구하는 "2026-07-19" */
 export function toDateInputValue(date: Date): string {
   return date.toISOString().slice(0, 10);

@@ -38,7 +38,7 @@ export default async function BookPage({
 
   const range = yearRange(year);
 
-  const [book, artworks] = await Promise.all([
+  const [book, artworks, orderCount] = await Promise.all([
     prisma.collection.findUnique({
       where: { profileId_year: { profileId: profile.id, year } },
       select: { id: true, title: true },
@@ -49,6 +49,8 @@ export default async function BookPage({
       // 여기서도 사진 바이트는 안 읽는다. <img>가 /api/photo로 따로 받는다.
       select: { id: true, childQuote: true, madeOn: true },
     }),
+    // 이 책에 주문이 몇 건인지. 한 권에 여러 건이 가능하므로 "이미 주문함"이 아니라 건수로 말한다.
+    prisma.order.count({ where: { collection: { profileId: profile.id, year } } }),
   ]);
 
   /**
@@ -103,6 +105,12 @@ export default async function BookPage({
           <span className="saved__sub">
             앞자리 여덟 자리가 주문한 날짜입니다. 문의하실 때 이 번호를 말씀해 주세요.
           </span>
+        </p>
+      ) : null}
+
+      {orderCount > 0 ? (
+        <p className="tally">
+          이 책의 주문 {orderCount}건 · <Link href="/orders">주문 목록 보기</Link>
         </p>
       ) : null}
 
