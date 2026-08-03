@@ -164,7 +164,7 @@ docker compose down -v && docker compose up -d --build
 
 **시간**: 약 65분
 
-### 13:36 Lv1 네 화면 — 이슈 → 브랜치 → PR → squash merge
+### 13:36 네 화면 — 이슈 → 브랜치 → PR → squash merge
 
 여기서부터 `main`에 직접 커밋하지 않았다. 이슈 4개, PR 4개, 전부 squash merge.
 **판단과 거부한 선택지는 PR 본문에 남겼다.** 커밋 메시지는 짧고, 왜 그 갈림길에서
