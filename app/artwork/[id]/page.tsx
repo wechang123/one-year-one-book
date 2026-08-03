@@ -21,11 +21,13 @@ export const dynamic = "force-dynamic";
 
 export default async function ArtworkDetailPage({
   params,
+  searchParams,
 }: {
   // Next 15부터 동적 세그먼트는 Promise로 온다. await 없이 쓰면 조용히 undefined가 된다.
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, { saved }] = await Promise.all([params, searchParams]);
   const prisma = getPrisma();
 
   const artwork = await prisma.artwork.findUnique({
@@ -59,6 +61,22 @@ export default async function ArtworkDetailPage({
           ← 작품 목록
         </Link>
       </nav>
+
+      {/*
+        🔑 등록 직후 문구가 "저장되었습니다"가 아니다.
+          부모는 보관하려고 이 서비스를 여는 게 아니라, **버려도 된다는 허락**을 받으려고 연다.
+          "저장되었습니다"는 앱이 한 일을 보고할 뿐이고, 사용자가 다음에 할 일 —
+          거실에 쌓인 그림을 정리하는 것 — 에 대해서는 아무 말도 하지 않는다.
+
+          그리고 이 문구를 목록이 아니라 여기서 말한다. 사진이 크게 보이는 자리에서
+          해야 믿긴다. 작은 카드 옆에서 "정리하셔도 됩니다"는 설득력이 없다.
+      */}
+      {saved !== undefined ? (
+        <p className="saved" role="status">
+          <strong>남았습니다. 이제 원본은 정리하셔도 됩니다.</strong>
+          <span className="saved__sub">아이 말과 만든 날까지 같이 저장했습니다.</span>
+        </p>
+      ) : null}
 
       <article className="detail">
         <figure className="detail__figure">
