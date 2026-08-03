@@ -15,20 +15,46 @@ import { formatDay } from "@/lib/date";
  */
 export const dynamic = "force-dynamic";
 
+/**
+ * 한 번에 보여주는 최대 건수.
+ *
+ * 🔑 LIMIT이 없으면 "지금 잘 도는 것"이 나중에 안 도는 이유가 된다.
+ *   주문은 지우는 화면이 없어서 **줄지 않고 쌓이기만 한다.**
+ *   페이지 나누기를 만들 근거는 아직 없지만(주문이 한 자릿수다),
+ *   상한이 없는 조회를 남겨두는 것과는 다른 이야기다.
+ *   대신 잘렸다는 사실을 화면이 숨기지 않는다 — 아래 tally를 보라.
+ */
+const PAGE_SIZE = 50;
+
 export default async function OrdersPage() {
   const prisma = getPrisma();
 
-  const orders = await prisma.order.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      orderNo: true,
-      status: true,
-      recipientName: true,
-      createdAt: true,
-      // 어느 책의 주문인지는 목록에서도 필요하다. 제목이 없으면 "무엇을 주문했더라"가 남는다.
-      collection: { select: { year: true, title: true } },
-    },
-  });
+  /**
+   * 🔑 아이를 먼저 찾고 그 아이의 주문만 읽는다.
+   *   전에는 where가 없어 **모든 아이의 주문**을 가져오고 있었다.
+   *   app/page.tsx에서 정확히 같은 문제를 고치고 그 이유를 주석으로 길게 남겨뒀는데,
+   *   Lv2 새 화면에서 그대로 재발했다. **고친 기록이 다음 화면으로 옮겨가지 않았다.**
+   */
+  const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where: profile ? { collection: { profileId: profile.id } } : undefined,
+      orderBy: { createdAt: "desc" },
+      take: PAGE_SIZE,
+      select: {
+        orderNo: true,
+        status: true,
+        recipientName: true,
+        createdAt: true,
+        // 어느 책의 주문인지는 목록에서도 필요하다. 제목이 없으면 "무엇을 주문했더라"가 남는다.
+        collection: { select: { year: true, title: true } },
+      },
+    }),
+    prisma.order.count({
+      where: profile ? { collection: { profileId: profile.id } } : undefined,
+    }),
+  ]);
 
   return (
     <div className="page">
@@ -63,7 +89,11 @@ export default async function OrdersPage() {
         </div>
       ) : (
         <>
-          <p className="tally">주문 {orders.length}건</p>
+          {/* 잘렸다는 사실을 숨기지 않는다. 숨기면 "주문이 사라졌다"로 읽힌다. */}
+          <p className="tally">
+            주문 {total}건
+            {total > orders.length ? ` · 최근 ${orders.length}건만 보입니다` : null}
+          </p>
 
           <ul className="orders">
             {orders.map((order) => {

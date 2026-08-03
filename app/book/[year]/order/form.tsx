@@ -71,7 +71,7 @@ export function NewOrderForm({ year }: { year: number }) {
           aria-describedby="phone-help"
         />
         <p className="field__help" id="phone-help">
-          주문에 문제가 생겼을 때만 씁니다. 하이픈은 넣어도 되고 안 넣어도 됩니다.
+          주문에 문제가 생겼을 때만 씁니다. 안심번호·국가번호를 붙여도 됩니다.
         </p>
       </div>
 

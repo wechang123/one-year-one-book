@@ -2,10 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
-import { parseYear } from "@/lib/book";
+import { parseYear, yearRange } from "@/lib/book";
 import { makeOrderNo } from "@/lib/order-no";
-import { isValidPhone, normalizePhone } from "@/lib/phone";
+import { isValidPhone, normalizePhone, phoneDigits } from "@/lib/phone";
 import { getNow } from "@/lib/now";
+import { isUniqueViolation, logError } from "@/lib/prisma-error";
 
 /**
  * 주문 넣기.
@@ -28,10 +29,37 @@ const ADDRESS_MAX = 200;
  *   중복 클릭·새로고침으로 인한 재전송은 **몇 초 안에** 일어난다.
  *   반면 "할머니 드릴 한 권 더"는 같은 주소라도 그 자리에서 연달아 넣는 일이 아니다.
  *   그래서 짧은 창을 두면 사고는 막고 의도는 막지 않는다.
- *   책 한 권에 주문 여러 건은 스키마가 허용한다(Order에 unique가 없다) — 그걸 지키면서
- *   실수만 걸러내는 방법이다.
+ *   책 한 권에 주문 여러 건은 스키마가 허용한다 — 그걸 지키면서 실수만 걸러내는 방법이다.
  */
 const DEDUP_WINDOW_MS = 60_000;
+
+/**
+ * DB가 막을 열쇠. `책id|연락처|시간버킷`.
+ *
+ * 🔑 조회로는 못 막는 것이 있다.
+ *   아래 findFirst는 **순차 재제출**(새로고침·뒤로가기)을 정확히 막는다.
+ *   그런데 **동시 제출**은 못 막는다 — 두 요청이 조회와 생성 사이의 틈에 같이 들어오면
+ *   둘 다 "없다"를 보고 둘 다 만든다. **실제로 두 건이 생겼다.**
+ *   그래서 같은 열쇠를 DB의 유니크 제약에 걸고, 충돌을 오류가 아니라 정상 흐름으로 받는다.
+ *
+ *   상용 결제 API가 `POST /orders`에 `Idempotency-Key`를 **필수**로 두는 이유가 정확히 이것이다.
+ *   클라이언트가 키를 만들어 보내면 재시도가 몇 번이든 결과가 하나다.
+ *   여기서는 클라이언트가 키를 안 보내므로 **서버가 요청 내용으로 키를 조립한다** —
+ *   같은 사람이 같은 책을 같은 순간에 주문하는 것은 한 번의 의도로 본다.
+ *
+ * 🔴 버킷 경계는 완전하지 않다. 59.9초와 60.1초에 도착한 **동시** 요청은 다른 버킷이 된다.
+ *   그 경우는 아래 findFirst가 60초를 되돌아보며 잡는다. 둘을 같이 써야 덮인다.
+ */
+function makeDedupKey(collectionId: string, phoneRaw: string, now: Date): string {
+  const bucket = Math.floor(now.getTime() / DEDUP_WINDOW_MS);
+  /**
+   * 🔑 숫자만 남겨서 키를 만든다.
+   *   저장은 사용자가 친 그대로 하지만(lib/phone.ts), 키까지 그대로 쓰면
+   *   `010-1234-5678`과 `01012345678`이 **다른 키가 되어 중복이 안 걸린다.**
+   *   비교하는 값과 보여주는 값은 다를 수 있다.
+   */
+  return `${collectionId}|${phoneDigits(phoneRaw)}|${bucket}`;
+}
 
 /** 주문번호가 겹치면 다시 뽑는다. 31^4 중에서 겹칠 확률은 낮지만 0은 아니다. */
 const ORDERNO_RETRIES = 5;
@@ -69,7 +97,7 @@ export async function createOrder(_prev: NewOrderState, formData: FormData): Pro
 
   if (!isValidPhone(phoneRaw)) {
     return {
-      error: "연락처를 다시 확인해주세요. 숫자만 9~11자리면 됩니다.",
+      error: "연락처를 다시 확인해주세요. 숫자가 8~15자리여야 합니다.",
       field: "recipientPhone",
       values,
     };
@@ -93,6 +121,19 @@ export async function createOrder(_prev: NewOrderState, formData: FormData): Pro
     select: { id: true },
   });
   if (!collection) return { error: "그 해의 책을 아직 만들지 않았습니다.", values };
+
+  /**
+   * 🔑 수록작이 0점이면 주문을 받지 않는다.
+   *   책은 있는데 그 해 작품이 전부 지워진 경우가 있을 수 있다(데모 초기화 직후 등).
+   *   **0쪽짜리 책을 인쇄할 수는 없다.** 책 만들기 쪽에도 같은 가드가 있지만,
+   *   두 시점 사이에 작품이 사라질 수 있으므로 주문 시점에 다시 본다.
+   */
+  const artworks = await prisma.artwork.count({
+    where: { profileId: profile.id, madeOn: yearRange(year) },
+  });
+  if (artworks === 0) {
+    return { error: `${year}년에 담긴 작품이 없어 주문할 수 없습니다.`, values };
+  }
 
   /**
    * 🔑 중복 차단은 여기서 한다. 버튼 잠금은 화면의 일이다.
@@ -121,7 +162,11 @@ export async function createOrder(_prev: NewOrderState, formData: FormData): Pro
     redirect(`/book/${year}?ordered=${duplicate.orderNo}`);
   }
 
+  const dedupKey = makeDedupKey(collection.id, phoneRaw, getNow());
+
   let orderNo = "";
+  let lastError: unknown = null;
+
   for (let attempt = 0; attempt < ORDERNO_RETRIES; attempt += 1) {
     const candidate = makeOrderNo();
     try {
@@ -133,6 +178,7 @@ export async function createOrder(_prev: NewOrderState, formData: FormData): Pro
       await prisma.order.create({
         data: {
           orderNo: candidate,
+          dedupKey,
           collectionId: collection.id,
           recipientName,
           recipientPhone,
@@ -144,16 +190,48 @@ export async function createOrder(_prev: NewOrderState, formData: FormData): Pro
       });
       orderNo = candidate;
       break;
-    } catch {
+    } catch (e) {
+      lastError = e;
+
       /**
-       * orderNo가 겹쳤다(@unique). 뽑기를 다시 한다.
-       * 미리 조회해서 피하지 않는 이유: 조회와 생성 사이에 다른 요청이 같은 값을 쓸 수 있다.
-       * **DB의 제약이 최종 방어선이고**, 여기서는 그 결과를 받아 다시 시도할 뿐이다.
+       * 🔑 유니크 충돌이라도 **어느 열이 걸렸는지에 따라 할 일이 정반대다.**
+       *   전에는 이 catch가 비어 있어서 둘을 구분하지 못했고, 그래서 어떤 실패든
+       *   화면은 "주문번호를 만들지 못했습니다"라고 말했다. 틀린 범인을 지목한 것이다.
        */
+      if (isUniqueViolation(e)) {
+        // dedupKey가 걸렸다 = 같은 요청이 이미 들어와 있다. 다시 뽑아도 또 걸린다.
+        const existing = await prisma.order.findUnique({
+          where: { dedupKey },
+          select: { orderNo: true },
+        });
+        if (existing) {
+          // 동시 제출이었다. 사용자가 원한 결과는 이미 이뤄져 있으므로 그 주문으로 보낸다.
+          redirect(`/book/${year}?ordered=${existing.orderNo}`);
+        }
+        // dedupKey가 아니라 orderNo가 겹쳤다. 뽑기를 다시 한다.
+        continue;
+      }
+
+      // 유니크 위반이 아니면 다시 뽑아도 소용없다. 로그에 남기고 나간다.
+      logError("createOrder", e);
+      return { error: "주문을 넣지 못했습니다. 잠시 뒤 다시 시도해주세요.", values };
     }
   }
 
   if (orderNo === "") {
+    /**
+     * 여기까지 왔다는 건 유니크 충돌이 계속됐다는 뜻이다. 두 가지가 섞여 있다.
+     *   ① dedupKey 충돌인데 상대 트랜잭션이 아직 커밋 전이라 조회가 비었다 → 지금은 보일 수 있다
+     *   ② orderNo가 연속으로 겹쳤다 → 확률이 지극히 낮고, 다시 시도하면 된다
+     * ①을 먼저 확인하고, 아니면 ②로 안내한다. **원인이 다르면 문구도 달라야 한다.**
+     */
+    const settled = await prisma.order.findUnique({
+      where: { dedupKey },
+      select: { orderNo: true },
+    });
+    if (settled) redirect(`/book/${year}?ordered=${settled.orderNo}`);
+
+    logError("createOrder:orderNo", lastError);
     return { error: "주문번호를 만들지 못했습니다. 잠시 뒤 다시 시도해주세요.", values };
   }
 

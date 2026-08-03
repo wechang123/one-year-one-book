@@ -84,14 +84,21 @@ export default async function BookPage({
                 등록하는 작품도 이 책에 담깁니다.
               </>
             ) : (
-              <>{artworks.length}점이 담긴 한 권입니다.</>
+              <>{artworks.length > 0 ? `${artworks.length}점이 담긴 한 권입니다.` : "아직 담긴 작품이 없습니다."}</>
             )}
           </p>
         </div>
 
-        <Link href={`/book/${year}/order`} className="btn">
-          주문하기
-        </Link>
+        {/*
+          🔑 0점이면 주문 버튼을 내린다.
+            서버가 거절하는 것을 화면이 권하면, 사용자는 눌러보고 나서야 안 된다는 걸 안다.
+            막는 자리와 말하는 자리가 같아야 한다.
+        */}
+        {artworks.length > 0 ? (
+          <Link href={`/book/${year}/order`} className="btn">
+            주문하기
+          </Link>
+        ) : null}
       </header>
 
       {/*
