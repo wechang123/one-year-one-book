@@ -28,7 +28,7 @@ export default async function ArtworkListPage() {
    */
   const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
 
-  const [artworks, books] = await Promise.all([
+  const [artworks, books, orderCount] = await Promise.all([
     prisma.artwork.findMany({
       where: profile ? { profileId: profile.id } : undefined,
       orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
@@ -42,6 +42,9 @@ export default async function ArtworkListPage() {
     prisma.collection.findMany({
       where: profile ? { profileId: profile.id } : undefined,
       select: { year: true, title: true },
+    }),
+    prisma.order.count({
+      where: profile ? { collection: { profileId: profile.id } } : undefined,
     }),
   ]);
 
@@ -88,7 +91,7 @@ export default async function ArtworkListPage() {
       </header>
 
       {/* 책은 이 서비스의 목적이라 메뉴 뒤에 숨기지 않는다. 다만 등록보다 빈도가 낮아 아래에 둔다. */}
-      <BooksStrip rows={yearRows} />
+      <BooksStrip rows={yearRows} orderCount={orderCount} />
 
       {artworks.length === 0 ? (
         <EmptyList />

@@ -27,7 +27,7 @@ export type YearRow = {
  *   주 사용자가 여는 이유는 여전히 "아이가 방금 그림을 내밀어서"다. 그게 30초짜리 일이고,
  *   책은 한 해에 한 번이다. 빈도가 높은 것이 위에 있어야 한다.
  */
-export function BooksStrip({ rows }: { rows: YearRow[] }) {
+export function BooksStrip({ rows, orderCount }: { rows: YearRow[]; orderCount: number }) {
   const [state, formAction] = useActionState(createBook, INITIAL);
 
   if (rows.length === 0) return null;
@@ -36,6 +36,18 @@ export function BooksStrip({ rows }: { rows: YearRow[] }) {
     <section className="books" aria-labelledby="books-h">
       <h2 className="books__h" id="books-h">
         한 해가 한 권
+        {/*
+          주문이 생긴 뒤에만 링크가 나온다. 0건일 때 "주문 0건"을 보여주면
+          아직 할 수 없는 일을 화면이 먼저 말하는 셈이 된다 — 책부터 묶어야 한다.
+        */}
+        {orderCount > 0 ? (
+          <>
+            {" · "}
+            <Link href="/orders" className="books__link">
+              주문 {orderCount}건
+            </Link>
+          </>
+        ) : null}
       </h2>
 
       {state.error ? (
