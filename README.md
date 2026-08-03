@@ -171,10 +171,15 @@ Next 16.2.12 / React 19.2.8 / Prisma 7.9.1 + `@prisma/adapter-pg` / PostgreSQL 1
 ## 이 저장소를 읽는 법
 
 **커밋이 논리 단위로 쪼개져 있는 것 자체가 산출물이다.** 결정 하나에 커밋 하나를 맞췄다.
-기능은 이슈 → 브랜치 → PR → squash merge로 들어갔고, **판단과 거부한 선택지는 PR 본문에 남아 있다.**
+기능은 이슈 → 브랜치 → PR → squash merge로 들어갔다.
+
+**갈림길에서 무엇을 버렸는지가 궁금하면 [`docs/decisions/`](./docs/decisions/)를 보라.**
+화면 하나에 파일 하나로, *왜 그렇게 했는지*와 **왜 다른 쪽을 버렸는지**가 들어 있다.
+`git log`는 무엇을 했는지만 말한다.
 
 | 문서 | 내용 |
 |---|---|
+| [`docs/decisions/`](./docs/decisions/) | 🔑 **화면별 판단 기록** — 갈림길 · 의도적으로 넣지 않은 것 · AI가 틀린 것 |
 | [`CLAUDE.md`](./CLAUDE.md) | AI 에이전트에게 준 작업 규칙 — 이 저장소를 어떻게 만들었는지 |
 | [`docs/01-problem.md`](./docs/01-problem.md) | 문제 정의 |
 | [`docs/02-user.md`](./docs/02-user.md) | 사용자 정의 (주 사용자 / 이 저장소를 처음 여는 사람) |
