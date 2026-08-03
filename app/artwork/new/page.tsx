@@ -14,6 +14,16 @@ import { NewArtworkForm } from "./form";
  *   폼에서 만들면 사용자 기기의 시간대를 따라가 컨테이너와 다른 날짜가 나올 수 있다.
  *   만든 날은 어느 해 책에 들어갈지를 정하는 값이라 하루가 밀리면 책이 바뀐다.
  */
+
+/**
+ * 🔑 이 선언이 없으면 이 화면만 빌드 시점에 미리 그려진다.
+ *   DB를 안 읽는 유일한 화면이라 Next가 정적으로 판단하고, 그 결과
+ *   기본 날짜와 max 속성이 **빌드한 날에 고정된다.**
+ *   컨테이너를 한 번 띄워두고 며칠 쓰면 "오늘"이 며칠 전으로 굳는다.
+ *   화면을 열 때마다 오늘이어야 하는 값이라 매번 그린다.
+ */
+export const dynamic = "force-dynamic";
+
 export default function NewArtworkPage() {
   const today = todayInputValue(getNow());
 

@@ -20,11 +20,27 @@ import { createArtwork, type NewArtworkState } from "./actions";
 
 const INITIAL: NewArtworkState = {};
 
+/**
+ * 서버의 MAX_BYTES(actions.ts)와 같은 값.
+ *
+ * 🔑 여기서 막는 것과 서버에서 막는 것은 목적이 다르다.
+ *   서버 검사는 데이터를 지키고, 이 검사는 **시간을 지킨다** —
+ *   폰 회선으로 10MB를 다 올려보낸 뒤에 "너무 큽니다"를 듣는 건 서버가 옳게 답한 것이지만
+ *   사용자에겐 낭비다. 고른 즉시 아는 편이 낫다.
+ *   그래도 서버 검사를 빼지 않는다. 이건 안내고, 저건 방어다.
+ */
+const MAX_BYTES = 8 * 1024 * 1024;
+
+function formatMB(n: number): string {
+  return `${(n / (1024 * 1024)).toFixed(1)}MB`;
+}
+
 export function NewArtworkForm({ today }: { today: string }) {
   const [state, formAction] = useActionState(createArtwork, INITIAL);
 
   const [preview, setPreview] = useState<string | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const [tooBig, setTooBig] = useState<string | null>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
 
@@ -45,9 +61,17 @@ export function NewArtworkForm({ today }: { today: string }) {
   function onPickPhoto(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     setSize(null);
+    setTooBig(null);
 
     if (!file) {
       setPreview(null);
+      return;
+    }
+
+    if (file.size > MAX_BYTES) {
+      // 미리보기를 그리지 않는다. 올릴 수 없는 사진을 크게 보여주면 올라간 것처럼 읽힌다.
+      setPreview(null);
+      setTooBig(`${formatMB(file.size)}짜리 사진이라 올릴 수 없어요. ${formatMB(MAX_BYTES)}까지 됩니다.`);
       return;
     }
 
@@ -89,6 +113,16 @@ export function NewArtworkForm({ today }: { today: string }) {
         <p className="field__help" id="photo-help">
           JPG · PNG · WebP, 8MB까지. 벽에 붙은 채로 찍어도 됩니다.
         </p>
+
+        {/*
+          고른 즉시 알려주는 자리. 서버 오류(.form__error)와 생김새를 맞추되
+          role="alert"로 즉시 읽히게 한다 — 제출을 기다리지 않고 지금 다시 고르면 되는 상황이다.
+        */}
+        {tooBig ? (
+          <p className="form__error" role="alert">
+            {tooBig}
+          </p>
+        ) : null}
 
         {preview ? (
           <figure className="preview">
