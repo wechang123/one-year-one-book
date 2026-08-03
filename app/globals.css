@@ -359,6 +359,36 @@ a {
   align-items: center;
 }
 
+/*
+ * 편집 화면의 썸네일. 어떤 작품을 고치는 중인지 알려주는 것이 전부라 작다.
+ * 여기서 크게 보여주면 폼이 화면 밖으로 밀려 정작 고칠 칸이 안 보인다.
+ */
+.editthumb {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0 0 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.editthumb__img {
+  flex: none;
+  width: 84px;
+  height: 84px;
+  /* 확인용이라 잘려도 된다. 상세와 달리 여기서 그림을 감상하지 않는다. */
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.editthumb__caption {
+  min-width: 0;
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
 /* ───────────────────────── 저장 직후 ───────────────────────── */
 
 .saved {
@@ -487,6 +517,10 @@ a {
 
 .detail__meta dd {
   margin: 0.15rem 0 0;
+}
+
+.detail__actions {
+  margin-top: 1.25rem;
 }
 
 /* ───────────────────────── 빈 목록 ───────────────────────── */
