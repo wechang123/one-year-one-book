@@ -117,7 +117,12 @@ CC0/PD는 표기 의무가 없지만 **의무 없이도 밝히는 것이 판단*
 
 **② Server Action 본문 크기 기본값은 1MB다**
 폰 사진은 2~5MB라 **오류 없이 조용히 실패한다.**
-→ `next.config.ts`의 `serverActions.bodySizeLimit`을 `8mb`로 두었다.
+→ `next.config.ts`의 `serverActions.bodySizeLimit`을 **`12mb`**로 두었다.
+
+🔑 이 값은 **앱이 받는 사진 한도(8MiB)보다 커야 한다.**
+`bodySizeLimit`은 파일이 아니라 **요청 본문 전체**(multipart 경계·필드 이름·아이 말·만든 날 포함)에 걸린다.
+두 값을 같게 두면 한도를 넘는 파일은 본문 단계에서 먼저 잘려 **액션이 시작조차 못 하고**,
+앱이 준비해둔 한국어 안내가 **도달할 수 없는 코드**가 된다. 실제로 그 상태였다.
 
 ---
 
