@@ -6,3 +6,8 @@ next-env.d.ts
 tsconfig.tsbuildinfo
 /generated/prisma
 .memsearch/
+
+# 진행 계획 — 로컬 전용.
+# 개인 일정이 담겨 있어 공개하지 않는다.
+# 에이전트 작업 규칙(CLAUDE.md)은 공개한다 — 그건 이 저장소가 어떻게 만들어졌는지의 증거다.
+PLAN.local.md
