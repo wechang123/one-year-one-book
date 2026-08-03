@@ -122,7 +122,7 @@
 
 - [x] 확보처와 라이선스 → [`03-feasibility.md §3-1`](./03-feasibility.md)
 - [x] 10장 확보 후 리사이즈 → `public/seed/`에 커밋
-- [ ] 출처 목록 → README
+- [x] 출처 목록 10칸 → [README](../README.md)
 
 **충족한 조건**
 - ✅ **아이 얼굴이 나온 이미지가 한 장도 없다** (초상권)
