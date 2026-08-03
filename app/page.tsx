@@ -3,6 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { isOngoing } from "@/lib/book";
 import { BooksStrip, type YearRow } from "./books-strip";
+import { DemoResetButton } from "./demo/reset-button";
 
 /**
  * 작품 목록 — 이 서비스의 첫 화면.
@@ -134,6 +135,19 @@ export default async function ArtworkListPage() {
           </ul>
         </>
       )}
+
+      {/*
+        🔑 맨 아래에 조용히 둔다.
+          처음 여는 사람에게는 필요하고 주 사용자에게는 필요 없는 기능이라,
+          찾으면 보이되 먼저 보이지는 않아야 한다.
+          그리고 이게 있어야 위의 버튼들이 눌린다 — 되돌릴 수 없으면 아무도 안 눌러본다.
+      */}
+      <footer className="demo">
+        <p className="demo__lede">
+          마음껏 등록하고 고치고 주문해 보세요. 언제든 처음 상태로 되돌릴 수 있습니다.
+        </p>
+        <DemoResetButton />
+      </footer>
     </div>
   );
 }

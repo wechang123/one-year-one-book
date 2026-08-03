@@ -859,6 +859,42 @@ a {
   line-height: 1.55;
 }
 
+/* ───────────────────────── 데모 초기화 ───────────────────────── */
+
+.demo {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.demo__lede {
+  margin: 0 0 0.4rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.reset__toggle {
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  padding: 0.6rem 0;
+}
+
+.reset__body {
+  margin-top: 0.6rem;
+  padding: 1rem 1.1rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.reset__what {
+  margin: 0 0 0.9rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
 /* ───────────────────────── 빈 목록 ───────────────────────── */
 
 .blank {
