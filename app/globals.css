@@ -1,8 +1,261 @@
-:root { color-scheme: light; }
-* { box-sizing: border-box; }
+:root {
+  color-scheme: light;
+
+  /* 색은 다섯 개만 쓴다. 아이 그림이 화면에서 제일 화려한 것이어야 한다. */
+  --ink: #1c1a17;
+  --ink-soft: #6b6560;
+  --line: #e5e0d8;
+  --paper: #faf8f4;
+  --accent: #1c1a17;
+  --danger: #a4362b;
+
+  --radius: 12px;
+  --page-max: 1400px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   line-height: 1.6;
+  /* 폰에서 가로로 밀리는 것을 원천 차단한다. 한 손으로 쓰는 화면이다. */
+  overflow-wrap: break-word;
 }
-main { padding: 2rem 1.25rem; }
+
+a {
+  color: inherit;
+}
+
+/* ───────────────────────── 뼈대 ───────────────────────── */
+
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 1.25rem 1rem 4rem;
+}
+
+@media (min-width: 700px) {
+  .page {
+    padding: 2rem 2rem 5rem;
+  }
+}
+
+/* ───────────────────────── 머리말 ───────────────────────── */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1.5rem;
+}
+
+.masthead__text {
+  min-width: 0;
+}
+
+.masthead__owner {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.masthead__title {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 1.375rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 700px) {
+  .masthead__title {
+    font-size: 1.75rem;
+  }
+}
+
+.masthead__lede {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+/* ───────────────────────── 버튼 ───────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  /* 폰에서 한 손 엄지로 누른다. 44px은 손가락이 빗나가지 않는 최소 크기다. */
+  min-height: 44px;
+  padding: 0 1.1rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--paper);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  opacity: 0.86;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+  font-weight: 500;
+}
+
+.btn--ghost:hover {
+  border-color: var(--ink-soft);
+  opacity: 1;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ───────────────────────── 목록 ───────────────────────── */
+
+.tally {
+  margin: 0 0 0.9rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+/*
+ * 🔑 이 서비스의 반응형 원칙이 이 한 줄에 있다.
+ *   "화면이 넓어지면 칸이 커지는 게 아니라 더 많이 보인다."
+ *   auto-fill + minmax는 칸의 최소 크기를 고정하고 개수를 늘린다.
+ *   브레이크포인트로 열 수를 직접 적으면 화면 크기마다 규칙을 새로 정해야 하고,
+ *   적어두지 않은 크기에서는 칸이 늘어난다.
+ *   375px에서는 1열, 1440px에서는 4~5열이 저절로 나온다.
+ */
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.card:hover {
+  border-color: var(--ink-soft);
+}
+
+.card__frame {
+  /*
+   * 비율을 고정해 둔다. 사진이 도착하기 전에도 칸의 높이가 정해져 있어서
+   * 스크롤 중에 아래 카드들이 밀려 내려가지 않는다.
+   */
+  aspect-ratio: 4 / 3;
+  background: #f3efe8;
+  /*
+   * 🔑 relative + 아래의 absolute가 한 쌍이다. 빼면 비율이 깨진다.
+   *   이 상자는 세로 flex의 아이템이라 높이가 "내용에 따라" 정해지는 자리에 있다.
+   *   그 안에 height:100%인 이미지를 흐름 안에 두면 서로를 참조하게 되고,
+   *   브라우저는 이미지의 원래 비율을 택한다 — 세로로 긴 그림에서 상자가 늘어나
+   *   카드 높이가 제각각이 된다(실제로 그렇게 났다).
+   *   이미지를 흐름에서 빼면 상자 높이에 관여할 수 없게 되어 aspect-ratio가 이긴다.
+   */
+  position: relative;
+}
+
+.card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /*
+   * 🔑 cover가 아니라 contain이다. 목록에서 그림을 자르지 않는다.
+   *   잘려나간 자리에 아이가 설명한 것이 있을 수 있다
+   *   ("창문 앞에 있는 거 커튼 아니야. 다 나야.").
+   *   격자가 조금 덜 예뻐지는 대신 작품이 온전히 보인다.
+   */
+  object-fit: contain;
+  display: block;
+}
+
+.card__body {
+  padding: 0.85rem 0.9rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.quote {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  /* 카드 높이를 고르게 유지한다. 넘치는 문장은 상세에서 다 보인다. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/*
+ * 아이 말이 비어 있는 상태를 흐리게 처리하되 숨기지는 않는다.
+ * 비어 있다는 사실 자체가 "지금 물어보면 채울 수 있다"는 안내다.
+ */
+.quote--empty {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.card__date {
+  margin-top: auto;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* ───────────────────────── 빈 목록 ───────────────────────── */
+
+.blank {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.blank__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.0625rem;
+}
+
+.blank__body {
+  margin: 0 auto 1.25rem;
+  max-width: 36ch;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
