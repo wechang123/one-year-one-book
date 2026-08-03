@@ -33,8 +33,8 @@ export function DemoResetButton() {
           <p className="saved" role="status">
             <strong>처음 상태로 되돌렸습니다.</strong>
             <span className="saved__sub">
-              직접 만드신 것 {state.removed}건을 지우고, 시드 작품 10점의 말과 날짜를 원래대로
-              돌려놨습니다.
+              직접 만드신 작품·책·주문을 모두 지우고, 처음부터 있던 작품의 말과 날짜를
+              원래대로 돌려놨습니다.
             </span>
           </p>
         ) : null}

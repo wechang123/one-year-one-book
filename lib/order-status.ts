@@ -21,6 +21,17 @@ export const ORDER_STATUSES = ["RECEIVED", "PRINTING", "SHIPPING"] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+/**
+ * 밖에서 들어온 문자열이 상태인가.
+ *
+ * 🔑 `value in STATUS`로 검사하면 안 된다.
+ *   `in`은 프로토타입 체인까지 훑어서 `toString`·`constructor`·`valueOf`가 전부 통과한다.
+ *   허용 목록이 배열로 있으니 그걸 쓴다 — **허용한 것만 통과하는 게 허용 목록의 일이다.**
+ */
+export function isOrderStatus(value: string): value is OrderStatus {
+  return (ORDER_STATUSES as readonly string[]).includes(value);
+}
+
 type StatusInfo = {
   /** 화면에 쓰는 이름. */
   label: string;

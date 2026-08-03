@@ -186,7 +186,14 @@ export function NewArtworkForm({ today }: { today: string }) {
       </div>
 
       <div className="form__actions">
-        <SubmitButton />
+        {/*
+          🔑 올릴 수 없는 파일이면 제출 자체를 막는다.
+            전에는 경고 문구만 띄우고 버튼은 살아 있었다. 20MB를 고른 사용자가 그대로 누르면
+            요청 본문이 bodySizeLimit을 넘어 **서버 액션이 시작조차 못 하고**,
+            그러면 앱이 준비한 한국어 안내 대신 빈 오류가 뜬다.
+            서버 검사는 그대로 둔다 — 이건 안내고 저건 방어다.
+        */}
+        <SubmitButton blocked={!!tooBig} />
         <a href="/" className="btn btn--ghost">
           그만두기
         </a>
@@ -203,10 +210,10 @@ export function NewArtworkForm({ today }: { today: string }) {
  *   버튼이 그대로면 사용자는 안 눌렸다고 보고 다시 누른다. 그러면 같은 작품이 두 번 등록된다.
  *   disabled가 그 두 번째 클릭을 막고, 문구가 지금 뭐가 일어나는지 말한다.
  */
-function SubmitButton() {
+function SubmitButton({ blocked }: { blocked: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" className="btn" disabled={pending}>
+    <button type="submit" className="btn" disabled={pending || blocked}>
       {pending ? "저장하는 중…" : "저장하기"}
     </button>
   );

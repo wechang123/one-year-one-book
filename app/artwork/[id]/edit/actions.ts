@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { parseDateInputValue, todayInputValue } from "@/lib/date";
 import { getNow } from "@/lib/now";
+import { isNotFound, logError } from "@/lib/prisma-error";
 
 /**
  * 설명 편집 — 아이 말과 만든 날만.
@@ -75,8 +76,18 @@ export async function updateArtwork(
       },
       select: { id: true },
     });
-  } catch {
-    return { error: "이미 지워진 작품입니다. 목록에서 다시 확인해주세요.", values };
+  } catch (e) {
+    /**
+     * 🔑 원인이 다르면 문구도 달라야 한다.
+     *   전에는 어떤 실패든 "이미 지워진 작품입니다"라고 말했다.
+     *   DB가 끊겨서 실패해도 그렇게 말했고, 사용자는 지워지지도 않은 작품을
+     *   **목록에서 찾지 않게 된다.** 틀린 원인을 알려주면 틀린 행동을 한다.
+     */
+    if (isNotFound(e)) {
+      return { error: "이미 지워진 작품입니다. 목록에서 다시 확인해주세요.", values };
+    }
+    logError("updateArtwork", e);
+    return { error: "저장하지 못했습니다. 잠시 뒤 다시 시도해주세요.", values };
   }
 
   // 고친 결과를 바로 보여준다. 저장했다고 말만 하면 반영됐는지 확인하러 또 눌러야 한다.

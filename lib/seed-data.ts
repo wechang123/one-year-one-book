@@ -15,6 +15,16 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { PrismaClient } from "../generated/prisma/client";
 
+/**
+ * 이 함수가 쓰는 것만 요구한다.
+ *
+ * 🔑 왜 PrismaClient를 그대로 받지 않나
+ *   [데모 초기화]가 이 함수를 **트랜잭션 안에서** 부른다. 트랜잭션 콜백이 주는 클라이언트는
+ *   $transaction·$connect 같은 것이 빠져 있어서 PrismaClient와 타입이 다르다.
+ *   여기서 필요한 건 profile·artwork 두 개뿐이라 그것만 요구하면 둘 다 들어온다.
+ */
+export type SeedClient = Pick<PrismaClient, "profile" | "artwork">;
+
 /** 시드가 만든 아이는 언제나 한 명이다. id를 고정해 upsert 한 번으로 멱등해진다. */
 export const SEED_PROFILE_ID = "seed-profile";
 
@@ -124,7 +134,7 @@ export function seedArtworkId(file: string): string {
  * 그래서 이 함수는 연결을 만들지도, 끊지도, 프로세스를 끝내지도 않는다.
  * 그건 부르는 쪽의 사정이다.
  */
-export async function applySeed(prisma: PrismaClient): Promise<number> {
+export async function applySeed(prisma: SeedClient): Promise<number> {
   const seedDir = join(process.cwd(), "public", "seed");
 
   const profile = await prisma.profile.upsert({

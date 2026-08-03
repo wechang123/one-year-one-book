@@ -97,6 +97,20 @@ model Order {
   recipientPhone String
   address        String
 
+  /// 중복 제출을 DB가 막는 열쇠. "책id|연락처|시간버킷" 형태다.
+  ///
+  /// 🔑 왜 화면이나 앱이 아니라 여기인가
+  ///   조회해서 "없으면 만든다"는 조회와 생성 사이가 비어 있다. 두 요청이 그 틈에
+  ///   동시에 들어오면 둘 다 "없다"를 보고 둘 다 만든다. 실제로 그렇게 두 건이 생겼다.
+  ///   같은 이유로 책에 @@unique([profileId, year])를 걸었다 —
+  ///   "화면에서 막는 것만으로는 두 번 눌리면 두 권이 생긴다."
+  ///   주문도 같은 자리이므로 같은 방법으로 막는다.
+  ///
+  /// 🔑 왜 nullable인가
+  ///   Postgres는 NULL을 서로 다른 값으로 본다. 이 칸이 비어 있는 주문은 제약을 안 탄다 —
+  ///   이 열이 생기기 전에 만들어진 주문이 그렇고, 그것들을 지어낸 값으로 채우지 않는다.
+  dedupKey String? @unique
+
   origin    DataOrigin @default(USER)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
