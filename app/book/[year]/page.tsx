@@ -21,8 +21,14 @@ import { BookTitleForm } from "./title-form";
  */
 export const dynamic = "force-dynamic";
 
-export default async function BookPage({ params }: { params: Promise<{ year: string }> }) {
-  const { year: yearParam } = await params;
+export default async function BookPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ year: string }>;
+  searchParams: Promise<{ ordered?: string }>;
+}) {
+  const [{ year: yearParam }, { ordered }] = await Promise.all([params, searchParams]);
   const year = parseYear(yearParam);
   if (year === null) notFound();
 
@@ -80,11 +86,25 @@ export default async function BookPage({ params }: { params: Promise<{ year: str
             )}
           </p>
         </div>
-        {/*
-          [주문하기]는 주문 화면과 같이 들어온다(#7).
-          없는 화면으로 가는 링크를 먼저 만들지 않는다 — docs/decisions/02에 적어둔 원칙이다.
-        */}
+
+        <Link href={`/book/${year}/order`} className="btn">
+          주문하기
+        </Link>
       </header>
+
+      {/*
+        🔑 주문번호를 여기서 크게 보여준다.
+          "접수되었습니다"만으로는 사용자가 나중에 문의할 때 댈 것이 없다.
+          이 번호는 전화로 부를 수 있게 만든 값이라(lib/order-no.ts), 부를 수 있게 보여야 한다.
+      */}
+      {ordered ? (
+        <p className="saved" role="status">
+          <strong>주문이 접수됐습니다. 주문번호 {ordered}</strong>
+          <span className="saved__sub">
+            앞자리 여덟 자리가 주문한 날짜입니다. 문의하실 때 이 번호를 말씀해 주세요.
+          </span>
+        </p>
+      ) : null}
 
       <BookTitleForm year={year} title={book.title} />
 
