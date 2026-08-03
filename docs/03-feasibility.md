@@ -45,7 +45,7 @@
 | 실측한 것 | 결과 | 반영 |
 |---|---|---|
 | **`public/`에 업로드 파일을 쓰면?** | `next start`는 **부팅 시점에 스캔**한다. 실행 중 쓴 파일은 재시작 전까지 **404**. 볼륨을 붙여도 안 고쳐진다 | **업로드는 DB `Bytes` + route handler로 서빙.** 커밋된 시드 이미지는 부팅 때 이미 있으므로 정상 |
-| **Server Action 기본 본문 크기** | **1MB.** 폰 사진은 2~5MB → **오류 없이 조용히 실패한다** | `next.config.ts`에 `serverActions.bodySizeLimit: "8mb"` 적용 완료 |
+| **Server Action 기본 본문 크기** | **1MB.** 폰 사진은 2~5MB → **오류 없이 조용히 실패한다** | `next.config.ts`에 `serverActions.bodySizeLimit` 적용. 🔴 이 값은 **앱이 받는 사진 한도보다 커야 한다** — 같게 두면 한도 초과 파일이 본문 단계에서 잘려 앱의 안내가 도달할 수 없는 코드가 된다(조사 당시엔 이 함정을 몰랐고, 실제로 그 상태로 만들었다가 나중에 재현해서 고쳤다) |
 
 **스택 확정** — Next 16.2.12 / React 19.2.8 / Prisma 7.9.1 + `@prisma/adapter-pg` / PostgreSQL 18 / TypeScript 6.0.3.
 
