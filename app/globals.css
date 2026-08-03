@@ -840,6 +840,25 @@ a {
   color: var(--ink-soft);
 }
 
+.advance {
+  margin: 1.25rem 0 0;
+  padding: 1rem 1.1rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+/*
+ * 점선 테두리로 둘렀다. 다른 상자는 실선이라, 이것만 "제품의 일부가 아니다"라고
+ * 생김새로도 말한다. 글로만 밝히면 읽지 않는 사람에게는 안 밝힌 것과 같다.
+ */
+.advance__note {
+  margin: 0 0 0.8rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
 /* ───────────────────────── 빈 목록 ───────────────────────── */
 
 .blank {
