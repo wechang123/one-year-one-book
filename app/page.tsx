@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
+import { isOngoing } from "@/lib/book";
+import { BooksStrip, type YearRow } from "./books-strip";
 
 /**
  * 작품 목록 — 이 서비스의 첫 화면.
@@ -16,9 +18,19 @@ export const dynamic = "force-dynamic";
 export default async function ArtworkListPage() {
   const prisma = getPrisma();
 
-  const [profile, artworks] = await Promise.all([
-    prisma.profile.findFirst({ orderBy: { createdAt: "asc" } }),
+  /**
+   * 🔑 아이를 먼저 찾고, 그 아이의 것만 읽는다.
+   *   전에는 artwork.findMany에 where가 없어 **모든 아이의 작품**을 가져오고 있었다.
+   *   지금은 아이가 하나뿐이라 화면이 같아 보이지만, schema.prisma의 인덱스는
+   *   @@index([profileId, madeOn])로 "이 아이의 작품을 만든 날 역순"을 전제로 깔려 있다.
+   *   where가 없으면 그 인덱스를 쓰지 못하고, 무엇보다 **주석이 코드보다 앞서 있는 상태**가 된다.
+   *   조회를 두 단계로 나누는 값보다, 화면이 무엇을 보여주는지가 코드에 적혀 있는 값이 크다.
+   */
+  const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
+
+  const [artworks, books] = await Promise.all([
     prisma.artwork.findMany({
+      where: profile ? { profileId: profile.id } : undefined,
       orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
       /**
        * 🔑 사진 테이블을 건드리지 않는다.
@@ -27,9 +39,36 @@ export default async function ArtworkListPage() {
        */
       select: { id: true, childQuote: true, madeOn: true },
     }),
+    prisma.collection.findMany({
+      where: profile ? { profileId: profile.id } : undefined,
+      select: { year: true, title: true },
+    }),
   ]);
 
   const owner = profile?.childName;
+
+  /**
+   * 🔑 연도별 묶음을 DB에 다시 묻지 않는다.
+   *   수록작은 madeOn의 연도로 정해지므로, 방금 받아온 목록에서 세면 답이 나온다.
+   *   같은 사실을 두 곳에서 계산하면 두 곳이 갈라진다.
+   *   madeOn은 date 컬럼이라 UTC 자정이다 — 연도도 UTC로 읽어야 1월 1일이 옆 해로 안 샌다.
+   */
+  const byYear = new Map<number, number>();
+  for (const a of artworks) {
+    const y = a.madeOn.getUTCFullYear();
+    byYear.set(y, (byYear.get(y) ?? 0) + 1);
+  }
+
+  const titleOf = new Map(books.map((b) => [b.year, b.title]));
+
+  const yearRows: YearRow[] = [...byYear.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([year, count]) => ({
+      year,
+      count,
+      ongoing: isOngoing(year),
+      bookTitle: titleOf.get(year) ?? null,
+    }));
 
   return (
     <div className="page">
@@ -47,6 +86,9 @@ export default async function ArtworkListPage() {
           사진 등록
         </Link>
       </header>
+
+      {/* 책은 이 서비스의 목적이라 메뉴 뒤에 숨기지 않는다. 다만 등록보다 빈도가 낮아 아래에 둔다. */}
+      <BooksStrip rows={yearRows} />
 
       {artworks.length === 0 ? (
         <EmptyList />

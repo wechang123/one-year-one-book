@@ -246,6 +246,101 @@ a {
   max-width: 46rem;
 }
 
+/* ───────────────────────── 책 ───────────────────────── */
+
+.books {
+  margin: 0 0 1.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.books__h {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.books__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/*
+ * 폰에서는 정보와 버튼이 위아래로, 넓어지면 한 줄로.
+ * 버튼을 좁은 화면에서 오른쪽에 붙이면 연도·점수와 겹쳐 읽기 어려워진다.
+ */
+.books__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.books__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.books__year {
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.books__count {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.books__title {
+  font-size: 0.875rem;
+  /* 제목은 부모가 쓴 말이라 길 수 있다. 줄을 밀어내지 않게 자른다. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 22ch;
+}
+
+/* ───────────────────────── 표지 제목 고치기 ───────────────────────── */
+
+.titleedit {
+  margin: 0 0 1.5rem;
+}
+
+.titleedit__toggle {
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  /* 44px 타깃을 만들되 목록의 주인공(작품)보다 조용해야 한다. */
+  padding: 0.6rem 0;
+}
+
+.titleedit__form {
+  margin-top: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.titleedit__row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.4rem 0 0.4rem;
+}
+
 /* ───────────────────────── 등록 폼 ───────────────────────── */
 
 .form__head {
