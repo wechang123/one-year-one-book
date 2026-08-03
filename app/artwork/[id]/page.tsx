@@ -125,6 +125,17 @@ export default async function ArtworkDetailPage({
               <time dateTime={artwork.madeOn.toISOString()}>{formatMadeOn(artwork.madeOn)}</time>
             </dd>
           </dl>
+
+          {/*
+            🔑 아이 말이 비어 있을 때 문구가 다르다.
+              비어 있으면 할 일은 "고치기"가 아니라 "지금 물어보고 채우기"다.
+              같은 버튼이라도 무엇을 하러 가는지가 다르면 그렇게 말해야 한다.
+          */}
+          <div className="detail__actions">
+            <Link href={`/artwork/${artwork.id}/edit`} className="btn btn--ghost">
+              {artwork.childQuote ? "설명 고치기" : "아이 말 채우기"}
+            </Link>
+          </div>
         </div>
       </article>
     </div>

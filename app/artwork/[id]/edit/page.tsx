@@ -1,0 +1,65 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getPrisma } from "@/lib/prisma";
+import { toDateInputValue, todayInputValue } from "@/lib/date";
+import { getNow } from "@/lib/now";
+import { EditArtworkForm } from "./form";
+
+/**
+ * 설명 편집.
+ *
+ * 🔑 여기서 고칠 수 있는 것은 아이 말과 만든 날뿐이다.
+ *   등록이 30초 안에 끝나야 해서 아이 말은 비운 채로도 저장된다. 나중에 물어본 말을
+ *   채우는 것과 날짜 오타를 고치는 것 — 이 둘이 실제로 나중에 바뀌는 값이다.
+ *   사진은 아니다. 그 판단의 근거와 파급은 ./actions.ts 머리말에 적었다.
+ */
+export const dynamic = "force-dynamic";
+
+export default async function EditArtworkPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const prisma = getPrisma();
+
+  const artwork = await prisma.artwork.findUnique({
+    where: { id },
+    // 여기서도 사진 바이트는 안 읽는다. 썸네일은 <img>가 따로 받아온다.
+    select: { id: true, childQuote: true, madeOn: true },
+  });
+
+  if (!artwork) notFound();
+
+  return (
+    <div className="page page--narrow">
+      <nav className="detail__nav">
+        <Link href={`/artwork/${artwork.id}`} className="btn btn--ghost">
+          ← 작품으로
+        </Link>
+      </nav>
+
+      <header className="form__head">
+        <h1 className="form__title">설명 고치기</h1>
+      </header>
+
+      {/*
+        어떤 작품을 고치는 중인지 보여준다. 목록에 비슷한 그림이 여러 장이면
+        제목 없이 폼만 놓았을 때 엉뚱한 작품을 고칠 수 있다.
+      */}
+      <figure className="editthumb">
+        <img className="editthumb__img" src={`/api/photo/${artwork.id}`} alt="" />
+        <figcaption className="editthumb__caption">
+          사진은 바꿀 수 없어요. 등록할 때 미리보기로 먼저 확인하게 되어 있습니다.
+        </figcaption>
+      </figure>
+
+      <EditArtworkForm
+        id={artwork.id}
+        childQuote={artwork.childQuote ?? ""}
+        madeOn={toDateInputValue(artwork.madeOn)}
+        today={todayInputValue(getNow())}
+      />
+    </div>
+  );
+}
