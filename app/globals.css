@@ -238,6 +238,116 @@ a {
   color: var(--ink-soft);
 }
 
+/* ───────────────────────── 작품 상세 ───────────────────────── */
+
+.detail__nav {
+  margin-bottom: 1.25rem;
+}
+
+/*
+ * 🔑 목록과 같은 원칙을 다른 방식으로 지킨다.
+ *   "넓어지면 칸이 커지는 게 아니라 더 많이 보인다."
+ *   상세에는 늘릴 칸이 없다. 대신 좁을 때는 사진 아래 있던 아이 말이
+ *   넓어지면 사진 옆으로 올라와, 스크롤 없이 그림과 말이 같이 보인다.
+ *   이 서비스에서 그림과 말은 따로 보면 반쪽이라 나란히 놓이는 것이 이득이다.
+ *
+ *   900px를 경계로 삼은 이유: 사진이 최소 260px짜리 글 칸을 떼어주고도
+ *   원본을 대신할 만큼 남으려면 이 정도가 필요하다. 목록의 700px과 다른 것은
+ *   여기 놓이는 물건이 다르기 때문이다.
+ */
+@media (min-width: 900px) {
+  .detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 22rem);
+    gap: 2rem;
+    align-items: start;
+  }
+}
+
+.detail__figure {
+  margin: 0;
+}
+
+.detail__img {
+  display: block;
+  margin: 0 auto;
+  /*
+   * 비율을 고정하지 않는다. 시드 10장이 1280×905(가로)부터 1194×1843(세로)까지
+   * 제각각이고, 실제 아이 그림이 원래 그렇다. 비율을 고정하면 잘리거나 여백이 생긴다.
+   * width/height 속성이 원본 비율을 주므로 자리는 미리 잡힌다.
+   */
+  max-width: 100%;
+  /*
+   * 화면 높이의 72%를 넘지 않게 한다. 세로로 긴 그림이 화면을 넘어가면
+   * 한 장을 보는 데 스크롤이 필요해지고, 그러면 "원본 대신 보기"가 성립하지 않는다.
+   */
+  max-height: 72vh;
+  width: auto;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.detail__side {
+  /* 좁을 때 사진과 붙지 않게. 넓을 때는 grid의 gap이 맡으므로 0으로 되돌린다. */
+  margin-top: 1.25rem;
+}
+
+@media (min-width: 900px) {
+  .detail__side {
+    margin-top: 0;
+  }
+}
+
+/*
+ * 목록의 .quote와 달리 -webkit-line-clamp가 없다. 여기서 또 자르면
+ * 잘린 문장을 볼 곳이 없어진다. 이 문장이 이 서비스의 존재 이유다.
+ */
+.detail__quote {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  /* 한 줄이 너무 길면 눈이 다음 줄을 놓친다. 읽는 글이라 폭을 제한한다. */
+  max-width: 32ch;
+}
+
+@media (min-width: 900px) {
+  .detail__quote {
+    font-size: 1.375rem;
+  }
+}
+
+.detail__quote--empty {
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.detail__hint {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  font-style: normal;
+}
+
+.detail__meta {
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.9375rem;
+}
+
+.detail__meta dt {
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
+.detail__meta dd {
+  margin: 0.15rem 0 0;
+}
+
 /* ───────────────────────── 빈 목록 ───────────────────────── */
 
 .blank {
