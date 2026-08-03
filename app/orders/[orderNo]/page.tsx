@@ -4,6 +4,7 @@ import { getPrisma } from "@/lib/prisma";
 import { formatMoment } from "@/lib/date";
 import { isOrderNo } from "@/lib/order-no";
 import { ORDER_STATUSES, STATUS, stepOf, TOTAL_STEPS, type OrderStatus } from "@/lib/order-status";
+import { AdvanceButton } from "./advance";
 
 /**
  * 주문 상세.
@@ -93,6 +94,8 @@ export default async function OrderDetailPage({
         </ol>
       </section>
 
+      <AdvanceButton orderNo={order.orderNo} from={current} />
+
       <section aria-labelledby="hist-h">
         <h2 className="section__h" id="hist-h">
           지나온 기록
@@ -124,9 +127,7 @@ export default async function OrderDetailPage({
         </dl>
       </section>
 
-      <p className="notice">
-        결제와 배송은 아직 연결되어 있지 않습니다. 실제 제작은 이뤄지지 않습니다.
-      </p>
+      <p className="notice">결제와 배송은 아직 연결되어 있지 않습니다. 실제 제작은 이뤄지지 않습니다.</p>
     </div>
   );
 }
