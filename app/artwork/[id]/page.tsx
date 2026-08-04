@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
-import { formatMadeOn } from "@/lib/date";
+import { formatMadeOn, toDateInputValue } from "@/lib/date";
+import { InlineQuoteForm } from "./inline-quote";
 
 /**
  * 작품 상세.
@@ -108,11 +109,32 @@ export default async function ArtworkDetailPage({
           그리고 이 문구를 목록이 아니라 여기서 말한다. 사진이 크게 보이는 자리에서
           해야 믿긴다. 작은 카드 옆에서 "정리하셔도 됩니다"는 설득력이 없다.
       */}
+      {/*
+        🔑 허락을 조건화하지 않는다.
+          말이 있든 없든 첫 문장이 같고 **무게도 같다.**
+          "말을 채워야 정리하셔도 됩니다"로 쓰면 04-content §2-1
+          ("말 없는 사진은 나중에 채울 수 있다")을 즉시 거짓으로 만든다.
+
+          더 큰 문제는 따로 있다 — 이 앱이 사용자에게 주기로 한 유일한 것이 **허락**인데,
+          그걸 성실도에 따라 배급하는 순간 그 허락이 조건부가 된다.
+          그러면 말을 못 받은 날 부모는 허락도 못 받는다. 가장 필요한 날에 못 받는 것이다.
+      */}
       {saved !== undefined ? (
         <p className="saved" role="status">
           <strong>남았습니다. 이제 원본은 정리하셔도 됩니다.</strong>
-          <span className="saved__sub">아이 말과 만든 날까지 같이 저장했습니다.</span>
+          {artwork.childQuote ? (
+            <span className="saved__sub">아이 말과 만든 날까지 같이 저장했습니다.</span>
+          ) : (
+            <span className="saved__sub">
+              그림은 사진으로 남았습니다. 말은 지금만 받을 수 있어서 자리를 비워뒀습니다.
+            </span>
+          )}
         </p>
+      ) : null}
+
+      {/* 말이 비어 있을 때만. 아이가 아직 옆에 있는 유일한 순간이다. */}
+      {saved !== undefined && !artwork.childQuote ? (
+        <InlineQuoteForm id={artwork.id} madeOn={toDateInputValue(artwork.madeOn)} />
       ) : null}
 
       {/*
