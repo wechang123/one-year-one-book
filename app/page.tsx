@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { isOngoing } from "@/lib/book";
+import { subjectParticle } from "@/lib/korean";
 import { BooksStrip, type YearRow } from "./books-strip";
 import { DemoResetButton } from "./demo/reset-button";
 
@@ -38,6 +39,25 @@ function highlight(text: string, q: string) {
   }
   out.push(text.slice(from));
   return out;
+}
+
+/**
+ * 검색어를 문장의 주어 자리에 놓는다. `"공룡"이` · `"이불"이` · `"바다"가`.
+ *
+ * 🔑 조사를 모르는 검색어(영문·숫자·이모지)는 **조사가 필요 없는 모양**으로 바꾼다.
+ *   `"dino", 이 낱말이 …`. 앱이 발음을 지어내는 것보다 문장을 바꾸는 쪽이 정직하다.
+ *   `말`이 아니라 `낱말`인 이유는 뒤에 오는 문장이 이미 *"…들어간 말"*이기 때문이다.
+ */
+function QuotedSubject({ q }: { q: string }) {
+  const particle = subjectParticle(q);
+  return particle ? (
+    <>
+      &ldquo;{q}&rdquo;
+      {particle}
+    </>
+  ) : (
+    <>&ldquo;{q}&rdquo;, 이 낱말이</>
+  );
 }
 
 export default async function ArtworkListPage({
@@ -228,7 +248,9 @@ export default async function ArtworkListPage({
          *   앱은 저장된 것만 안다. 아는 것까지만 말한다.
          */
         <div className="blank">
-          <h2 className="blank__title">&ldquo;{q}&rdquo;가 들어간 말이 없어요.</h2>
+          <h2 className="blank__title">
+            <QuotedSubject q={q} /> 들어간 말이 없어요.
+          </h2>
           <p className="blank__body">
             저장된 아이 말 중에는 없습니다.
             {wordless > 0 ? (
@@ -255,7 +277,7 @@ export default async function ArtworkListPage({
           <p className="tally">
             {searching ? (
               <>
-                &ldquo;{q}&rdquo;가 들어간 말 {artworks.length}점
+                <QuotedSubject q={q} /> 들어간 말 {artworks.length}점
               </>
             ) : (
               <>
