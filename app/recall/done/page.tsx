@@ -73,7 +73,7 @@ export default async function RecallDonePage() {
 
         <div className="form__actions form__actions--center">
           <Link href="/" className="btn">
-            목록으로
+            타임라인
           </Link>
         </div>
       </div>

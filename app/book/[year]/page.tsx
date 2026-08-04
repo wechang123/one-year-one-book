@@ -68,7 +68,7 @@ export default async function BookPage({
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
           <ArrowLeft />
-          목록으로
+          타임라인
         </Link>
       </nav>
 
