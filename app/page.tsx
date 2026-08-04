@@ -95,7 +95,14 @@ export default async function ArtworkListPage() {
         <EmptyList />
       ) : (
         <>
-          <p className="tally">작품 {artworks.length}점</p>
+          {/*
+            🔑 되짚어보기 입구를 여기 둔다. 머리말의 [사진 등록]과 경쟁시키지 않는다.
+              등록은 주 사용자가 30초 안에 하는 일이고, 되짚어보기는 가끔 하는 일이다.
+              빈도가 높은 것이 크고, 낮은 것은 그 목록을 설명하는 자리에 조용히 붙인다.
+          */}
+          <p className="tally">
+            작품 {artworks.length}점 · <Link href="/recall">되짚어보기</Link>
+          </p>
 
           <ul className="grid">
             {artworks.map((artwork) => (
