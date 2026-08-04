@@ -52,6 +52,28 @@
   --t-infant-fill: #ebf1f0;
   --t-child-fill: #f5f0e6;
 
+
+  /*
+   * 간격 — 4px 격자 위 9단계.
+   *
+   * 🔴 전에는 서로 다른 rem 값이 **29종**이었다. 0.35 · 0.4 · 0.45가 따로 있었고
+   *   0.8 · 0.85 · 0.9 · 0.95도 따로 있었다. **0.4rem과 0.45rem은 0.8px 차이다** —
+   *   눈으로 구별되지 않는데 값은 둘이었다. 한 자리씩 그때그때 맞춘 결과라
+   *   각 값은 그 자리에서 맞았지만 **전체를 지배하는 규칙이 없었다.**
+   *
+   * 🔑 4px 격자인 이유: 버튼 최소 높이 44px, 아이콘 16px, 본문 16px이 전부 4의 배수다.
+   *   이미 화면을 정하고 있던 수에 여백도 맞춘다.
+   */
+  --s-1: 0.125rem;   /* 2px */
+  --s-2: 0.25rem;   /* 4px */
+  --s-3: 0.5rem;   /* 8px */
+  --s-4: 0.75rem;   /* 12px */
+  --s-5: 1rem;   /* 16px */
+  --s-6: 1.5rem;   /* 24px */
+  --s-7: 2rem;   /* 32px */
+  --s-8: 3rem;   /* 48px */
+  --s-9: 5rem;   /* 80px */
+
   --radius: 12px;
   --page-max: 1400px;
 }
@@ -61,7 +83,7 @@
 }
 
 body {
-  margin: 0;
+  margin:0;
   background: var(--paper);
   color: var(--ink);
   font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -89,17 +111,17 @@ a {
 .sitenav__inner {
   /* 아래 .page와 같은 폭·같은 여백. 로고와 머리말 제목의 왼쪽 끝이 맞는다. */
   max-width: var(--page-max);
-  margin: 0 auto;
-  padding: 0 1rem;
+  margin:0 auto;
+  padding:0 var(--s-5);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap:var(--s-5);
 }
 
 @media (min-width: 700px) {
   .sitenav__inner {
-    padding: 0 2rem;
+    padding:0 var(--s-7);
   }
 }
 
@@ -113,20 +135,20 @@ a {
 
 .sitenav__list {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin:0;
+  padding:0;
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap:var(--s-1);
 }
 
 .sitenav__link {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap:var(--s-2);
   /* 폰에서 엄지로 누른다. 버튼과 같은 44px. */
   min-height: 44px;
-  padding: 0 0.6rem;
+  padding:0 var(--s-3);
   border-radius: 999px;
   font-size: 0.875rem;
   color: var(--ink-soft);
@@ -164,13 +186,13 @@ a {
 
 .page {
   max-width: var(--page-max);
-  margin: 0 auto;
-  padding: 1.25rem 1rem 4rem;
+  margin:0 auto;
+  padding:var(--s-5) var(--s-5) var(--s-8);
 }
 
 @media (min-width: 700px) {
   .page {
-    padding: 2rem 2rem 5rem;
+    padding:var(--s-7) var(--s-7) var(--s-9);
   }
 }
 
@@ -189,8 +211,8 @@ a {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap:var(--s-5);
+  margin-bottom:var(--s-5);
 }
 
 .masthead__text {
@@ -203,7 +225,7 @@ a {
  *   한 줄로 합치면서 세로 21px과 오른쪽 블록 하나가 같이 사라졌다.
  */
 .masthead__meta {
-  margin: 0 0 0.1rem;
+  margin:0 0 var(--s-1);
   font-size: 0.8125rem;
   letter-spacing: 0.02em;
   color: var(--ink-soft);
@@ -214,7 +236,7 @@ a {
 }
 
 .masthead__title {
-  margin: 0.15rem 0 0.35rem;
+  margin:var(--s-1) 0 var(--s-2);
   font-size: 1.375rem;
   line-height: 1.35;
   letter-spacing: -0.01em;
@@ -237,7 +259,7 @@ a {
  *   가장 흐린 색이었다. 회색은 "덜 봐도 되는 것"에 쓰는 색이고 이건 그게 아니다.
  */
 .masthead__lede {
-  margin: 0;
+  margin:0;
   max-width: 46ch;
   font-size: 0.9375rem;
   color: var(--ink);
@@ -265,10 +287,10 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap:var(--s-3);
   /* 폰에서 한 손 엄지로 누른다. 44px은 손가락이 빗나가지 않는 최소 크기다. */
   min-height: 44px;
-  padding: 0 1.1rem;
+  padding:0 var(--s-5);
   border: 1px solid var(--accent);
   border-radius: 999px;
   background: var(--accent);
@@ -304,7 +326,7 @@ a {
 /* ───────────────────────── 목록 ───────────────────────── */
 
 .tally {
-  margin: 0 0 0.9rem;
+  margin:0 0 var(--s-5);
   font-size: 0.875rem;
   color: var(--ink-soft);
 }
@@ -315,7 +337,7 @@ a {
  */
 
 .span + .span {
-  margin-top: 1.5rem;
+  margin-top:var(--s-6);
 }
 
 .span__head {
@@ -333,9 +355,9 @@ a {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 0.45rem;
-  margin: 0 0 0.7rem;
-  padding: 0.5rem 0 0.45rem;
+  gap:0 var(--s-3);
+  margin:0 0 var(--s-4);
+  padding:var(--s-3) 0 var(--s-3);
   /*
    * 🔴 회색 실선 1px이었다. 이 선은 화면에서 가장 긴 요소인데(1400px × 4줄)
    *   아무것도 말하지 않고 있었다. 지금은 **자기 밑에 오는 카드들의 시기**를 띤다.
@@ -385,7 +407,7 @@ a {
 .span__age::before,
 .span__count::before {
   content: "·";
-  margin-right: 0.45rem;
+  margin-right:var(--s-3);
   font-weight: 400;
 }
 
@@ -399,11 +421,11 @@ a {
  */
 .grid {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin:0;
+  padding:0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
+  gap:var(--s-5);
 }
 
 .card {
@@ -491,15 +513,15 @@ a {
 }
 
 .card__body {
-  padding: 0.85rem 0.9rem 0.95rem;
+  padding:var(--s-4) var(--s-5) var(--s-5);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap:var(--s-3);
   flex: 1;
 }
 
 .quote {
-  margin: 0;
+  margin:0;
   font-size: 0.9375rem;
   line-height: 1.5;
   /* 카드 높이를 고르게 유지한다. 넘치는 문장은 상세에서 다 보인다. */
@@ -524,11 +546,11 @@ a {
  * 생일을 안 넣었으면 축이 없고 날짜만 남는다.
  */
 .card__when {
-  margin: 0.35rem 0 0;
-  margin-top: auto;
+  margin:var(--s-2) 0 0;
+  margin-top:auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 0 0.4rem;
+  gap:0 var(--s-3);
   font-size: 0.8125rem;
   color: var(--ink-soft);
 }
@@ -570,7 +592,7 @@ a {
 
 .card__age::after {
   content: "·";
-  margin-left: 0.4rem;
+  margin-left:var(--s-3);
   color: var(--ink-soft);
   font-weight: 400;
 }
@@ -598,13 +620,13 @@ a {
  *   칸들의 배경이 그 일을 하고 있고, 테두리는 거기에 아무것도 더하지 않았다.
  */
 .books {
-  margin: 1.75rem 0 0;
-  padding: 1.25rem 0 0;
+  margin:var(--s-6) 0 0;
+  padding:var(--s-5) 0 0;
   border-top: 1px solid var(--line);
 }
 
 .books__h {
-  margin: 0 0 0.75rem;
+  margin:0 0 var(--s-4);
   font-size: 0.8125rem;
   letter-spacing: 0.04em;
   color: var(--ink-soft);
@@ -623,11 +645,11 @@ a {
  */
 .books__list {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin:0;
+  padding:0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0.6rem;
+  gap:var(--s-3);
 }
 
 /*
@@ -643,13 +665,13 @@ a {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap:var(--s-3);
 }
 
 .books__meta {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap:var(--s-1);
   min-width: 0;
   width: 100%;
 }
@@ -676,7 +698,7 @@ a {
 /* ───────────────────────── 표지 제목 고치기 ───────────────────────── */
 
 .titleedit {
-  margin: 0 0 1.5rem;
+  margin:0 0 var(--s-6);
 }
 
 .titleedit__toggle {
@@ -684,12 +706,12 @@ a {
   font-size: 0.875rem;
   color: var(--ink-soft);
   /* 44px 타깃을 만들되 목록의 주인공(작품)보다 조용해야 한다. */
-  padding: 0.6rem 0;
+  padding:var(--s-3) 0;
 }
 
 .titleedit__form {
-  margin-top: 0.6rem;
-  padding: 1rem;
+  margin-top:var(--s-3);
+  padding:var(--s-5);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
@@ -697,25 +719,25 @@ a {
 
 .titleedit__row {
   display: flex;
-  gap: 0.5rem;
+  gap:var(--s-3);
   align-items: center;
-  margin: 0.4rem 0 0.4rem;
+  margin:var(--s-3) 0 var(--s-3);
 }
 
 /* ───────────────────────── 등록 폼 ───────────────────────── */
 
 .form__head {
-  margin-bottom: 1.75rem;
+  margin-bottom:var(--s-6);
 }
 
 .form__title {
-  margin: 0 0 0.35rem;
+  margin:0 0 var(--s-2);
   font-size: 1.375rem;
   letter-spacing: -0.01em;
 }
 
 .form__lede {
-  margin: 0;
+  margin:0;
   color: var(--ink-soft);
   font-size: 0.9375rem;
 }
@@ -723,12 +745,12 @@ a {
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap:var(--s-6);
 }
 
 .form__error {
-  margin: 0;
-  padding: 0.85rem 1rem;
+  margin:0;
+  padding:var(--s-4) var(--s-5);
   border: 1px solid var(--danger);
   border-radius: var(--radius);
   /* 색만으로 알리지 않는다. 테두리·굵기가 같이 말하므로 색각 이상에서도 읽힌다. */
@@ -741,7 +763,7 @@ a {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap:var(--s-3);
 }
 
 .field__label {
@@ -750,7 +772,7 @@ a {
 }
 
 .field__req {
-  margin-left: 0.35rem;
+  margin-left:var(--s-2);
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--ink-soft);
@@ -759,7 +781,7 @@ a {
 .field__input,
 .field__file {
   width: 100%;
-  padding: 0.7rem 0.8rem;
+  padding:var(--s-4) var(--s-4);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
@@ -781,13 +803,13 @@ a {
 }
 
 .field__help {
-  margin: 0;
+  margin:0;
   color: var(--ink-soft);
   font-size: 0.8125rem;
 }
 
 .preview {
-  margin: 0.75rem 0 0;
+  margin:var(--s-4) 0 0;
 }
 
 .preview__img {
@@ -803,7 +825,7 @@ a {
 }
 
 .preview__caption {
-  margin-top: 0.4rem;
+  margin-top:var(--s-3);
   color: var(--ink-soft);
   font-size: 0.8125rem;
 }
@@ -811,7 +833,7 @@ a {
 .form__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap:var(--s-3);
   align-items: center;
 }
 
@@ -827,9 +849,9 @@ a {
 .editthumb {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  margin: 0 0 1.75rem;
-  padding-bottom: 1.25rem;
+  gap:var(--s-5);
+  margin:0 0 var(--s-6);
+  padding-bottom:var(--s-5);
   border-bottom: 1px solid var(--line);
 }
 
@@ -855,8 +877,8 @@ a {
  * 잘못된 것이 아니라 "여기까지"라는 사실이라, 경고처럼 보이면 안 된다.
  */
 .notice {
-  margin: 0 0 1.5rem;
-  padding: 0.85rem 1rem;
+  margin:0 0 var(--s-6);
+  padding:var(--s-4) var(--s-5);
   border: 1px solid var(--line);
   border-left: 3px solid var(--ink-soft);
   border-radius: var(--radius);
@@ -868,7 +890,7 @@ a {
 
 .form__note {
   display: inline-block;
-  margin-top: 0.3rem;
+  margin-top:var(--s-2);
   font-size: 0.875rem;
 }
 
@@ -877,9 +899,9 @@ a {
 .saved {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  margin: 0 0 1.25rem;
-  padding: 0.9rem 1rem;
+  gap:var(--s-2);
+  margin:0 0 var(--s-5);
+  padding:var(--s-5) var(--s-5);
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
@@ -895,21 +917,21 @@ a {
 /* ───────────────────────── 앞뒤 병치 ───────────────────────── */
 
 .pair {
-  margin-top: 2rem;
-  padding-top: 1.25rem;
+  margin-top:var(--s-7);
+  padding-top:var(--s-5);
   border-top: 1px solid var(--line);
 }
 
 .pair__list {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin:0;
+  padding:0;
   /*
    * 좁은 화면에서는 위아래, 넓어지면 좌우로 나란히.
    * "나란히 놓이면 설명된다"가 이 블록의 이유라 넓은 화면에서 반드시 옆에 와야 한다.
    */
   display: grid;
-  gap: 0.75rem;
+  gap:var(--s-4);
 }
 
 @media (min-width: 700px) {
@@ -920,9 +942,9 @@ a {
 
 .pair__item {
   display: flex;
-  gap: 0.8rem;
+  gap:var(--s-4);
   align-items: flex-start;
-  padding: 0.8rem;
+  padding:var(--s-4);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
@@ -956,7 +978,7 @@ a {
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   color: var(--ink-soft);
-  margin-bottom: 0.2rem;
+  margin-bottom:var(--s-2);
 }
 
 .pair__quote {
@@ -976,7 +998,7 @@ a {
 
 .pair__date {
   display: block;
-  margin-top: 0.25rem;
+  margin-top:var(--s-2);
   font-size: 0.8125rem;
   color: var(--ink-soft);
 }
@@ -984,7 +1006,7 @@ a {
 /* ───────────────────────── 검색 ───────────────────────── */
 
 .search {
-  margin: 0 0 1.5rem;
+  margin:0 0 var(--s-6);
 }
 
 /*
@@ -998,7 +1020,7 @@ a {
  * 여러 해에 걸쳐 찾혔을 때 전부 몇 점인지는 이 줄이 아니면 아무도 말하지 않는다.
  */
 .search__result {
-  margin: 0.35rem 0 0;
+  margin:var(--s-2) 0 0;
   font-size: 0.875rem;
   color: var(--ink-soft);
 }
@@ -1010,14 +1032,14 @@ a {
 .search__row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap:var(--s-3);
   align-items: center;
   /* 도움말이 검색 중에만 붙는다. 평소에는 아래 여백이 곧 폼의 여백이다. */
-  margin-bottom: 0;
+  margin-bottom:0;
 }
 
 .search__row + .field__help {
-  margin-top: 0.4rem;
+  margin-top:var(--s-3);
 }
 
 /*
@@ -1054,8 +1076,8 @@ mark {
  */
 .saidlist {
   list-style: none;
-  margin: 0 0 1.75rem;
-  padding: 0;
+  margin:0 0 var(--s-6);
+  padding:0;
   counter-reset: said;
 }
 
@@ -1065,7 +1087,7 @@ mark {
 
 .saidlist__link {
   display: block;
-  padding: 0.9rem 0;
+  padding:var(--s-5) 0;
   text-decoration: none;
 }
 
@@ -1087,31 +1109,31 @@ mark {
 
 .saidlist__date {
   display: block;
-  margin-top: 0.25rem;
+  margin-top:var(--s-2);
   font-size: 0.8125rem;
   color: var(--ink-soft);
 }
 
 .recallone__date {
-  margin: 0.9rem 0 1rem;
+  margin:var(--s-5) 0 var(--s-5);
   font-size: 0.9375rem;
   color: var(--ink-soft);
 }
 
 .recallone__said {
-  margin: 0 0 1.5rem;
+  margin:0 0 var(--s-6);
 }
 
 .recallone__toggle {
   cursor: pointer;
-  padding: 0.6rem 0;
+  padding:var(--s-3) 0;
   font-size: 0.9375rem;
   color: var(--ink-soft);
 }
 
 .recallone__quote {
-  margin: 0.5rem 0 0;
-  padding-left: 1rem;
+  margin:var(--s-3) 0 0;
+  padding-left:var(--s-5);
   border-left: 3px solid var(--line);
   font-size: 1.25rem;
   line-height: 1.55;
@@ -1119,31 +1141,31 @@ mark {
 }
 
 .recallone__none {
-  margin: 0 0 1.5rem;
+  margin:0 0 var(--s-6);
   font-size: 0.9375rem;
   color: var(--ink-soft);
 }
 
 /* 끝 화면. 이 서비스의 목적이 닫히는 자리라 화면에서 가장 조용하고 가장 크다. */
 .closing {
-  padding: 2.5rem 1.5rem;
+  padding:var(--s-7) var(--s-6);
   text-align: center;
 }
 
 .closing__lede {
-  margin: 0 0 1rem;
+  margin:0 0 var(--s-5);
   font-size: 0.9375rem;
   color: var(--ink-soft);
 }
 
 .closing__title {
-  margin: 0 0 1rem;
+  margin:0 0 var(--s-5);
   font-size: 1.625rem;
   letter-spacing: -0.01em;
 }
 
 .closing__body {
-  margin: 0 auto 1.75rem;
+  margin:0 auto var(--s-6);
   max-width: 40ch;
   font-size: 0.9375rem;
   line-height: 1.7;
@@ -1153,23 +1175,23 @@ mark {
 /* ───────────────────────── 등록 직후 인라인 입력 ───────────────────────── */
 
 .inlinequote {
-  margin: 0 0 1.5rem;
-  padding: 1rem 1.1rem;
+  margin:0 0 var(--s-6);
+  padding:var(--s-5) var(--s-5);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
 }
 
 .inlinequote .field__input {
-  margin-top: 0.35rem;
+  margin-top:var(--s-2);
 }
 
 .inlinequote__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.9rem;
-  margin-top: 0.8rem;
+  gap:var(--s-5);
+  margin-top:var(--s-4);
 }
 
 /*
@@ -1192,8 +1214,8 @@ mark {
  */
 .recall {
   display: block;
-  margin: 0 0 1.5rem;
-  padding: 0.9rem 0 0.9rem 1rem;
+  margin:0 0 var(--s-6);
+  padding:var(--s-5) 0 var(--s-5) var(--s-5);
   border-left: 3px solid var(--line);
   text-decoration: none;
 }
@@ -1206,7 +1228,7 @@ a.recall:hover {
   display: block;
   font-size: 0.8125rem;
   color: var(--ink-soft);
-  margin-bottom: 0.3rem;
+  margin-bottom:var(--s-2);
 }
 
 .recall__quote {
@@ -1219,7 +1241,7 @@ a.recall:hover {
 
 .recall__date {
   display: block;
-  margin-top: 0.35rem;
+  margin-top:var(--s-2);
   font-size: 0.8125rem;
   color: var(--ink-soft);
 }
@@ -1232,7 +1254,7 @@ a.recall:hover {
 /* ───────────────────────── 작품 상세 ───────────────────────── */
 
 .detail__nav {
-  margin-bottom: 1.25rem;
+  margin-bottom:var(--s-5);
 }
 
 /*
@@ -1250,18 +1272,18 @@ a.recall:hover {
   .detail {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(260px, 22rem);
-    gap: 2rem;
+    gap:var(--s-7);
     align-items: start;
   }
 }
 
 .detail__figure {
-  margin: 0;
+  margin:0;
 }
 
 .detail__img {
   display: block;
-  margin: 0 auto;
+  margin:0 auto;
   /*
    * 비율을 고정하지 않는다. 시드 10장이 1280×905(가로)부터 1194×1843(세로)까지
    * 제각각이고, 실제 아이 그림이 원래 그렇다. 비율을 고정하면 잘리거나 여백이 생긴다.
@@ -1282,12 +1304,12 @@ a.recall:hover {
 
 .detail__side {
   /* 좁을 때 사진과 붙지 않게. 넓을 때는 grid의 gap이 맡으므로 0으로 되돌린다. */
-  margin-top: 1.25rem;
+  margin-top:var(--s-5);
 }
 
 @media (min-width: 900px) {
   .detail__side {
-    margin-top: 0;
+    margin-top:0;
   }
 }
 
@@ -1296,7 +1318,7 @@ a.recall:hover {
  * 잘린 문장을 볼 곳이 없어진다. 이 문장이 이 서비스의 존재 이유다.
  */
 .detail__quote {
-  margin: 0;
+  margin:0;
   font-size: 1.25rem;
   line-height: 1.55;
   letter-spacing: -0.01em;
@@ -1318,14 +1340,14 @@ a.recall:hover {
 
 .detail__hint {
   display: inline-block;
-  margin-top: 0.5rem;
+  margin-top:var(--s-3);
   font-size: 0.9375rem;
   font-style: normal;
 }
 
 .detail__meta {
-  margin: 1.5rem 0 0;
-  padding-top: 1rem;
+  margin:var(--s-6) 0 0;
+  padding-top:var(--s-5);
   border-top: 1px solid var(--line);
   font-size: 0.9375rem;
 }
@@ -1336,17 +1358,17 @@ a.recall:hover {
 }
 
 .detail__meta dd {
-  margin: 0.15rem 0 0;
+  margin:var(--s-1) 0 0;
 }
 
 .detail__actions {
-  margin-top: 1.25rem;
+  margin-top:var(--s-5);
 }
 
 /* ───────────────────────── 주문 ───────────────────────── */
 
 .section__h {
-  margin: 2rem 0 0.75rem;
+  margin:var(--s-7) 0 var(--s-4);
   font-size: 0.8125rem;
   letter-spacing: 0.04em;
   color: var(--ink-soft);
@@ -1355,20 +1377,20 @@ a.recall:hover {
 
 .orders {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin:0;
+  padding:0;
   /*
    * 목록과 같은 원칙 — 넓어지면 칸이 커지는 게 아니라 더 많이 보인다.
    * 주문 카드는 글자라 그림보다 좁아도 읽히므로 최소 폭을 300px로 뒀다.
    */
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 0.75rem;
+  gap:var(--s-4);
 }
 
 .order {
   display: block;
-  padding: 0.9rem 1rem;
+  padding:var(--s-5) var(--s-5);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
@@ -1384,8 +1406,8 @@ a.recall:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.4rem;
+  gap:var(--s-3);
+  margin-bottom:var(--s-3);
 }
 
 .order__no {
@@ -1396,13 +1418,13 @@ a.recall:hover {
 }
 
 .order__book {
-  margin: 0 0 0.25rem;
+  margin:0 0 var(--s-2);
   font-size: 0.9375rem;
   font-weight: 600;
 }
 
 .order__meta {
-  margin: 0;
+  margin:0;
   font-size: 0.8125rem;
   color: var(--ink-soft);
 }
@@ -1414,7 +1436,7 @@ a.recall:hover {
  */
 .badge {
   flex: none;
-  padding: 0.15rem 0.55rem;
+  padding:var(--s-1) var(--s-3);
   border: 1px solid var(--line);
   border-radius: 999px;
   font-size: 0.8125rem;
@@ -1435,7 +1457,7 @@ a.recall:hover {
 }
 
 .status {
-  padding: 1.1rem 1.2rem;
+  padding:var(--s-5) var(--s-5);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
@@ -1444,8 +1466,8 @@ a.recall:hover {
 .status__now {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin: 0 0 0.4rem;
+  gap:var(--s-3);
+  margin:0 0 var(--s-3);
 }
 
 .status__step {
@@ -1454,7 +1476,7 @@ a.recall:hover {
 }
 
 .status__detail {
-  margin: 0 0 0.9rem;
+  margin:0 0 var(--s-5);
   font-size: 0.9375rem;
 }
 
@@ -1462,13 +1484,13 @@ a.recall:hover {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
+  gap:var(--s-3);
+  margin:0;
+  padding:0;
 }
 
 .steps__item {
-  padding: 0.2rem 0.6rem;
+  padding:var(--s-2) var(--s-3);
   border: 1px solid var(--line);
   border-radius: 999px;
   font-size: 0.8125rem;
@@ -1493,18 +1515,18 @@ a.recall:hover {
 
 .events {
   list-style: none;
-  margin: 0;
-  padding: 0 0 0 1rem;
+  margin:0;
+  padding:0 0 0 var(--s-5);
   border-left: 2px solid var(--line);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap:var(--s-5);
 }
 
 .events__item {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap:var(--s-1);
   position: relative;
 }
 
@@ -1535,8 +1557,8 @@ a.recall:hover {
 }
 
 .advance {
-  margin: 1.25rem 0 0;
-  padding: 1rem 1.1rem;
+  margin:var(--s-5) 0 0;
+  padding:var(--s-5) var(--s-5);
   border: 1px dashed var(--line);
   border-radius: var(--radius);
   background: #fff;
@@ -1547,7 +1569,7 @@ a.recall:hover {
  * 생김새로도 말한다. 글로만 밝히면 읽지 않는 사람에게는 안 밝힌 것과 같다.
  */
 .advance__note {
-  margin: 0 0 0.8rem;
+  margin:0 0 var(--s-4);
   font-size: 0.8125rem;
   color: var(--ink-soft);
   line-height: 1.55;
@@ -1556,13 +1578,13 @@ a.recall:hover {
 /* ───────────────────────── 데모 초기화 ───────────────────────── */
 
 .demo {
-  margin-top: 3rem;
-  padding-top: 1.5rem;
+  margin-top:var(--s-8);
+  padding-top:var(--s-6);
   border-top: 1px solid var(--line);
 }
 
 .demo__lede {
-  margin: 0 0 0.4rem;
+  margin:0 0 var(--s-3);
   font-size: 0.875rem;
   color: var(--ink-soft);
 }
@@ -1571,19 +1593,19 @@ a.recall:hover {
   cursor: pointer;
   font-size: 0.875rem;
   color: var(--ink-soft);
-  padding: 0.6rem 0;
+  padding:var(--s-3) 0;
 }
 
 .reset__body {
-  margin-top: 0.6rem;
-  padding: 1rem 1.1rem;
+  margin-top:var(--s-3);
+  padding:var(--s-5) var(--s-5);
   border: 1px dashed var(--line);
   border-radius: var(--radius);
   background: #fff;
 }
 
 .reset__what {
-  margin: 0 0 0.9rem;
+  margin:0 0 var(--s-5);
   font-size: 0.875rem;
   line-height: 1.7;
   color: var(--ink-soft);
@@ -1595,17 +1617,17 @@ a.recall:hover {
   border: 1px dashed var(--line);
   border-radius: var(--radius);
   background: #fff;
-  padding: 2.5rem 1.5rem;
+  padding:var(--s-7) var(--s-6);
   text-align: center;
 }
 
 .blank__title {
-  margin: 0 0 0.5rem;
+  margin:0 0 var(--s-3);
   font-size: 1.0625rem;
 }
 
 .blank__body {
-  margin: 0 auto 1.25rem;
+  margin:0 auto var(--s-5);
   max-width: 36ch;
   color: var(--ink-soft);
   font-size: 0.9375rem;
@@ -1623,8 +1645,8 @@ a.recall:hover {
  */
 .saidby {
   display: inline-block;
-  margin-right: 0.4rem;
-  padding: 0.05rem 0.45rem;
+  margin-right:var(--s-3);
+  padding:var(--s-1) var(--s-3);
   border-radius: 999px;
   background: var(--line);
   font-size: 0.75rem;
@@ -1643,22 +1665,22 @@ a.recall:hover {
 /* 상세에서는 한 줄을 통째로 쓴다. 자리가 있고, 한 점을 오래 보는 자리다. */
 .detail__side > .saidby {
   display: inline-block;
-  margin-bottom: 0.5rem;
+  margin-bottom:var(--s-3);
 }
 
 /* ── 누구의 말인가 (등록·편집) ────────────────────────────── */
 .speaker {
-  margin: 0 0 0.5rem;
-  padding: 0;
+  margin:0 0 var(--s-3);
+  padding:0;
   border: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 1rem;
+  gap:var(--s-2) var(--s-5);
 }
 
 .speaker__legend {
-  padding: 0;
+  padding:0;
   font-size: 0.8125rem;
   color: var(--ink-soft);
 }
@@ -1667,7 +1689,7 @@ a.recall:hover {
 .speaker__opt {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap:var(--s-3);
   min-height: 44px;
   font-size: 1rem;
   cursor: pointer;
@@ -1680,7 +1702,7 @@ a.recall:hover {
 }
 
 .speaker__fixed {
-  margin: 0 0 0.5rem;
+  margin:0 0 var(--s-3);
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--ink-soft);
@@ -1691,13 +1713,13 @@ a.recall:hover {
  * 화면 아래에서 "왜 이렇게 했는지"를 말하는 자리. 폼과 섞이지 않게 선으로 끊는다.
  */
 .note {
-  margin-top: 2.5rem;
-  padding-top: 1.25rem;
+  margin-top:var(--s-7);
+  padding-top:var(--s-5);
   border-top: 1px solid var(--line);
 }
 
 .note__body {
-  margin: 0 0 0.75rem;
+  margin:0 0 var(--s-4);
   font-size: 0.9375rem;
   line-height: 1.7;
   color: var(--ink-soft);
@@ -1718,7 +1740,7 @@ a.recall:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap:var(--s-2);
   aspect-ratio: 1 / 1;
   /*
    * 🔴 여기가 한 번 틀렸다. 전에는 `max-height: 42vh`로 높이를 잘랐는데,
@@ -1728,9 +1750,9 @@ a.recall:hover {
    *   "저장 버튼이 밀려나면 손해다"라는 원래 목적도 그대로 지켜진다.
    */
   max-width: min(100%, 22rem);
-  margin-inline: auto;
-  margin-bottom: 0.6rem;
-  padding: 1.25rem;
+  margin-inline:auto;
+  margin-bottom:var(--s-3);
+  padding:var(--s-5);
   border: 2px dashed var(--line);
   border-radius: var(--radius);
   background: #fff;
