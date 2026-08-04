@@ -34,28 +34,21 @@ export type YearRow = {
  *   주 사용자가 여는 이유는 여전히 "손에 뭔가 들려 있어서"다. 그게 30초짜리 일이고,
  *   책은 한 해에 한 번이다. 빈도가 높은 것이 위에 있어야 한다.
  */
-export function BooksStrip({ rows, orderCount }: { rows: YearRow[]; orderCount: number }) {
+/* 🔑 `orderCount`를 더는 안 받는다. 주문 링크가 화면 머리말로 갔다. */
+export function BooksStrip({ rows }: { rows: YearRow[] }) {
   const [state, formAction] = useActionState(createBook, INITIAL);
 
   if (rows.length === 0) return null;
 
   return (
-    <section className="books" aria-labelledby="books-h">
-      <h2 className="books__h" id="books-h">
-        한 해가 한 권
-        {/*
-          주문이 생긴 뒤에만 링크가 나온다. 0건일 때 "주문 0건"을 보여주면
-          아직 할 수 없는 일을 화면이 먼저 말하는 셈이 된다 — 책부터 묶어야 한다.
-        */}
-        {orderCount > 0 ? (
-          <>
-            {" · "}
-            <Link href="/orders" className="books__link">
-              주문 {orderCount}건
-            </Link>
-          </>
-        ) : null}
-      </h2>
+    <section className="books" aria-label="해마다 한 권">
+      {/*
+        🔴 여기 `한 해가 한 권` 제목이 있었다. 지웠다.
+          v1에서는 이 줄이 **홈 안의 한 구역**이라 이름표가 필요했다.
+          v2에서는 이게 `/books` 화면 전체이고, 그 화면의 머리말이 이미 같은 말을 한다 —
+          `한 해가 한 권` / `책`. **같은 문구가 한 화면에 두 번 있었다.**
+          주문 링크도 화면 머리말의 버튼으로 옮겼다.
+      */}
 
       {state.error ? (
         <p className="form__error" role="alert">

@@ -5,7 +5,10 @@ import {
   Baby as LBaby,
   BookOpen as LBookOpen,
   BookPlus as LBookPlus,
+  CalendarDays as LCalendarDays,
   Camera as LCamera,
+  LayoutGrid as LLayoutGrid,
+  Milestone as LMilestone,
   MessageSquareQuote as LMessageSquareQuote,
   Package as LPackage,
   RotateCcw as LRotateCcw,
@@ -117,3 +120,19 @@ export const SquarePen = wrap(LSquarePen, "SquarePen");
 
 /** 처음 상태로 되돌리기. 데모를 마음껏 망가뜨릴 수 있게 하는 자리. */
 export const RotateCcw = wrap(LRotateCcw, "RotateCcw");
+
+/* ── v2의 사이드바가 쓰는 넷 ───────────────────────────── */
+
+/**
+ * 타임라인.
+ * 🔑 `Route`(구불구불한 길)가 아니라 `Milestone`(이정표)이다.
+ *   이 앱의 타임라인은 **지나온 자리에 표가 하나씩 꽂혀 있는 것**이지
+ *   어디로 가는 길이 아니다. 앞으로 갈 곳을 그리면 화면이 목표를 만든다.
+ */
+export const Milestone = wrap(LMilestone, "Milestone");
+
+/** 캘린더. */
+export const CalendarDays = wrap(LCalendarDays, "CalendarDays");
+
+/** 모아보기 — v1의 격자 화면. */
+export const LayoutGrid = wrap(LLayoutGrid, "LayoutGrid");

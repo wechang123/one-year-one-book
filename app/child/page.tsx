@@ -3,6 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 import { toDateInputValue, todayInputValue } from "@/lib/date";
 import { getNow } from "@/lib/now";
 import { describeAge } from "@/lib/age";
+import { checkupWindows } from "@/lib/schedule";
 import { ChildForm } from "./form";
 import { ArrowLeft } from "../icons";
 
@@ -39,7 +40,7 @@ export default async function ChildPage() {
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
           <ArrowLeft />
-          목록으로
+          타임라인
         </Link>
       </nav>
 
@@ -57,6 +58,28 @@ export default async function ChildPage() {
         </p>
       ) : null}
 
+      {/*
+        🔴 v2에서 이 두 날짜가 하는 일이 하나 늘었다 — **캘린더의 검진 창**이 여기서 나온다.
+          그런데 화면은 여전히 *"임신 몇 주였는지"*까지만 말하고 있었다.
+          값이 하는 일이 늘었는데 그 값을 받는 자리가 침묵하면,
+          사용자는 **왜 비어 있는지 모른 채 빈 달력**을 본다.
+
+        🔑 태어난 날이 있으면 몇 개가 잡혔는지 세어서 보여준다. 없으면 무엇이 안 보이는지 말한다.
+          "넣으세요"라고 재촉하지 않는다 — 무엇이 달라지는지만 말하고 고르는 것은 사용자다.
+      */}
+      {profile?.bornOn ? (
+        <p className="tally">
+          <Link href="/calendar">캘린더</Link>에 영유아 건강검진 창{" "}
+          <strong>{checkupWindows({ dueOn: profile.dueOn, bornOn: profile.bornOn }).length}개</strong>가
+          이 날짜에서 계산돼 표시됩니다.
+        </p>
+      ) : (
+        <p className="tally">
+          태어난 날을 넣으면 <Link href="/calendar">캘린더</Link>에 <strong>영유아 건강검진 창</strong>이
+          같이 표시됩니다. 국민건강보험공단이 정한 구간을 옮겨 적은 것입니다.
+        </p>
+      )}
+
       {profile ? (
         <ChildForm
           childName={profile.childName}
@@ -69,7 +92,7 @@ export default async function ChildPage() {
           <h2 className="blank__title">아이 정보를 찾지 못했습니다.</h2>
           <p className="blank__body">컨테이너를 다시 시작하면 초기 데이터가 만들어집니다.</p>
           <Link href="/" className="btn">
-            목록으로
+            타임라인
           </Link>
         </div>
       )}
