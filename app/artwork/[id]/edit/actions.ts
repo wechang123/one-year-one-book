@@ -5,6 +5,7 @@ import { getPrisma } from "@/lib/prisma";
 import { parseDateInputValue, todayInputValue } from "@/lib/date";
 import { getNow } from "@/lib/now";
 import { isNotFound, logError } from "@/lib/prisma-error";
+import { readQuoteBy, settleQuoteBy } from "@/lib/speaker";
 
 /**
  * 설명 편집 — 아이 말과 만든 날만.
@@ -28,7 +29,7 @@ export type EditArtworkState = {
   error?: string;
   field?: "madeOn";
   /** 오류로 되돌아왔을 때 고치던 값이 지워지지 않게 그대로 돌려보낸다. */
-  values?: { childQuote: string; madeOn: string };
+  values?: { childQuote: string; madeOn: string; quoteBy: "CHILD" | "PARENT" };
 };
 
 export async function updateArtwork(
@@ -37,14 +38,16 @@ export async function updateArtwork(
 ): Promise<EditArtworkState> {
   const id = formData.get("id");
   if (typeof id !== "string" || id === "") {
-    return { error: "어떤 작품인지 알 수 없습니다. 목록에서 다시 들어와주세요." };
+    return { error: "어떤 점인지 알 수 없습니다. 목록에서 다시 들어와주세요." };
   }
 
   const madeOnRaw = formData.get("madeOn");
   const quotePeek = formData.get("childQuote");
+  const pickedBy = readQuoteBy(formData.get("quoteBy"));
   const values = {
     childQuote: typeof quotePeek === "string" ? quotePeek : "",
     madeOn: typeof madeOnRaw === "string" ? madeOnRaw : "",
+    quoteBy: pickedBy,
   };
   const madeOn = typeof madeOnRaw === "string" ? parseDateInputValue(madeOnRaw) : null;
   if (!madeOn) {
@@ -63,6 +66,17 @@ export async function updateArtwork(
   const prisma = getPrisma();
 
   /**
+   * 🔑 말의 주인을 여기서도 다시 확정한다.
+   *   등록에만 두면 **편집으로 우회해 "태아가 한 말"을 만들 수 있다.**
+   *   미래 날짜 검사를 두 액션에 똑같이 둔 것과 같은 이유다.
+   */
+  const profile = await prisma.profile.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { dueOn: true, bornOn: true },
+  });
+  const quoteBy = settleQuoteBy(pickedBy, madeOn, profile ?? { dueOn: null, bornOn: null });
+
+  /**
    * 없는 id면 update가 예외를 던진다. 그걸 잡아 화면 문구로 바꾼다.
    * 여기서 findUnique로 먼저 확인하지 않는 이유: 확인과 수정 사이에 지워질 수 있고,
    * 그러면 같은 오류를 두 곳에서 처리하게 된다. 한 번의 update가 답을 다 준다.
@@ -72,6 +86,7 @@ export async function updateArtwork(
       where: { id },
       data: {
         childQuote: quote === "" ? null : quote,
+        quoteBy,
         madeOn,
       },
       select: { id: true },
@@ -84,7 +99,7 @@ export async function updateArtwork(
      *   **목록에서 찾지 않게 된다.** 틀린 원인을 알려주면 틀린 행동을 한다.
      */
     if (isNotFound(e)) {
-      return { error: "이미 지워진 작품입니다. 목록에서 다시 확인해주세요.", values };
+      return { error: "이미 지워진 기록입니다. 목록에서 다시 확인해주세요.", values };
     }
     logError("updateArtwork", e);
     return { error: "저장하지 못했습니다. 잠시 뒤 다시 시도해주세요.", values };

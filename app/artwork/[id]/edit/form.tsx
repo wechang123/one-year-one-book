@@ -1,8 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
+import { describeAge, type Birth } from "@/lib/age";
+import { parseDateInputValue } from "@/lib/date";
+import { QuoteField } from "../../quote-field";
 import { updateArtwork, type EditArtworkState } from "./actions";
 
 const INITIAL: EditArtworkState = {};
@@ -10,14 +13,18 @@ const INITIAL: EditArtworkState = {};
 export function EditArtworkForm({
   id,
   childQuote,
+  quoteBy,
   madeOn,
   today,
+  birth,
 }: {
   id: string;
   childQuote: string;
+  quoteBy: "CHILD" | "PARENT";
   /** "2026-07-19" */
   madeOn: string;
   today: string;
+  birth: Birth;
 }) {
   const [state, formAction] = useActionState(updateArtwork, INITIAL);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -25,6 +32,15 @@ export function EditArtworkForm({
   useEffect(() => {
     if (state.field === "madeOn") dateRef.current?.focus();
   }, [state]);
+
+  // 등록 폼과 같은 이유다 — 날짜가 말의 주인과 시간 축을 같이 정한다.
+  const [madeOnValue, setMadeOnValue] = useState(state.values?.madeOn || madeOn);
+  useEffect(() => {
+    if (state.values?.madeOn) setMadeOnValue(state.values.madeOn);
+  }, [state]);
+
+  const madeOnDate = parseDateInputValue(madeOnValue);
+  const when = madeOnDate ? describeAge(madeOnDate, birth) : null;
 
   return (
     <form action={formAction} className="form" noValidate>
@@ -36,31 +52,7 @@ export function EditArtworkForm({
         </p>
       ) : null}
 
-      <div className="field">
-        <label className="field__label" htmlFor="childQuote">
-          아이가 한 말
-        </label>
-        <textarea
-          id="childQuote"
-          name="childQuote"
-          rows={3}
-          className="field__input"
-          /*
-           * 🔑 defaultValue다. value로 두면 매 글자마다 리렌더가 필요한 제어 컴포넌트가 되고,
-           *   그 상태를 관리할 이유가 없다 — 이 폼은 제출할 때 한 번만 값을 읽는다.
-           */
-          defaultValue={state.values?.childQuote ?? childQuote}
-          placeholder="아이가 한 말을 그대로 적어주세요"
-          aria-describedby="quote-help"
-        />
-        <p className="field__help" id="quote-help">
-          {/* 등록 폼과 같은 질문을 제안한다. 두 화면이 다른 질문을 시키면 말이 갈린다. */}
-          <strong>&ldquo;이거 무슨 얘기야?&rdquo;</strong> 하고 물어보면 이야기가 나옵니다.
-          <br />
-          비우면 &ldquo;아직 안 물어봤어요&rdquo;로 돌아갑니다.
-        </p>
-      </div>
-
+      {/* 등록 폼과 순서를 맞춘다. 날짜가 이 자리에 무엇을 적어야 하는지를 정한다. */}
       <div className="field">
         <label className="field__label" htmlFor="madeOn">
           만든 날
@@ -72,6 +64,7 @@ export function EditArtworkForm({
           type="date"
           className="field__input field__input--date"
           defaultValue={state.values?.madeOn || madeOn}
+          onChange={(e) => setMadeOnValue(e.target.value)}
           max={today}
           aria-describedby="date-help"
         />
@@ -82,8 +75,21 @@ export function EditArtworkForm({
             화면이 말하지 않으면 나중에 책을 만들 때 왜 빠졌는지 알 수 없다.
           */}
           연도를 바꾸면 담기는 책이 바뀝니다. 책은 한 해에 한 권입니다.
+          {when && when.scale !== "none" ? (
+            <>
+              <br />
+              이때는 <strong>{when.label}</strong>입니다.
+            </>
+          ) : null}
         </p>
       </div>
+
+      <QuoteField
+        birth={birth}
+        madeOn={madeOnDate}
+        defaultQuote={state.values?.childQuote ?? childQuote}
+        defaultQuoteBy={state.values?.quoteBy ?? quoteBy}
+      />
 
       <div className="form__actions">
         <SubmitButton />
