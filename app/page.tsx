@@ -66,7 +66,7 @@ export default async function ArtworkListPage({
    */
   const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
 
-  const [artworks, books, orderCount, wordless] = await Promise.all([
+  const [artworks, allMadeOn, books, orderCount, wordless] = await Promise.all([
     prisma.artwork.findMany({
       where: profile
         ? {
@@ -107,6 +107,22 @@ export default async function ArtworkListPage({
        */
       select: { id: true, childQuote: true, madeOn: true },
     }),
+    /**
+     * 🔴 연도 집계는 **검색과 무관한 별도 조회**다. 전에는 위 목록에서 셌는데,
+     *   그 목록에 검색 필터가 걸려 있어서 **검색이 책 줄을 오염시켰다.**
+     *   `?q=닭`이면 책 줄이 "지금까지 1점"이라고 말하고, 그 자리에서 [책으로 묶기]를 누르면
+     *   **10점짜리 책이 만들어진다.** 화면이 말한 수와 만들어진 것이 달랐다.
+     *   0건 검색이면 책 줄이 통째로 사라지기까지 했다.
+     *
+     * 🔑 갈림길: 검색 중일 때만 이 조회를 더 할까 vs 항상 할까 → **항상.**
+     *   조건부로 두면 "검색 중이 아닐 때는 위 목록에서 센다"는 두 번째 경로가 생기고,
+     *   두 경로는 갈라진다 — 방금 갈라져서 이 버그가 났다.
+     *   대가는 madeOn 한 열을 한 번 더 읽는 것뿐이다. 사진 바이트는 여기서도 안 읽는다.
+     */
+    prisma.artwork.findMany({
+      where: profile ? { profileId: profile.id } : undefined,
+      select: { madeOn: true },
+    }),
     prisma.collection.findMany({
       where: profile ? { profileId: profile.id } : undefined,
       select: { year: true, title: true },
@@ -123,13 +139,14 @@ export default async function ArtworkListPage({
   const owner = profile?.childName;
 
   /**
-   * 🔑 연도별 묶음을 DB에 다시 묻지 않는다.
-   *   수록작은 madeOn의 연도로 정해지므로, 방금 받아온 목록에서 세면 답이 나온다.
-   *   같은 사실을 두 곳에서 계산하면 두 곳이 갈라진다.
+   * 🔑 수록작은 madeOn의 연도로 정해진다. 그래서 여기서도 그 규칙 그대로 센다.
    *   madeOn은 date 컬럼이라 UTC 자정이다 — 연도도 UTC로 읽어야 1월 1일이 옆 해로 안 샌다.
+   *
+   * 🔴 세는 대상이 화면에 보이는 목록이 아니라 **그 아이의 전체**다.
+   *   책에 담기는 것은 검색 결과가 아니라 그 해에 남긴 전부이기 때문이다.
    */
   const byYear = new Map<number, number>();
-  for (const a of artworks) {
+  for (const a of allMadeOn) {
     const y = a.madeOn.getUTCFullYear();
     byYear.set(y, (byYear.get(y) ?? 0) + 1);
   }
