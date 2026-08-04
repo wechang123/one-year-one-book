@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
+import { describeAge } from "@/lib/age";
+import { SaidBy, emptyQuoteText } from "../artwork/said-by";
 
 /**
  * 되짚어보기 — 입구.
@@ -28,23 +30,24 @@ export default async function RecallPage() {
     where: profile ? { profileId: profile.id } : undefined,
     orderBy: [{ madeOn: "asc" }, { createdAt: "asc" }],
     // 사진 테이블을 아예 건드리지 않는다. 이 화면에는 사진이 없다.
-    select: { id: true, childQuote: true, madeOn: true },
+    select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
   });
 
   const first = artworks[0];
+  const birth = { dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null };
 
   return (
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 작품 목록
+          ← 목록으로
         </Link>
       </nav>
 
       <header className="form__head">
         <h1 className="form__title">되짚어보기</h1>
         <p className="form__lede">
-          그림을 정리하고 나면 남는 것입니다. <strong>사진은 한 장도 없습니다.</strong>
+          실물을 정리하고 나면 남는 것입니다. <strong>사진은 한 장도 없습니다.</strong>
         </p>
       </header>
 
@@ -52,10 +55,10 @@ export default async function RecallPage() {
         <div className="blank">
           <h2 className="blank__title">아직 되짚어볼 것이 없어요.</h2>
           <p className="blank__body">
-            작품을 등록하고 <strong>그때 아이가 한 말</strong>을 적어두면 여기에 쌓입니다.
+            한 점 남기면서 <strong>그때의 말</strong>을 적어두면 여기에 쌓입니다.
           </p>
           <Link href="/artwork/new" className="btn">
-            첫 작품 등록하기
+            첫 한 점 남기기
           </Link>
         </div>
       ) : (
@@ -65,7 +68,10 @@ export default async function RecallPage() {
               <li key={a.id} className="saidlist__item">
                 <Link href={`/recall/${a.id}`} className="saidlist__link">
                   {a.childQuote ? (
-                    <span className="saidlist__quote">{a.childQuote}</span>
+                    <span className="saidlist__quote">
+                      <SaidBy by={a.quoteBy} />
+                      {a.childQuote}
+                    </span>
                   ) : (
                     /*
                      * 🔑 말이 빈 것도 남긴다. 빼지 않는다.
@@ -75,10 +81,14 @@ export default async function RecallPage() {
                      *   "다 잘 남았다"는 거짓말이 된다.
                      */
                     <span className="saidlist__quote saidlist__quote--empty">
-                      아직 안 물어봤어요
+                      {emptyQuoteText(a.quoteBy)}
                     </span>
                   )}
                   <time className="saidlist__date" dateTime={a.madeOn.toISOString()}>
+                    {(() => {
+                      const when = describeAge(a.madeOn, birth);
+                      return when.scale === "none" ? null : <>{when.label} · </>;
+                    })()}
                     {formatMadeOn(a.madeOn)}
                   </time>
                 </Link>

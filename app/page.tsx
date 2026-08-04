@@ -3,6 +3,8 @@ import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { isOngoing } from "@/lib/book";
 import { subjectParticle } from "@/lib/korean";
+import { describeAge } from "@/lib/age";
+import { SaidBy, emptyQuoteText } from "./artwork/said-by";
 import { BooksStrip, type YearRow } from "./books-strip";
 import { DemoResetButton } from "./demo/reset-button";
 
@@ -125,7 +127,7 @@ export default async function ArtworkListPage({
        *   사진 바이트는 <img src="/api/photo/[작품id]">가 따로 받아온다.
        *   목록 쿼리가 바이트를 끌고 오면 10점만 있어도 매 요청이 1.7MB가 된다.
        */
-      select: { id: true, childQuote: true, madeOn: true },
+      select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
     }),
     /**
      * 🔴 연도 집계는 **검색과 무관한 별도 조회**다. 전에는 위 목록에서 셌는데,
@@ -157,6 +159,7 @@ export default async function ArtworkListPage({
   ]);
 
   const owner = profile?.childName;
+  const birth = { dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null };
 
   /**
    * 🔑 수록작은 madeOn의 연도로 정해진다. 그래서 여기서도 그 규칙 그대로 센다.
@@ -186,10 +189,25 @@ export default async function ArtworkListPage({
     <div className="page">
       <header className="masthead">
         <div className="masthead__text">
-          {owner ? <p className="masthead__owner">{owner}의 기록</p> : null}
-          <h1 className="masthead__title">아이가 만든 것을, 아이의 말과 함께.</h1>
+          {/*
+            🔑 아이 이름이 링크다. 여기가 생일을 넣는 자리로 가는 유일한 입구다.
+              별도 메뉴를 만들지 않은 이유: 이 값은 **한 번 넣고 다시 안 여는 값**이다.
+              자주 쓰는 것과 같은 무게로 두면 화면이 그만큼 흐려진다.
+          */}
+          {owner ? (
+            <p className="masthead__owner">
+              <Link href="/child">{owner}의 기록</Link>
+            </p>
+          ) : null}
+          <h1 className="masthead__title">아이가 남긴 것을, 그때의 말과 함께.</h1>
           <p className="masthead__lede">
-            한 해가 지나면 한 권으로 묶습니다. 그래서 실물은 마음 편히 정리하셔도 됩니다.
+            {/*
+              🔴 전에는 "아이가 만든 것"이었다. 초음파 사진은 아이가 만든 것이 아니다.
+                그리고 "아이의 말"도 아니다 — 그 시기에 말을 남기는 사람은 부모다.
+                한 줄 정의에서 살린 것은 **버리려고 기록한다** 하나다. 그게 이 서비스의 서명이다.
+            */}
+            초음파 사진부터 상장까지, 한 해가 지나면 한 권으로 묶습니다.
+            <strong> 그래서 실물은 마음 편히 정리하셔도 됩니다.</strong>
           </p>
         </div>
 
@@ -281,7 +299,7 @@ export default async function ArtworkListPage({
               </>
             ) : (
               <>
-                작품 {artworks.length}점 · <Link href="/recall">되짚어보기</Link>
+                남긴 것 {artworks.length}점 · <Link href="/recall">되짚어보기</Link>
               </>
             )}
           </p>
@@ -307,13 +325,29 @@ export default async function ArtworkListPage({
 
                   <div className="card__body">
                     {artwork.childQuote ? (
-                      <p className="quote">{highlight(artwork.childQuote, q)}</p>
+                      <p className="quote">
+                        <SaidBy by={artwork.quoteBy} />
+                        {highlight(artwork.childQuote, q)}
+                      </p>
                     ) : (
-                      <p className="quote quote--empty">아직 안 물어봤어요</p>
+                      <p className="quote quote--empty">{emptyQuoteText(artwork.quoteBy)}</p>
                     )}
-                    <time className="card__date" dateTime={artwork.madeOn.toISOString()}>
-                      {formatMadeOn(artwork.madeOn)}
-                    </time>
+                    <p className="card__when">
+                      {/*
+                        🔑 날짜 앞에 시간 축을 둔다. 부모가 그 시절을 부르는 단위가 그쪽이다 —
+                          "임신 24주"가 "2018년 9월 12일"보다 먼저 떠오른다.
+                          생일을 안 넣었으면 축이 없고, 그때는 날짜만 남는다.
+                      */}
+                      {(() => {
+                        const when = describeAge(artwork.madeOn, birth);
+                        return when.scale === "none" ? null : (
+                          <span className="card__age">{when.label}</span>
+                        );
+                      })()}
+                      <time className="card__date" dateTime={artwork.madeOn.toISOString()}>
+                        {formatMadeOn(artwork.madeOn)}
+                      </time>
+                    </p>
                   </div>
                 </Link>
               </li>
@@ -359,13 +393,14 @@ export default async function ArtworkListPage({
 function EmptyList() {
   return (
     <div className="blank">
-      <h2 className="blank__title">아직 남긴 작품이 없어요.</h2>
+      <h2 className="blank__title">아직 남긴 것이 없어요.</h2>
       <p className="blank__body">
-        아이가 그림을 내밀면 사진을 찍고, <strong>그때 아이가 한 말</strong>을 그대로 적어두세요.
-        그 말은 그 자리에서 안 물어보면 영영 얻을 수 없습니다.
+        아이가 그림을 내밀면, 병원에서 초음파 사진을 받아 나오면 — <strong>그 자리에서</strong>
+        사진을 찍고 <strong>그때의 말</strong>을 그대로 적어두세요.
+        그 말은 그 자리에서 안 받으면 영영 얻을 수 없습니다.
       </p>
       <Link href="/artwork/new" className="btn">
-        첫 작품 등록하기
+        첫 한 점 남기기
       </Link>
     </div>
   );

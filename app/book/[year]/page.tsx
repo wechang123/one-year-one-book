@@ -65,7 +65,7 @@ export default async function BookPage({
     <div className="page">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 작품 목록
+          ← 목록으로
         </Link>
       </nav>
 
@@ -81,10 +81,10 @@ export default async function BookPage({
                     지금 주문해도 되지만, 그게 올해의 전부는 아니라는 걸 화면이 말해야 한다.
                 */}
                 <strong>아직 진행 중인 해</strong>입니다. 지금까지 {artworks.length}점이 모였고, 앞으로
-                등록하는 작품도 이 책에 담깁니다.
+                등록하는 것도 이 책에 담깁니다.
               </>
             ) : (
-              <>{artworks.length > 0 ? `${artworks.length}점이 담긴 한 권입니다.` : "아직 담긴 작품이 없습니다."}</>
+              <>{artworks.length > 0 ? `${artworks.length}점이 담긴 한 권입니다.` : "아직 담긴 것이 없습니다."}</>
             )}
           </p>
         </div>
@@ -125,12 +125,12 @@ export default async function BookPage({
 
       {artworks.length === 0 ? (
         <div className="blank">
-          <h2 className="blank__title">{year}년에 등록한 작품이 아직 없어요.</h2>
+          <h2 className="blank__title">{year}년에 남긴 것이 아직 없어요.</h2>
           <p className="blank__body">
-            작품을 등록하면 <strong>만든 날의 연도</strong>를 보고 이 책에 저절로 담깁니다.
+            한 점 남기면 <strong>만든 날의 연도</strong>를 보고 이 책에 저절로 담깁니다.
           </p>
           <Link href="/artwork/new" className="btn">
-            작품 등록하기
+            한 점 남기기
           </Link>
         </div>
       ) : (

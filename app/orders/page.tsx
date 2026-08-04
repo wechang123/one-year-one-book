@@ -60,7 +60,7 @@ export default async function OrdersPage() {
     <div className="page">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 작품 목록
+          ← 목록으로
         </Link>
       </nav>
 
@@ -81,7 +81,7 @@ export default async function OrdersPage() {
         <div className="blank">
           <h2 className="blank__title">아직 넣으신 주문이 없어요.</h2>
           <p className="blank__body">
-            한 해의 작품을 <strong>책으로 묶으면</strong> 그 책을 주문할 수 있습니다.
+            한 해에 남긴 것을 <strong>책으로 묶으면</strong> 그 책을 주문할 수 있습니다.
           </p>
           <Link href="/" className="btn">
             책 묶으러 가기

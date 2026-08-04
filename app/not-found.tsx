@@ -23,11 +23,11 @@ export default function NotFound() {
       <div className="blank">
         <h1 className="blank__title">이 주소에는 아무것도 없어요.</h1>
         <p className="blank__body">
-          주소가 잘못되었거나 지워진 작품입니다.{" "}
+          주소가 잘못되었거나 지워진 기록입니다.{" "}
           <strong>남기신 기록은 목록에 그대로 있습니다.</strong>
         </p>
         <Link href="/" className="btn">
-          작품 목록으로
+          목록으로
         </Link>
       </div>
     </div>

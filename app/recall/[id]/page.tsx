@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
+import { describeAge } from "@/lib/age";
 
 /**
  * 되짚어보기 — 한 장 보기.
@@ -31,9 +32,11 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
       id: true,
       profileId: true,
       childQuote: true,
+      quoteBy: true,
       madeOn: true,
       createdAt: true,
       photo: { select: { width: true, height: true } },
+      profile: { select: { dueOn: true, bornOn: true } },
     },
   });
 
@@ -53,6 +56,8 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
   });
 
   const { width, height } = artwork.photo ?? {};
+  const when = describeAge(artwork.madeOn, artwork.profile);
+  const child = artwork.quoteBy === "CHILD";
 
   return (
     <div className="page page--narrow">
@@ -74,12 +79,15 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
       </figure>
 
       <p className="recallone__date">
+        {when.scale === "none" ? null : <>{when.label} · </>}
         <time dateTime={artwork.madeOn.toISOString()}>{formatMadeOn(artwork.madeOn)}</time>
       </p>
 
       {artwork.childQuote ? (
         <details className="recallone__said">
-          <summary className="recallone__toggle">그때 뭐라고 했는지 보기</summary>
+          <summary className="recallone__toggle">
+            그때 뭐라고 {child ? "했는지" : "적었는지"} 보기
+          </summary>
           <blockquote className="recallone__quote">{artwork.childQuote}</blockquote>
         </details>
       ) : (
@@ -88,7 +96,7 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
          *   펼 것이 없다. 그림과 날짜만 남는다 — 그게 "말을 못 받았을 때 남는 것"의 전부다.
          *   설명하지 않아도 옆의 다른 점들과 비교되면서 저절로 읽힌다.
          */
-        <p className="recallone__none">이 그림에는 말이 남아 있지 않습니다.</p>
+        <p className="recallone__none">여기엔 말이 남아 있지 않습니다.</p>
       )}
 
       <div className="form__actions">
@@ -102,7 +110,7 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
           </Link>
         )}
         <Link href={`/artwork/${artwork.id}`} className="btn btn--ghost">
-          이 작품 보기
+          이 한 점 보기
         </Link>
       </div>
     </div>

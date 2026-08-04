@@ -2,6 +2,9 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { describeAge, type Birth } from "@/lib/age";
+import { parseDateInputValue } from "@/lib/date";
+import { QuoteField } from "../quote-field";
 import { createArtwork, type NewArtworkState } from "./actions";
 
 /**
@@ -35,7 +38,16 @@ function formatMB(n: number): string {
   return `${(n / (1024 * 1024)).toFixed(1)}MB`;
 }
 
-export function NewArtworkForm({ today }: { today: string }) {
+export function NewArtworkForm({
+  today,
+  birth,
+  lastQuoteBy,
+}: {
+  today: string;
+  birth: Birth;
+  /** 마지막으로 고른 말의 주인. 처음이면 아이. */
+  lastQuoteBy: "CHILD" | "PARENT";
+}) {
   const [state, formAction] = useActionState(createArtwork, INITIAL);
 
   const [preview, setPreview] = useState<string | null>(null);
@@ -43,6 +55,20 @@ export function NewArtworkForm({ today }: { today: string }) {
   const [tooBig, setTooBig] = useState<string | null>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * 🔑 만든 날을 폼이 들고 있어야 하는 이유
+   *   이 값이 **말의 주인과 시간 축을 같이 정한다.** 2018년 9월이면 임신 24주고
+   *   그때는 아이가 말을 하지 않는다. 날짜를 고치면 그 두 가지가 그 자리에서 따라 바뀌어야
+   *   사용자가 무엇을 남기고 있는지 안다.
+   */
+  const [madeOnValue, setMadeOnValue] = useState(state.values?.madeOn || today);
+  useEffect(() => {
+    if (state.values?.madeOn) setMadeOnValue(state.values.madeOn);
+  }, [state]);
+
+  const madeOn = parseDateInputValue(madeOnValue);
+  const when = madeOn ? describeAge(madeOn, birth) : null;
 
   // 오류가 나면 문제가 된 칸으로 초점을 옮긴다. 폼이 길어지면 오류 문구만으로는
   // 어디를 고쳐야 하는지 찾아야 하고, 폰에서는 그게 스크롤이다.
@@ -140,34 +166,12 @@ export function NewArtworkForm({ today }: { today: string }) {
         <input type="hidden" name="height" value={size?.height ?? ""} />
       </div>
 
-      <div className="field">
-        <label className="field__label" htmlFor="childQuote">
-          아이가 한 말
-        </label>
-        <textarea
-          id="childQuote"
-          name="childQuote"
-          rows={3}
-          className="field__input"
-          defaultValue={state.values?.childQuote ?? ""}
-          placeholder="아이가 한 말을 그대로 적어주세요"
-          aria-describedby="quote-help"
-        />
-        <p className="field__help" id="quote-help">
-          {/*
-            🔑 이 문구가 콘텐츠 품질을 앱이 통제하는 **유일한 지점**이다.
-              전에는 "이건 뭐야?"를 제안하고 있었는데, 그 질문의 답은 이름 하나다 — "닭."
-              실제로 ★7장(그림만 보면 모를 문장) 중 **그 질문의 답이 하나도 없다.**
-              전부 "왜 그랬는지"·"무슨 일이 있었는지"에서 나온 말이다.
-              앱이 시키는 질문과 앱이 자랑하는 문장이 다른 질문에서 나오고 있었다.
-          */}
-          <strong>&ldquo;이거 무슨 얘기야?&rdquo;</strong> 하고 물어보면 이야기가 나옵니다.
-          &ldquo;이건 뭐야?&rdquo;라고 물으면 &ldquo;닭.&rdquo; 하고 끝납니다.
-          <br />
-          지금 못 물어봤으면 비워두세요. 나중에 채울 수 있습니다.
-        </p>
-      </div>
-
+      {/*
+        🔑 날짜가 말보다 위에 있다. 순서를 바꿨다.
+          날짜가 **이 자리에 무엇을 적어야 하는지**를 정하기 때문이다 —
+          태어나기 전이면 여기 남는 것은 부모의 말이고, 그 뒤면 아이의 말이다.
+          말을 먼저 적게 해놓고 날짜를 나중에 물으면, 다 적고 나서 주인이 바뀐다.
+      */}
       <div className="field">
         <label className="field__label" htmlFor="madeOn">
           만든 날 <span className="field__req">필수</span>
@@ -179,6 +183,7 @@ export function NewArtworkForm({ today }: { today: string }) {
           type="date"
           className="field__input field__input--date"
           defaultValue={state.values?.madeOn || today}
+          onChange={(e) => setMadeOnValue(e.target.value)}
           max={today}
           aria-describedby="date-help"
         />
@@ -187,9 +192,27 @@ export function NewArtworkForm({ today }: { today: string }) {
             사진 찍은 날이 아니라 만든 날이다. 벽에 붙어 있던 그림을 오늘 찍는 일이 흔하다.
             그래서 EXIF에서 자동으로 채우지 않는다. (docs/03-feasibility.md §3-2)
           */}
-          오늘로 채워뒀습니다. 예전에 만든 것이면 바꿔주세요.
+          오늘로 채워뒀습니다. 예전 것이면 바꿔주세요 — <strong>초음파 사진처럼 몇 해 전 것도 됩니다.</strong>
+          {/*
+            🔑 고른 날짜가 아이의 어느 시점이었는지 그 자리에서 말한다.
+              날짜만으로는 "2018년 9월 12일"이 임신 몇 주였는지 부모도 바로 안 떠오른다.
+              축이 보이면 연도를 잘못 친 것도 여기서 걸린다.
+          */}
+          {when && when.scale !== "none" ? (
+            <>
+              <br />
+              이때는 <strong>{when.label}</strong>입니다.
+            </>
+          ) : null}
         </p>
       </div>
+
+      <QuoteField
+        birth={birth}
+        madeOn={madeOn}
+        defaultQuote={state.values?.childQuote ?? ""}
+        defaultQuoteBy={lastQuoteBy}
+      />
 
       <div className="form__actions">
         {/*

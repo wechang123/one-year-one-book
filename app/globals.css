@@ -232,10 +232,36 @@ a {
   font-style: italic;
 }
 
-.card__date {
+/*
+ * 시간 축과 날짜를 한 줄에 둔다. 축이 앞이다 —
+ * 부모가 그 시절을 부르는 단위가 "임신 24주"이지 "2018년 9월 12일"이 아니다.
+ * 생일을 안 넣었으면 축이 없고 날짜만 남는다.
+ */
+.card__when {
+  margin: 0.35rem 0 0;
   margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.4rem;
   font-size: 0.8125rem;
   color: var(--ink-soft);
+}
+
+.card__age {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.card__age::after {
+  content: "·";
+  margin-left: 0.4rem;
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+
+.card__date {
+  font-size: inherit;
+  color: inherit;
 }
 
 /*
@@ -1226,4 +1252,96 @@ a.recall:hover {
   max-width: 36ch;
   color: var(--ink-soft);
   font-size: 0.9375rem;
+}
+
+/* ── 말의 주인 ─────────────────────────────────────────────
+ *
+ * 🔑 표식이 색만으로 구분되면 안 된다. 이 저장소는 다른 곳에서도 같은 규칙을 지켰다.
+ *   그래서 글자로 쓴다 — "부모가 남긴 말". 색은 거들 뿐이다.
+ */
+.saidby {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-soft);
+  vertical-align: 0.08em;
+  white-space: nowrap;
+}
+
+.saidby--parent {
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+/* 상세에서는 한 줄을 통째로 쓴다. 자리가 있고, 한 점을 오래 보는 자리다. */
+.detail__side > .saidby {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+/* ── 누구의 말인가 (등록·편집) ────────────────────────────── */
+.speaker {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1rem;
+}
+
+.speaker__legend {
+  padding: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* 44px — 한 손 엄지로 누르는 자리라 라디오 자체보다 라벨이 커야 한다. */
+.speaker__opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.speaker__opt input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--accent);
+}
+
+.speaker__fixed {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* ── 설명 문단 (아이 정보 화면) ─────────────────────────────
+ *
+ * 화면 아래에서 "왜 이렇게 했는지"를 말하는 자리. 폼과 섞이지 않게 선으로 끊는다.
+ */
+.note {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.note__body {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.note__body strong {
+  color: var(--ink);
 }

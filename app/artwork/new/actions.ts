@@ -5,6 +5,7 @@ import { getPrisma } from "@/lib/prisma";
 import { parseDateInputValue, todayInputValue } from "@/lib/date";
 import { formatBytes, sniffImage } from "@/lib/image";
 import { getNow } from "@/lib/now";
+import { readQuoteBy, settleQuoteBy } from "@/lib/speaker";
 
 /**
  * 작품 등록.
@@ -38,7 +39,7 @@ export type NewArtworkState = {
    *   사진은 어차피 다시 골라야 하지만(브라우저가 file 입력을 채워줄 수 없다),
    *   손으로 친 글자는 남아야 한다.
    */
-  values?: { childQuote: string; madeOn: string };
+  values?: { childQuote: string; madeOn: string; quoteBy: "CHILD" | "PARENT" };
 };
 
 /** 브라우저가 보낸 원본 크기. 화면 표시용이라 못 믿을 값이면 그냥 버린다. */
@@ -56,9 +57,12 @@ export async function createArtwork(
   const quoteRaw = formData.get("childQuote");
   const madeOnRaw = formData.get("madeOn");
 
+  const pickedBy = readQuoteBy(formData.get("quoteBy"));
+
   const values = {
     childQuote: typeof quoteRaw === "string" ? quoteRaw : "",
     madeOn: typeof madeOnRaw === "string" ? madeOnRaw : "",
+    quoteBy: pickedBy,
   };
 
   // ── 사진 ─────────────────────────────────────────────
@@ -119,6 +123,9 @@ export async function createArtwork(
     return { error: "아이 정보를 찾지 못했습니다. 컨테이너를 다시 시작하면 초기 데이터가 만들어집니다.", values };
   }
 
+  // 태어나기 전이면 화면이 무엇을 보냈든 부모의 말이다. (lib/speaker.ts)
+  const quoteBy = settleQuoteBy(pickedBy, madeOn, profile);
+
   /**
    * 🔑 작품과 사진을 한 번의 create로 만든다.
    *   따로 만들면 사진 저장이 실패했을 때 사진 없는 작품이 남고,
@@ -129,6 +136,7 @@ export async function createArtwork(
     data: {
       profileId: profile.id,
       childQuote: quote === "" ? null : quote,
+      quoteBy,
       madeOn,
       // [데모 초기화]가 지울 대상. 시드는 남고 직접 만든 것만 사라진다.
       origin: "USER",

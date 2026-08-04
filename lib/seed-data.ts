@@ -31,6 +31,18 @@ export const SEED_PROFILE_ID = "seed-profile";
 /** 가상의 아이. 실존 인물이 아니다. */
 export const CHILD_NAME = "하늘";
 
+/**
+ * 출산예정일과 태어난 날.
+ *
+ * 🔑 **일부러 다르게 뒀다.** 예정일보다 엿새 늦게 태어난 아이다.
+ *   두 값을 따로 저장하는 이유가 이 엿새에 다 들어 있다 —
+ *   태어난 날을 40주 0일로 놓고 거꾸로 세면 임신 구간의 주차가 통째로 밀린다.
+ *   시드가 두 값을 같게 두면 그 차이가 화면에 한 번도 안 나타나고,
+ *   **읽는 사람은 필드가 왜 둘인지 알 수 없다.**
+ */
+export const DUE_ON = "2019-03-08";
+export const BORN_ON = "2019-03-14";
+
 export type SeedArtwork = {
   file: string;
   madeOn: string;
@@ -43,6 +55,16 @@ export type SeedArtwork = {
    *   그래서 두 점을 비워 그 상태를 시드에 넣는다 — 결손이 아니라 **상태**다.
    */
   quote: string | null;
+  /**
+   * 말의 주인. 안 적으면 아이다.
+   *
+   * 🔴 **이 필드가 없어서 실제로 버그가 났다.** quoteBy를 스키마에 넣고 화면까지 다 연결한 뒤
+   *   시드에는 안 넣었더니, 심사자가 값을 바꾼 시드 행이 [처음 상태로 되돌리기]에도
+   *   **안 돌아왔다.** origin은 SEED라 삭제 대상이 아니고, 재적용 update가 이 열을 안 건드렸기 때문이다.
+   *   초기화가 "USER 삭제 + 시드 재적용"인 이유가 바로 이건데, 재적용이 새 열을 빠뜨리면 그 설계가 샌다.
+   *   **되돌릴 수 있는 열을 늘릴 때마다 이 파일도 같이 늘어나야 한다.**
+   */
+  by?: "CHILD" | "PARENT";
   width: number;
   height: number;
 };
@@ -155,10 +177,12 @@ export function seedArtworkId(file: string): string {
 export async function applySeed(prisma: SeedClient): Promise<number> {
   const seedDir = join(process.cwd(), "public", "seed");
 
+  const birth = { dueOn: new Date(DUE_ON), bornOn: new Date(BORN_ON) };
+
   const profile = await prisma.profile.upsert({
     where: { id: SEED_PROFILE_ID },
-    create: { id: SEED_PROFILE_ID, childName: CHILD_NAME, origin: "SEED" },
-    update: { childName: CHILD_NAME },
+    create: { id: SEED_PROFILE_ID, childName: CHILD_NAME, origin: "SEED", ...birth },
+    update: { childName: CHILD_NAME, ...birth },
   });
 
   for (const item of ARTWORKS) {
@@ -177,6 +201,7 @@ export async function applySeed(prisma: SeedClient): Promise<number> {
         id,
         profileId: profile.id,
         childQuote: item.quote,
+        quoteBy: item.by ?? "CHILD",
         // "2026-01-08"은 UTC 자정으로 해석된다. 컬럼이 date라 시각은 잘려나가고
         // 날짜만 남는다. 어느 시간대에서 읽어도 같은 날짜다.
         madeOn: new Date(item.madeOn),
@@ -187,6 +212,7 @@ export async function applySeed(prisma: SeedClient): Promise<number> {
       //   심사자가 고친 설명·날짜를 여기서 원래 값으로 되돌린다.
       update: {
         childQuote: item.quote,
+        quoteBy: item.by ?? "CHILD",
         madeOn: new Date(item.madeOn),
         // 바이트는 다시 쓰지 않는다 — 같은 파일이라 쓸 이유가 없다.
         // 그래도 upsert인 이유: 사진만 없는 작품이 남았을 때 스스로 복구한다.

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { todayInputValue } from "@/lib/date";
 import { getNow } from "@/lib/now";
+import { getPrisma } from "@/lib/prisma";
 import { NewArtworkForm } from "./form";
 
 /**
@@ -24,14 +25,34 @@ import { NewArtworkForm } from "./form";
  */
 export const dynamic = "force-dynamic";
 
-export default function NewArtworkPage() {
+export default async function NewArtworkPage() {
   const today = todayInputValue(getNow());
+  const prisma = getPrisma();
+
+  const profile = await prisma.profile.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { id: true, dueOn: true, bornOn: true },
+  });
+
+  /**
+   * 🔑 마지막으로 고른 말의 주인을 기본값으로 되돌려준다.
+   *   아이가 말을 시작하는 시점은 아이마다 다르고 **앱은 그걸 모른다. 부모는 안다.**
+   *   그래서 앱이 추측하는 대신 **직전 선택을 그대로 다시 제안한다** —
+   *   한 번 고르면 그 뒤로는 대체로 같고, 바뀌는 날에만 한 번 더 고르면 된다.
+   */
+  const last = profile
+    ? await prisma.artwork.findFirst({
+        where: { profileId: profile.id },
+        orderBy: { createdAt: "desc" },
+        select: { quoteBy: true },
+      })
+    : null;
 
   return (
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 작품 목록
+          ← 목록으로
         </Link>
       </nav>
 
@@ -40,13 +61,17 @@ export default function NewArtworkPage() {
         <p className="form__lede">
           {/*
             여기서 이미 목적을 말해둔다. 저장 후에 처음 듣는 것보다,
-            무엇을 위해 적는지 알고 적는 편이 아이 말을 더 정확히 받아적게 만든다.
+            무엇을 위해 적는지 알고 적는 편이 그때의 말을 더 정확히 받아적게 만든다.
           */}
-          사진과 그때 한 말을 남겨두면, 한 해가 지나 한 권으로 묶입니다.
+          사진과 그때의 말을 남겨두면, 한 해가 지나 한 권으로 묶입니다.
         </p>
       </header>
 
-      <NewArtworkForm today={today} />
+      <NewArtworkForm
+        today={today}
+        birth={{ dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null }}
+        lastQuoteBy={last?.quoteBy ?? "CHILD"}
+      />
     </div>
   );
 }

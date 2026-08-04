@@ -26,16 +26,21 @@ export default async function EditArtworkPage({
   const artwork = await prisma.artwork.findUnique({
     where: { id },
     // 여기서도 사진 바이트는 안 읽는다. 썸네일은 <img>가 따로 받아온다.
-    select: { id: true, childQuote: true, madeOn: true },
+    select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
   });
 
   if (!artwork) notFound();
+
+  const profile = await prisma.profile.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { dueOn: true, bornOn: true },
+  });
 
   return (
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href={`/artwork/${artwork.id}`} className="btn btn--ghost">
-          ← 작품으로
+          ← 이 한 점으로
         </Link>
       </nav>
 
@@ -44,8 +49,8 @@ export default async function EditArtworkPage({
       </header>
 
       {/*
-        어떤 작품을 고치는 중인지 보여준다. 목록에 비슷한 그림이 여러 장이면
-        제목 없이 폼만 놓았을 때 엉뚱한 작품을 고칠 수 있다.
+        어떤 것을 고치는 중인지 보여준다. 목록에 비슷한 사진이 여러 장이면
+        폼만 놓았을 때 엉뚱한 것을 고칠 수 있다.
       */}
       <figure className="editthumb">
         <img className="editthumb__img" src={`/api/photo/${artwork.id}`} alt="" />
@@ -57,8 +62,10 @@ export default async function EditArtworkPage({
       <EditArtworkForm
         id={artwork.id}
         childQuote={artwork.childQuote ?? ""}
+        quoteBy={artwork.quoteBy}
         madeOn={toDateInputValue(artwork.madeOn)}
         today={todayInputValue(getNow())}
+        birth={{ dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null }}
       />
     </div>
   );

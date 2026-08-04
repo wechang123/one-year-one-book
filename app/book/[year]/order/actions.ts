@@ -166,7 +166,7 @@ export async function createOrder(_prev: NewOrderState, formData: FormData): Pro
     where: { profileId: profile.id, madeOn: yearRange(year) },
   });
   if (artworks === 0) {
-    return { error: `${year}년에 담긴 작품이 없어 주문할 수 없습니다.`, values };
+    return { error: `${year}년에 담긴 것이 없어 주문할 수 없습니다.`, values };
   }
 
   /**

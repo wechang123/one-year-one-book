@@ -23,7 +23,21 @@ const INITIAL: EditArtworkState = {};
  *   비워두는 것을 더 크게 쓰면 앱이 스스로 "안 해도 된다"고 밀어내는 것이고,
  *   더 작게 쓰면 비워두는 것이 실패로 읽힌다. **둘 다 정상이라고 말해야 한다.**
  */
-export function InlineQuoteForm({ id, madeOn }: { id: string; madeOn: string }) {
+export function InlineQuoteForm({
+  id,
+  madeOn,
+  quoteBy,
+}: {
+  id: string;
+  madeOn: string;
+  /**
+   * 🔑 여기서는 **고르게 하지 않는다.** 이 폼은 등록 직후 한 칸짜리다.
+   *   말의 주인은 방금 등록 화면에서 정해졌고, 그때 고른 값을 그대로 이어받는다.
+   *   바꾸려면 편집 화면으로 가면 된다 — 여기서 라디오까지 띄우면
+   *   "지금 한 줄만 적으면 된다"는 이 자리의 성질이 무너진다.
+   */
+  quoteBy: "CHILD" | "PARENT";
+}) {
   const [state, formAction] = useActionState(updateArtwork, INITIAL);
 
   return (
@@ -31,6 +45,7 @@ export function InlineQuoteForm({ id, madeOn }: { id: string; madeOn: string }) 
       <input type="hidden" name="id" value={id} />
       {/* 날짜는 바꾸지 않는다. 액션이 요구하는 값이라 그대로 되돌려 보낸다. */}
       <input type="hidden" name="madeOn" value={madeOn} />
+      <input type="hidden" name="quoteBy" value={quoteBy} />
 
       {state.error ? (
         <p className="form__error" role="alert">
@@ -47,11 +62,23 @@ export function InlineQuoteForm({ id, madeOn }: { id: string; madeOn: string }) 
         rows={2}
         className="field__input"
         defaultValue={state.values?.childQuote ?? ""}
-        placeholder="아이가 한 말을 그대로 적어주세요"
+        placeholder={
+          quoteBy === "CHILD"
+            ? "아이가 한 말을 그대로 적어주세요"
+            : "지금 본 것, 지금 하고 싶은 말을 그대로 적어주세요"
+        }
         aria-describedby="inline-quote-help"
       />
       <p className="field__help" id="inline-quote-help">
-        <strong>&ldquo;이거 무슨 얘기야?&rdquo;</strong> 하고 물어보면 이야기가 나옵니다.
+        {quoteBy === "CHILD" ? (
+          <>
+            <strong>&ldquo;이거 무슨 얘기야?&rdquo;</strong> 하고 물어보면 이야기가 나옵니다.
+          </>
+        ) : (
+          <>
+            아이가 아직 말을 안 하는 시기라 <strong>부모의 말</strong>로 남습니다.
+          </>
+        )}
       </p>
 
       <div className="inlinequote__actions">
