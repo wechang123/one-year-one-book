@@ -4,6 +4,7 @@ import { formatMadeOn } from "@/lib/date";
 import { describeAge, timeBand, type TimeBand } from "@/lib/age";
 import { SaidBy, emptyQuoteText } from "./artwork/said-by";
 import { Camera } from "./icons";
+import { DemoResetButton } from "./demo/reset-button";
 
 /**
  * 타임라인 — v2의 첫 화면.
@@ -177,6 +178,22 @@ export default async function TimelinePage() {
           <Camera />한 점 더 남기기
         </Link>
       </p>
+
+      {/*
+        🔴 이 구역은 v1의 홈(지금의 `/grid`)에 있었다. 첫 화면이 바뀌면서 따라왔다.
+          v1에서 이 자리를 고른 근거가 *"처음 여는 사람에게는 필요하고 주 사용자에게는
+          필요 없는 기능이라, 찾으면 보이되 먼저 보이지는 않아야 한다"*였는데,
+          **첫 화면의 맨 아래**라는 조건이 그 근거의 전부다. 화면이 바뀌었으니 자리도 따라간다.
+
+          안 옮겼으면 `/grid`를 안 들른 사람은 이걸 영영 못 본다 —
+          그리고 되돌릴 수 없으면 아무도 위의 버튼을 안 눌러본다.
+      */}
+      <footer className="demo">
+        <p className="demo__lede">
+          마음껏 등록하고 고치고 주문해 보세요. 언제든 처음 상태로 되돌릴 수 있습니다.
+        </p>
+        <DemoResetButton />
+      </footer>
     </div>
   );
 }

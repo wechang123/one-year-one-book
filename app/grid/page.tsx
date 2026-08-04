@@ -1,14 +1,11 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
-import { isOngoing } from "@/lib/book";
 import { subjectParticle } from "@/lib/korean";
 import { describeAge, describeSpan, timeBand } from "@/lib/age";
 import { groupByYear } from "@/lib/group";
 import { SaidBy, emptyQuoteText } from "../artwork/said-by";
 import { Camera, Search } from "../icons";
-import { BooksStrip, type YearRow } from "../books-strip";
-import { DemoResetButton } from "../demo/reset-button";
 
 /**
  * 작품 목록 — 이 서비스의 첫 화면.
@@ -90,7 +87,7 @@ export default async function GridPage({
    */
   const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
 
-  const [artworks, allMadeOn, books, orderCount, wordless] = await Promise.all([
+  const [artworks, allMadeOn, wordless] = await Promise.all([
     prisma.artwork.findMany({
       where: profile
         ? {
@@ -147,13 +144,6 @@ export default async function GridPage({
       where: profile ? { profileId: profile.id } : undefined,
       select: { madeOn: true },
     }),
-    prisma.collection.findMany({
-      where: profile ? { profileId: profile.id } : undefined,
-      select: { year: true, title: true },
-    }),
-    prisma.order.count({
-      where: profile ? { collection: { profileId: profile.id } } : undefined,
-    }),
     // 검색으로 영원히 못 찾는 것이 몇 점인지. 화면이 그 사실을 말하기 위해 센다.
     prisma.artwork.count({
       where: profile ? { profileId: profile.id, childQuote: null } : { childQuote: null },
@@ -181,29 +171,7 @@ export default async function GridPage({
     ? null
     : Math.min(...allMadeOn.map((a) => a.madeOn.getUTCFullYear()));
 
-  /**
-   * 🔑 수록작은 madeOn의 연도로 정해진다. 그래서 여기서도 그 규칙 그대로 센다.
-   *   madeOn은 date 컬럼이라 UTC 자정이다 — 연도도 UTC로 읽어야 1월 1일이 옆 해로 안 샌다.
-   *
-   * 🔴 세는 대상이 화면에 보이는 목록이 아니라 **그 아이의 전체**다.
-   *   책에 담기는 것은 검색 결과가 아니라 그 해에 남긴 전부이기 때문이다.
-   */
-  const byYear = new Map<number, number>();
-  for (const a of allMadeOn) {
-    const y = a.madeOn.getUTCFullYear();
-    byYear.set(y, (byYear.get(y) ?? 0) + 1);
-  }
 
-  const titleOf = new Map(books.map((b) => [b.year, b.title]));
-
-  const yearRows: YearRow[] = [...byYear.entries()]
-    .sort((a, b) => b[0] - a[0])
-    .map(([year, count]) => ({
-      year,
-      count,
-      ongoing: isOngoing(year),
-      bookTitle: titleOf.get(year) ?? null,
-    }));
 
   return (
     <div className="page">
@@ -513,29 +481,13 @@ export default async function GridPage({
       )}
 
       {/*
-        🔑 책 줄은 작품 아래다. 위가 아니다.
-          이 서비스의 주인공은 **아이가 만든 것과 아이가 한 말**이고,
-          책은 그 콘텐츠를 활용하는 쪽이다. 화면에서 먼저 보이는 것이 주인공이라,
-          책이 위에 있으면 첫 5초가 "책 만드는 서비스"라고 말한다.
-
-          그렇다고 홈에서 빼지는 않는다. 빼면 책 만들기 → 주문 → 상태 변경으로 가는
-          동선이 끊기고, "직접 만들어보라고 비워둔" 시드 배치가 무의미해진다.
-          위가 아니라 아래 — 그게 부가 기능의 자리다.
+        🔴 여기 책 줄(`BooksStrip`)이 있었다. 지웠다.
+          v1에서 이 자리에 둔 근거는 *"책 만들기 → 주문 → 상태 변경으로 가는 동선이 끊기면
+          안 된다"*였다. v2에는 **사이드바에 `책` 칸이 있어서** 그 동선이 끊기지 않는다.
+          같은 줄을 두 화면에서 그리면, 한쪽에서 만든 책이 다른 쪽에 안 보일 때
+          어느 쪽이 진짜인지 물어야 한다. 그릴 곳은 하나면 된다.
       */}
-      <BooksStrip rows={yearRows} orderCount={orderCount} />
 
-      {/*
-        🔑 맨 아래에 조용히 둔다.
-          처음 여는 사람에게는 필요하고 주 사용자에게는 필요 없는 기능이라,
-          찾으면 보이되 먼저 보이지는 않아야 한다.
-          그리고 이게 있어야 위의 버튼들이 눌린다 — 되돌릴 수 없으면 아무도 안 눌러본다.
-      */}
-      <footer className="demo">
-        <p className="demo__lede">
-          마음껏 등록하고 고치고 주문해 보세요. 언제든 처음 상태로 되돌릴 수 있습니다.
-        </p>
-        <DemoResetButton />
-      </footer>
     </div>
   );
 }
