@@ -91,9 +91,6 @@ export default async function ArtworkListPage() {
         </Link>
       </header>
 
-      {/* 책은 이 서비스의 목적이라 메뉴 뒤에 숨기지 않는다. 다만 등록보다 빈도가 낮아 아래에 둔다. */}
-      <BooksStrip rows={yearRows} orderCount={orderCount} />
-
       {artworks.length === 0 ? (
         <EmptyList />
       ) : (
@@ -135,6 +132,18 @@ export default async function ArtworkListPage() {
           </ul>
         </>
       )}
+
+      {/*
+        🔑 책 줄은 작품 아래다. 위가 아니다.
+          이 서비스의 주인공은 **아이가 만든 것과 아이가 한 말**이고,
+          책은 그 콘텐츠를 활용하는 쪽이다. 화면에서 먼저 보이는 것이 주인공이라,
+          책이 위에 있으면 첫 5초가 "책 만드는 서비스"라고 말한다.
+
+          그렇다고 홈에서 빼지는 않는다. 빼면 책 만들기 → 주문 → 상태 변경으로 가는
+          동선이 끊기고, "직접 만들어보라고 비워둔" 시드 배치가 무의미해진다.
+          위가 아니라 아래 — 그게 부가 기능의 자리다.
+      */}
+      <BooksStrip rows={yearRows} orderCount={orderCount} />
 
       {/*
         🔑 맨 아래에 조용히 둔다.
