@@ -5,6 +5,7 @@ import { formatMoment } from "@/lib/date";
 import { isOrderNo } from "@/lib/order-no";
 import { ORDER_STATUSES, STATUS, stepOf, TOTAL_STEPS, type OrderStatus } from "@/lib/order-status";
 import { AdvanceButton } from "./advance";
+import { ArrowLeft } from "../../icons";
 
 /**
  * 주문 상세.
@@ -59,7 +60,8 @@ export default async function OrderDetailPage({
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href="/orders" className="btn btn--ghost">
-          ← 주문 목록
+          <ArrowLeft />
+          주문 목록
         </Link>
       </nav>
 

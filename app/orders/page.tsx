@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { STATUS, stepOf, TOTAL_STEPS, type OrderStatus } from "@/lib/order-status";
 import { formatDay } from "@/lib/date";
+import { ArrowLeft } from "../icons";
 
 /**
  * 주문 목록.
@@ -60,7 +61,8 @@ export default async function OrdersPage() {
     <div className="page">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 목록으로
+          <ArrowLeft />
+          목록으로
         </Link>
       </nav>
 

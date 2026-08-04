@@ -3,6 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { describeAge } from "@/lib/age";
 import { SaidBy, emptyQuoteText } from "../artwork/said-by";
+import { ArrowLeft } from "../icons";
 
 /**
  * 되짚어보기 — 입구.
@@ -40,7 +41,8 @@ export default async function RecallPage() {
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 목록으로
+          <ArrowLeft />
+          목록으로
         </Link>
       </nav>
 

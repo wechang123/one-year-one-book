@@ -4,6 +4,7 @@ import { getPrisma } from "@/lib/prisma";
 import { toDateInputValue, todayInputValue } from "@/lib/date";
 import { getNow } from "@/lib/now";
 import { EditArtworkForm } from "./form";
+import { ArrowLeft } from "../../../icons";
 
 /**
  * 설명 편집.
@@ -40,7 +41,8 @@ export default async function EditArtworkPage({
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href={`/artwork/${artwork.id}`} className="btn btn--ghost">
-          ← 이 한 점으로
+          <ArrowLeft />
+          이 한 점으로
         </Link>
       </nav>
 
