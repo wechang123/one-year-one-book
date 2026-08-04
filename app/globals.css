@@ -175,8 +175,20 @@ a {
   /*
    * 비율을 고정해 둔다. 사진이 도착하기 전에도 칸의 높이가 정해져 있어서
    * 스크롤 중에 아래 카드들이 밀려 내려가지 않는다.
+   *
+   * 🔴 4/3이었다. **그 값은 가로 그림만 들어오던 시절의 것이다.**
+   *   지금은 세로 A4 상장과 가로 8절 그림이 같은 격자에 섞인다.
+   *   자르지 않기로 했으므로(아래 contain) 남는 것은 여백이고, 여백은 틀 비율이 정한다.
+   *
+   *     4/3 틀 · A4 세로(1:1.41) → 폭의 53%만 씀 (좌우 47% 여백)
+   *     1/1 틀 · A4 세로        → 폭의 71%   (좌우 29%)
+   *     1/1 틀 · 8절 가로(4:3)  → 높이의 75% (위아래 25%)
+   *
+   *   정사각은 어느 쪽에도 유리하지 않은 대신 **어느 쪽도 크게 손해 보지 않는다.**
+   *   대가는 카드가 조금 높아져 한 화면에 덜 들어오는 것이고, 그건 받아들인다 —
+   *   격자는 색인이고, 색인에서 절반이 여백인 칸은 색인 구실을 못 한다.
    */
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   background: #f3efe8;
   /*
    * 🔑 relative + 아래의 absolute가 한 쌍이다. 빼면 비율이 깨진다.
@@ -1344,4 +1356,44 @@ a.recall:hover {
 
 .note__body strong {
   color: var(--ink);
+}
+
+/* ── 사진이 들어설 자리 (등록 화면) ──────────────────────────
+ *
+ * 🔑 고르기 전에 이 자리가 무엇을 받는지 말한다.
+ *   비율을 목록 카드와 같게 둬서 "여기서 본 자리가 목록에서도 같은 모양"이 되게 한다.
+ *   점선은 장식이 아니라 **아직 비었다**는 표시다 — 실선 테두리는 채워진 칸에 쓴다.
+ */
+.dropslot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  aspect-ratio: 1 / 1;
+  /* 폰 세로에서 화면을 다 먹지 않게. 저장 버튼이 밀려나면 오히려 손해다. */
+  max-height: 42vh;
+  margin-bottom: 0.6rem;
+  padding: 1.25rem;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  text-align: center;
+  cursor: pointer;
+}
+
+.dropslot:hover {
+  border-color: var(--ink-soft);
+}
+
+.dropslot__title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.dropslot__body {
+  max-width: 30ch;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
 }
