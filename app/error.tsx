@@ -53,7 +53,7 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
       <div className="blank">
         <h1 className="blank__title">지금은 기록을 불러오지 못했어요.</h1>
         <p className="blank__body">
-          <strong>남기신 작품은 그대로 있습니다.</strong> 잠시 뒤 다시 시도해 주세요.
+          <strong>남기신 것은 그대로 있습니다.</strong> 잠시 뒤 다시 시도해 주세요.
         </p>
 
         <div className="form__actions form__actions--center">
@@ -61,7 +61,7 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
             {pending ? "다시 불러오는 중…" : "다시 시도"}
           </button>
           <Link href="/" className="btn btn--ghost">
-            작품 목록으로
+            목록으로
           </Link>
         </div>
       </div>

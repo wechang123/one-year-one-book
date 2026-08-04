@@ -33,16 +33,16 @@ export function DemoResetButton() {
           <p className="saved" role="status">
             <strong>처음 상태로 되돌렸습니다.</strong>
             <span className="saved__sub">
-              직접 만드신 작품·책·주문을 모두 지우고, 처음부터 있던 작품의 말과 날짜를
+              직접 남기신 것과 책·주문을 모두 지우고, 처음부터 있던 것의 말과 날짜를
               원래대로 돌려놨습니다.
             </span>
           </p>
         ) : null}
 
         <p className="reset__what">
-          <strong>지워지는 것</strong> — 직접 등록한 작품과 사진, 직접 만든 책과 그 책의 주문·이력
+          <strong>지워지는 것</strong> — 직접 등록한 사진과 말, 직접 만든 책과 그 책의 주문·이력
           <br />
-          <strong>남는 것</strong> — 처음부터 있던 작품 10점. 그중 설명이나 날짜를 고치셨다면{" "}
+          <strong>남는 것</strong> — 처음부터 있던 것. 그중 말이나 날짜를 고치셨다면{" "}
           <strong>원래 문장으로 되돌아갑니다.</strong>
         </p>
 

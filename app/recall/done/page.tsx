@@ -71,7 +71,7 @@ export default async function RecallDonePage() {
 
         <div className="form__actions form__actions--center">
           <Link href="/" className="btn">
-            작품 목록으로
+            목록으로
           </Link>
         </div>
       </div>
