@@ -150,14 +150,20 @@ export function NewArtworkForm({ today }: { today: string }) {
           rows={3}
           className="field__input"
           defaultValue={state.values?.childQuote ?? ""}
-          placeholder="이건 뭐야? 하고 물어보고, 대답을 그대로 적어보세요."
+          placeholder="아이가 한 말을 그대로 적어주세요"
           aria-describedby="quote-help"
         />
         <p className="field__help" id="quote-help">
           {/*
-            비워도 저장되게 만들었으면, 비워도 된다고 화면이 말해야 한다.
-            말하지 않으면 사용자는 필수라고 가정하고 지어낸다. 지어낸 말은 이 서비스에 쓸모가 없다.
+            🔑 이 문구가 콘텐츠 품질을 앱이 통제하는 **유일한 지점**이다.
+              전에는 "이건 뭐야?"를 제안하고 있었는데, 그 질문의 답은 이름 하나다 — "닭."
+              실제로 ★7장(그림만 보면 모를 문장) 중 **그 질문의 답이 하나도 없다.**
+              전부 "왜 그랬는지"·"무슨 일이 있었는지"에서 나온 말이다.
+              앱이 시키는 질문과 앱이 자랑하는 문장이 다른 질문에서 나오고 있었다.
           */}
+          <strong>&ldquo;이거 무슨 얘기야?&rdquo;</strong> 하고 물어보면 이야기가 나옵니다.
+          &ldquo;이건 뭐야?&rdquo;라고 물으면 &ldquo;닭.&rdquo; 하고 끝납니다.
+          <br />
           지금 못 물어봤으면 비워두세요. 나중에 채울 수 있습니다.
         </p>
       </div>
