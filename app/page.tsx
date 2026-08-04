@@ -173,6 +173,15 @@ export default async function ArtworkListPage({
   const nothingYet = allMadeOn.length === 0;
 
   /**
+   * 🔑 이 아카이브가 어디까지 거슬러 올라가는가. 머리말 요약에 쓴다.
+   *   8~9년을 쌓는 서비스에서 **가장 먼저 남긴 것이 언제인지**가 규모를 말하는 수치다.
+   *   `allMadeOn`을 한 번 훑을 뿐 조회를 늘리지 않는다.
+   */
+  const firstYear = nothingYet
+    ? null
+    : Math.min(...allMadeOn.map((a) => a.madeOn.getUTCFullYear()));
+
+  /**
    * 🔑 수록작은 madeOn의 연도로 정해진다. 그래서 여기서도 그 규칙 그대로 센다.
    *   madeOn은 date 컬럼이라 UTC 자정이다 — 연도도 UTC로 읽어야 1월 1일이 옆 해로 안 샌다.
    *
@@ -222,11 +231,27 @@ export default async function ArtworkListPage({
           </p>
         </div>
 
-        {/* 등록은 언제나 열려 있다. 주기·마감 규칙을 만들지 않았다. */}
-        <Link href="/artwork/new" className="btn">
-          <Camera />
-          사진 등록
-        </Link>
+        {/*
+          🔴 여기가 1440px에서 **805px 비어 있던 자리**다. 머리말 글은 46ch(435px)에 묶여 있는데
+            버튼만 오른쪽 끝으로 밀려 있어서, 그 사이가 통째로 빈칸이었다.
+            이 저장소가 `.grid`에 적어둔 원칙 — *"넓어지면 칸이 커지는 게 아니라 더 많이 보인다"* —
+            을 격자만 지키고 머리말은 어기고 있었다.
+
+          🔑 빈칸을 여백으로 두지 않고 **요약으로 채운다.** 새 조회는 없다 —
+            `allMadeOn`은 연도 집계 때문에 이미 읽고 있다.
+        */}
+        <div className="masthead__side">
+          {nothingYet ? null : (
+            <p className="masthead__sum">
+              남긴 것 <strong>{allMadeOn.length}점</strong> · {firstYear}년부터
+            </p>
+          )}
+          {/* 등록은 언제나 열려 있다. 주기·마감 규칙을 만들지 않았다. */}
+          <Link href="/artwork/new" className="btn">
+            <Camera />
+            사진 등록
+          </Link>
+        </div>
       </header>
 
       {/*
@@ -236,10 +261,22 @@ export default async function ArtworkListPage({
             이 서비스에서 색인을 만드는 사람은 아이여야 한다.
       */}
       {nothingYet ? null : (
-      <form className="search" action="/">
-        <label className="search__label" htmlFor="q">
+      /*
+        🔴 접었다. 전에는 펼쳐진 채로 첫 화면에 있었고, 375px에서 **142px**을 먹었다.
+          검색은 **이미 있는 것을 좁히는 행동**이라 새로 남기는 행동·남긴 것보다 뒤다 —
+          [찾기] 버튼을 진한 것에서 테두리만 있는 것으로 내린 것과 같은 판단의 연장이다.
+          첫 화면에서 되찾은 자리는 그림이 가져간다. 이게 무슨 서비스인지 5초에 말하는 것이 그림이다.
+
+        🔑 `<details>`라 JS가 꺼져도 열리고 닫힌다. 데모 초기화(`.reset`)가 이미 쓰는 방식이다.
+        🔑 검색 중이면 열려 있다(`open={searching}`). 결과를 보고 있는데 검색어와 [전체 보기]가
+          접혀 있으면, 무엇으로 찾았는지 확인할 방법이 사라진다.
+      */
+      <details className="search" open={searching}>
+        <summary className="search__toggle">
+          <Search />
           아이가 한 말로 찾기
-        </label>
+        </summary>
+        <form action="/">
         <div className="search__row">
           <input
             id="q"
@@ -248,6 +285,8 @@ export default async function ArtworkListPage({
             className="field__input"
             defaultValue={q}
             placeholder="공룡, 이불, 선생님…"
+            /* 보이는 이름표가 <summary>로 옮겨갔다. 접힌 상태에서도 이름이 남아야 한다. */
+            aria-label="아이가 한 말로 찾기"
             aria-describedby="search-help"
           />
           {/*
@@ -277,7 +316,18 @@ export default async function ArtworkListPage({
           그림이 아니라 <strong>아이가 한 말</strong>에서 찾습니다.
           {wordless > 0 ? ` 말이 비어 있는 ${wordless}점은 여기서 찾을 수 없습니다.` : null}
         </p>
-      </form>
+        </form>
+
+        {/*
+          🔑 찾은 총량은 여기다. 해 제목은 그 해 안에서 몇 점인지만 말하므로
+            여러 해에 걸쳐 찾혔을 때 전부 몇 점인지는 아무도 말하지 않는다.
+        */}
+        {searching && artworks.length > 0 ? (
+          <p className="search__result">
+            <QuotedSubject q={q} /> 들어간 말 <strong>{artworks.length}점</strong>
+          </p>
+        ) : null}
+      </details>
       )}
 
       {searching && artworks.length === 0 ? (
@@ -310,21 +360,11 @@ export default async function ArtworkListPage({
       ) : (
         <>
           {/*
-            🔑 되짚어보기 입구를 여기 둔다. 머리말의 [사진 등록]과 경쟁시키지 않는다.
-              등록은 주 사용자가 30초 안에 하는 일이고, 되짚어보기는 가끔 하는 일이다.
-              빈도가 높은 것이 크고, 낮은 것은 그 목록을 설명하는 자리에 조용히 붙인다.
+            🔴 여기 `남긴 것 12점 · 되짚어보기` 한 줄이 있었다. 지웠다.
+              세 조각이 전부 다른 곳으로 갔기 때문이다 —
+              **점수**는 머리말 요약이, **해별 점수**는 해 제목이, **되짚어보기**는 상단 바가 맡는다.
+              한 줄 안에 남은 것이 없는데 줄만 남아 있었다.
           */}
-          <p className="tally">
-            {searching ? (
-              <>
-                <QuotedSubject q={q} /> 들어간 말 {artworks.length}점
-              </>
-            ) : (
-              <>
-                남긴 것 {artworks.length}점 · <Link href="/recall">되짚어보기</Link>
-              </>
-            )}
-          </p>
 
           {/*
             🔴 전에는 격자 하나에 전부 쏟아부었다. 시드가 한 해(10점)짜리였을 때 만든 모양이라
