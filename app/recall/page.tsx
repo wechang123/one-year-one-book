@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
-import { describeAge } from "@/lib/age";
+import { describeAge, timeBand } from "@/lib/age";
 import { SaidBy, emptyQuoteText } from "../artwork/said-by";
 import { ArrowLeft } from "../icons";
 
@@ -89,7 +89,13 @@ export default async function RecallPage() {
                   <time className="saidlist__date" dateTime={a.madeOn.toISOString()}>
                     {(() => {
                       const when = describeAge(a.madeOn, birth);
-                      return when.scale === "none" ? null : <>{when.label} · </>;
+                      const band = timeBand(when.scale);
+                      // 여기는 사진이 없는 화면이라, 시기 색이 유일하게 시간이 흐르는 표시다.
+                      return band === null ? null : (
+                        <>
+                          <span className={`age--${band}`}>{when.label}</span> ·{" "}
+                        </>
+                      );
                     })()}
                     {formatMadeOn(a.madeOn)}
                   </time>

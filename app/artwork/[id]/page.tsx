@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn, toDateInputValue } from "@/lib/date";
-import { describeAge } from "@/lib/age";
+import { describeAge, timeBand } from "@/lib/age";
 import { settleQuoteBy } from "@/lib/speaker";
 import { InlineQuoteForm } from "./inline-quote";
 import { SaidBy, emptyQuoteText } from "../said-by";
@@ -306,10 +306,11 @@ export default async function ArtworkDetailPage({
                 부모가 그 시절을 기억하는 단위는 날짜가 아니라 주차·개월·나이다.
                 여기서 판정은 하지 않는다 — **언제였는지만 부른다.** (lib/age.ts)
             */}
-            {when.scale !== "none" ? (
+            {timeBand(when.scale) !== null ? (
               <>
                 <dt>이때는</dt>
-                <dd>{when.label}</dd>
+                {/* 목록 카드의 같은 라벨과 색을 맞춘다. 격자에서 보던 색 그대로여야 같은 것으로 읽힌다. */}
+                <dd className={`age--${timeBand(when.scale)}`}>{when.label}</dd>
               </>
             ) : null}
           </dl>

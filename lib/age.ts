@@ -103,6 +103,40 @@ export function describeAge(madeOn: Date, birth: Birth): Timescale {
 }
 
 /**
+ * 시간 축을 **세 띠**로 접는다. 화면이 색을 실을 축이다.
+ *
+ * 🔑 왜 다섯(scale)이 아니라 셋인가
+ *   `days`와 `months`는 **부르는 단위만 다르고 같은 시기**다 — 백일 전에는 날로 세고
+ *   그 뒤에는 개월로 부르는 것뿐이라, 부모에게 둘은 이어진 한 구간이다.
+ *   `prenatal`과 `unborn`도 같다 — 주차를 셀 수 있느냐만 다르고 둘 다 태어나기 전이다.
+ *   색은 **부르는 법**이 아니라 **시기**를 가리켜야 한다.
+ *
+ * 🔑 왜 색을 쓰나
+ *   이 서비스가 다루는 것이 8~9년인데, 격자를 내리면 임신에서 초등까지 지나가면서도
+ *   화면은 그 이동을 아무것으로도 표시하지 않았다. 색이 장식이 아니라 **축**이 된다.
+ *
+ * ⛔ 여기서도 잣대는 없다. 띠는 **태어났는가**와 **두 돌을 넘겼는가**로만 갈린다 —
+ *   둘 다 날짜가 확정하는 사실이고, 발달 판정이 아니다.
+ */
+export type TimeBand = "before" | "infant" | "child";
+
+export function timeBand(scale: Timescale["scale"]): TimeBand | null {
+  switch (scale) {
+    case "prenatal":
+    case "unborn":
+      return "before";
+    case "days":
+    case "months":
+      return "infant";
+    case "years":
+      return "child";
+    // 생일을 안 넣었으면 축이 없다. 없는 축에 색을 칠하지 않는다.
+    default:
+      return null;
+  }
+}
+
+/**
  * 한 구간이 아이의 어느 시절이었나. `임신 14주 5일` · `생후 39일 ~ 생후 6개월`
  *
  * 🔑 양 끝만 부른다. 구간 안을 채우지 않는 이유는 **채울 것이 이미 아래에 있기 때문**이다 —
@@ -112,11 +146,30 @@ export function describeAge(madeOn: Date, birth: Birth): Timescale {
  * 🔑 생일이 없으면 `null`이다. `describeAge`가 그 경우 날짜를 그대로 돌려주는데,
  *   그 날짜는 카드마다 이미 찍혀 있어서 제목이 같은 말을 두 번 하게 된다.
  */
-export function describeSpan(from: Date, to: Date, birth: Birth): string | null {
+export type SpanEnd = { label: string; band: TimeBand };
+
+/**
+ * 🔑 **문자열 하나가 아니라 양 끝을 따로 돌려준다.**
+ *   전에는 `임신 32주 5일 ~ 생후 6개월`을 한 덩어리로 넘겼는데, 그러면 화면이
+ *   그 줄에 색을 못 입힌다 — 두 끝이 **서로 다른 시기**일 수 있기 때문이다.
+ *   한 해가 임신에서 시작해 생후로 끝나는 것이 이 서비스에서는 흔한 일이고,
+ *   그 넘어감이야말로 제목이 보여줄 값이다.
+ */
+export function describeSpan(
+  from: Date,
+  to: Date,
+  birth: Birth,
+): { from: SpanEnd; to: SpanEnd | null } | null {
   const a = describeAge(from, birth);
   const b = describeAge(to, birth);
-  if (a.scale === "none" || b.scale === "none") return null;
-  return a.label === b.label ? a.label : `${a.label} ~ ${b.label}`;
+  const ba = timeBand(a.scale);
+  const bb = timeBand(b.scale);
+  if (ba === null || bb === null) return null;
+  return {
+    from: { label: a.label, band: ba },
+    // 양 끝이 같은 말이면 한 번만 부른다. `임신 14주 5일 ~ 임신 14주 5일`은 말이 안 된다.
+    to: a.label === b.label ? null : { label: b.label, band: bb },
+  };
 }
 
 /**

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
-import { describeAge } from "@/lib/age";
+import { describeAge, timeBand } from "@/lib/age";
 import { ArrowLeft } from "../../icons";
 
 /**
@@ -81,7 +81,11 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
       </figure>
 
       <p className="recallone__date">
-        {when.scale === "none" ? null : <>{when.label} · </>}
+        {timeBand(when.scale) === null ? null : (
+          <>
+            <span className={`age--${timeBand(when.scale)}`}>{when.label}</span> ·{" "}
+          </>
+        )}
         <time dateTime={artwork.madeOn.toISOString()}>{formatMadeOn(artwork.madeOn)}</time>
       </p>
 

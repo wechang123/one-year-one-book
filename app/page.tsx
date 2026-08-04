@@ -3,7 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { isOngoing } from "@/lib/book";
 import { subjectParticle } from "@/lib/korean";
-import { describeAge, describeSpan } from "@/lib/age";
+import { describeAge, describeSpan, timeBand } from "@/lib/age";
 import { groupByYear } from "@/lib/group";
 import { SaidBy, emptyQuoteText } from "./artwork/said-by";
 import { Camera, Search } from "./icons";
@@ -385,7 +385,21 @@ export default async function ArtworkListPage({
             🔑 묶는 단위를 해로 고른 이유는 lib/group.ts에 적었다 — 책의 단위와 같아진다.
           */}
           {groupByYear(artworks).map(({ year, items }) => (
-            <section className="span" key={year} aria-labelledby={`span-${year}`}>
+            <section
+              className={
+                /*
+                  🔑 제목 밑줄이 **그 아래 카드들의 시기**를 띤다.
+                    격자가 최신순이라 제목 바로 밑에 오는 것이 그 해의 마지막 시기이고,
+                    `items[0]`이 바로 그것이다. 선이 자기 밑에 있는 것과 같은 색이 된다.
+                */
+                (() => {
+                  const b = timeBand(describeAge(items[0].madeOn, birth).scale);
+                  return b ? `span span--${b}` : "span";
+                })()
+              }
+              key={year}
+              aria-labelledby={`span-${year}`}
+            >
               {/*
                 🔑 제목이 화면 위에 붙어 있는다(sticky). 격자를 내리는 동안
                   **지금 보고 있는 것이 어느 해인지**가 화면에서 사라지지 않아야
@@ -399,7 +413,23 @@ export default async function ArtworkListPage({
                 */}
                 {(() => {
                   const span = describeSpan(items[items.length - 1].madeOn, items[0].madeOn, birth);
-                  return span ? <span className="span__age">{span}</span> : null;
+                  if (!span) return null;
+                  /*
+                    🔑 양 끝을 각자 자기 시기 색으로 칠한다.
+                      `임신 32주 5일 ~ 생후 6개월`이 보라에서 청록으로 넘어가면서,
+                      **그 해에 아이가 태어났다는 사실**이 제목 한 줄에 그대로 보인다.
+                  */
+                  return (
+                    <span className="span__age">
+                      <span className={`age--${span.from.band}`}>{span.from.label}</span>
+                      {span.to ? (
+                        <>
+                          {" ~ "}
+                          <span className={`age--${span.to.band}`}>{span.to.label}</span>
+                        </>
+                      ) : null}
+                    </span>
+                  );
                 })()}
                 {/*
                   🔑 검색 중이면 `찾은 것 n점`이다. 그냥 `n점`이라고 쓰면
@@ -412,9 +442,19 @@ export default async function ArtworkListPage({
               </h2>
 
               <ul className="grid">
-                {items.map((artwork) => (
+                {items.map((artwork) => {
+                  /*
+                    🔑 시기를 카드 전체가 안다. 라벨 색과 사진 틀 바탕이 같은 값에서 나와야
+                      둘이 어긋나지 않는다 — 한 곳에서 정하고 두 곳이 쓴다.
+                  */
+                  const when = describeAge(artwork.madeOn, birth);
+                  const band = timeBand(when.scale);
+                  return (
                   <li key={artwork.id}>
-                    <Link href={`/artwork/${artwork.id}`} className="card">
+                    <Link
+                      href={`/artwork/${artwork.id}`}
+                      className={band ? `card card--${band}` : "card"}
+                    >
                       <div className="card__frame">
                         <img
                           className="card__img"
@@ -445,12 +485,9 @@ export default async function ArtworkListPage({
                               "임신 24주"가 "2018년 9월 12일"보다 먼저 떠오른다.
                               생일을 안 넣었으면 축이 없고, 그때는 날짜만 남는다.
                           */}
-                          {(() => {
-                            const when = describeAge(artwork.madeOn, birth);
-                            return when.scale === "none" ? null : (
-                              <span className="card__age">{when.label}</span>
-                            );
-                          })()}
+                          {band === null ? null : (
+                            <span className={`card__age age--${band}`}>{when.label}</span>
+                          )}
                           <time className="card__date" dateTime={artwork.madeOn.toISOString()}>
                             {formatMadeOn(artwork.madeOn)}
                           </time>
@@ -458,7 +495,8 @@ export default async function ArtworkListPage({
                       </div>
                     </Link>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </section>
           ))}
