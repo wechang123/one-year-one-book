@@ -535,6 +535,39 @@ a {
   font-size: 0.8125rem;
 }
 
+/* ───────────────────────── 등록 직후 인라인 입력 ───────────────────────── */
+
+.inlinequote {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.inlinequote .field__input {
+  margin-top: 0.35rem;
+}
+
+.inlinequote__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.8rem;
+}
+
+/*
+ * 🔑 버튼과 같은 크기다. 일부러 그렇게 뒀다.
+ *   더 작게 하면 비워두는 것이 실패로 읽히고, 더 크게 하면 앱이 스스로
+ *   "안 해도 된다"고 밀어내는 것이 된다. 둘 다 정상이라고 말해야 한다.
+ *   버튼처럼 보이지는 않게 한다 — 누를 것이 아니라 사실이다.
+ */
+.inlinequote__ok {
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
 /* ───────────────────────── 등록 직후 되돌아오는 말 ───────────────────────── */
 
 /*
