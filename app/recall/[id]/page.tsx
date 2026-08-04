@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { describeAge } from "@/lib/age";
+import { ArrowLeft } from "../../icons";
 
 /**
  * 되짚어보기 — 한 장 보기.
@@ -63,7 +64,8 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href="/recall" className="btn btn--ghost">
-          ← 되짚어보기
+          <ArrowLeft />
+          되짚어보기
         </Link>
       </nav>
 

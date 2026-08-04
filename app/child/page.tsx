@@ -4,6 +4,7 @@ import { toDateInputValue, todayInputValue } from "@/lib/date";
 import { getNow } from "@/lib/now";
 import { describeAge } from "@/lib/age";
 import { ChildForm } from "./form";
+import { ArrowLeft } from "../icons";
 
 /**
  * 아이 정보 — 이 서비스에서 유일하게 "설정"에 가까운 화면.
@@ -37,7 +38,8 @@ export default async function ChildPage() {
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 목록으로
+          <ArrowLeft />
+          목록으로
         </Link>
       </nav>
 

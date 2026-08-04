@@ -6,6 +6,7 @@ import { describeAge } from "@/lib/age";
 import { settleQuoteBy } from "@/lib/speaker";
 import { InlineQuoteForm } from "./inline-quote";
 import { SaidBy, emptyQuoteText } from "../said-by";
+import { ArrowLeft } from "../../icons";
 
 /**
  * 작품 상세.
@@ -164,7 +165,8 @@ export default async function ArtworkDetailPage({
     <div className="page">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 목록으로
+          <ArrowLeft />
+          목록으로
         </Link>
       </nav>
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
+import { ArrowLeft } from "../../icons";
 
 /**
  * 되짚어보기 — 끝.
@@ -35,7 +36,8 @@ export default async function RecallDonePage() {
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href="/recall" className="btn btn--ghost">
-          ← 되짚어보기
+          <ArrowLeft />
+          되짚어보기
         </Link>
       </nav>
 

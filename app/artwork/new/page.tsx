@@ -3,6 +3,7 @@ import { todayInputValue } from "@/lib/date";
 import { getNow } from "@/lib/now";
 import { getPrisma } from "@/lib/prisma";
 import { NewArtworkForm } from "./form";
+import { ArrowLeft } from "../../icons";
 
 /**
  * 작품 등록.
@@ -52,7 +53,8 @@ export default async function NewArtworkPage() {
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 목록으로
+          <ArrowLeft />
+          목록으로
         </Link>
       </nav>
 

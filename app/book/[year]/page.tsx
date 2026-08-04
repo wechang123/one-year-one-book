@@ -4,6 +4,7 @@ import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { isOngoing, parseYear, yearRange } from "@/lib/book";
 import { BookTitleForm } from "./title-form";
+import { ArrowLeft } from "../../icons";
 
 /**
  * 책 한 권 = 한 해.
@@ -65,7 +66,8 @@ export default async function BookPage({
     <div className="page">
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
-          ← 목록으로
+          <ArrowLeft />
+          목록으로
         </Link>
       </nav>
 

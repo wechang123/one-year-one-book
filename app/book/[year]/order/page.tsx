@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { isOngoing, parseYear, yearRange } from "@/lib/book";
 import { NewOrderForm } from "./form";
+import { ArrowLeft } from "../../../icons";
 
 /**
  * 주문 폼.
@@ -37,7 +38,8 @@ export default async function NewOrderPage({ params }: { params: Promise<{ year:
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href={`/book/${year}`} className="btn btn--ghost">
-          ← 책으로
+          <ArrowLeft />
+          책으로
         </Link>
       </nav>
 
