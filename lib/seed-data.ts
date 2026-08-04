@@ -34,7 +34,15 @@ export const CHILD_NAME = "하늘";
 export type SeedArtwork = {
   file: string;
   madeOn: string;
-  quote: string;
+  /**
+   * 아이가 한 말. **null일 수 있다.**
+   *
+   * 🔑 스키마와 문서가 "말 없는 사진은 나중에 채울 수 있다"고 세 곳에 적어놨는데,
+   *   시드 10점이 전부 말을 갖고 있어서 **그 판단이 화면에 한 번도 렌더된 적이 없었다.**
+   *   설명만 있고 증거가 없으면, 읽는 사람은 그게 실제로 동작하는지 알 수 없다.
+   *   그래서 두 점을 비워 그 상태를 시드에 넣는다 — 결손이 아니라 **상태**다.
+   */
+  quote: string | null;
   width: number;
   height: number;
 };
@@ -86,7 +94,11 @@ export const ARTWORKS: SeedArtwork[] = [
   {
     file: "07-people.jpg",
     madeOn: "2026-04-11",
-    quote: "아추! 하는 거야. 꽃 냄새 맡다가 재채기했어.",
+    /**
+     * 두 번째로 비운 것. 한 점만 비우면 사고처럼 보이고, 둘이면 패턴이 보인다 —
+     * "가끔 못 물어보는 날이 있다"가 이 서비스의 전제이기 때문이다.
+     */
+    quote: null,
     width: 830,
     height: 1161,
   },
@@ -107,7 +119,13 @@ export const ARTWORKS: SeedArtwork[] = [
   {
     file: "08-comic.jpg",
     madeOn: "2026-07-05",
-    quote: "만화야. 이 사람 넘어졌는데 안 아파. 말랑말랑해서.",
+    /**
+     * 🔑 일부러 비웠다. 목록 최신 두 번째라 **격자 첫 줄에 빈 말이 뜬다.**
+     *   눈에 안 띄는 자리에 두면 "우연히 하나 빠진 것"으로 읽힌다.
+     *   비어 있다는 사실을 숨기지 않는 것이 이 서비스의 원칙이고(04-content §2-1),
+     *   숨기지 않으려면 **잘 보이는 자리**에 있어야 한다.
+     */
+    quote: null,
     width: 830,
     height: 1166,
   },
