@@ -535,6 +535,111 @@ a {
   font-size: 0.8125rem;
 }
 
+/* ───────────────────────── 되짚어보기 ───────────────────────── */
+
+/*
+ * 말만 세로로 쌓이는 목록. 사진이 없으므로 글자가 유일한 시각 요소다.
+ * 격자(auto-fill)를 쓰지 않는 이유: 여기서 원하는 건 "많이 보이는 것"이 아니라
+ * **한 줄씩 읽히는 것**이다. 넓은 화면에서도 한 칼럼을 유지한다.
+ */
+.saidlist {
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  counter-reset: said;
+}
+
+.saidlist__item {
+  border-bottom: 1px solid var(--line);
+}
+
+.saidlist__link {
+  display: block;
+  padding: 0.9rem 0;
+  text-decoration: none;
+}
+
+.saidlist__link:hover .saidlist__quote {
+  text-decoration: underline;
+}
+
+.saidlist__quote {
+  display: block;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+/* 빈 줄. 흐리게 두되 지우지 않는다 — 남지 않은 것을 보여주는 자리다. */
+.saidlist__quote--empty {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.saidlist__date {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.recallone__date {
+  margin: 0.9rem 0 1rem;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.recallone__said {
+  margin: 0 0 1.5rem;
+}
+
+.recallone__toggle {
+  cursor: pointer;
+  padding: 0.6rem 0;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.recallone__quote {
+  margin: 0.5rem 0 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--line);
+  font-size: 1.25rem;
+  line-height: 1.55;
+  max-width: 32ch;
+}
+
+.recallone__none {
+  margin: 0 0 1.5rem;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+/* 끝 화면. 이 서비스의 목적이 닫히는 자리라 화면에서 가장 조용하고 가장 크다. */
+.closing {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.closing__lede {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.closing__title {
+  margin: 0 0 1rem;
+  font-size: 1.625rem;
+  letter-spacing: -0.01em;
+}
+
+.closing__body {
+  margin: 0 auto 1.75rem;
+  max-width: 40ch;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
 /* ───────────────────────── 등록 직후 인라인 입력 ───────────────────────── */
 
 .inlinequote {
