@@ -31,6 +31,91 @@ a {
   color: inherit;
 }
 
+/* ───────────────────────── 상단 바 ───────────────────────── */
+
+/*
+ * 모든 화면 맨 위의 얇은 줄. 왜 사이드바가 아닌지, 왜 sticky가 아닌지는
+ * app/site-nav.tsx에 적었다.
+ */
+.sitenav {
+  /* 종이색 본문 위에서 이 줄만 흰색이라, 경계선 없이도 바닥과 갈라진다. */
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+
+.sitenav__inner {
+  /* 아래 .page와 같은 폭·같은 여백. 로고와 머리말 제목의 왼쪽 끝이 맞는다. */
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (min-width: 700px) {
+  .sitenav__inner {
+    padding: 0 2rem;
+  }
+}
+
+.sitenav__home {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sitenav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.sitenav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  /* 폰에서 엄지로 누른다. 버튼과 같은 44px. */
+  min-height: 44px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sitenav__link:hover {
+  color: var(--ink);
+}
+
+/*
+ * 🔑 지금 화면 표시를 `aria-current`에 건다.
+ *   따로 클래스를 붙이면 "지금 화면"이라는 사실이 두 군데(마크업 클래스·속성)에 적히고,
+ *   둘은 갈라진다. 속성 하나가 뜻과 생김새를 같이 정하게 둔다.
+ */
+.sitenav__link[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--paper);
+}
+
+/*
+ * 아이콘은 글자 옆에 선다. em이라 글자 크기를 따라가고,
+ * flex: none이라 좁은 화면에서 눌려 찌그러지지 않는다.
+ */
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+}
+
 /* ───────────────────────── 뼈대 ───────────────────────── */
 
 .page {
