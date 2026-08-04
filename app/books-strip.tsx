@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createBook, type BookActionState } from "./book/actions";
+import { BookOpen } from "./icons";
 
 const INITIAL: BookActionState = {};
 
@@ -79,6 +80,7 @@ export function BooksStrip({ rows, orderCount }: { rows: YearRow[]; orderCount: 
 
             {row.bookTitle ? (
               <Link href={`/book/${row.year}`} className="btn btn--ghost">
+                <BookOpen />
                 책 보기
               </Link>
             ) : (
@@ -112,6 +114,7 @@ function MakeButton() {
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="btn btn--ghost" disabled={pending}>
+      <BookOpen />
       {pending ? "묶는 중…" : "책으로 묶기"}
     </button>
   );

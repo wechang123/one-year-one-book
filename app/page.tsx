@@ -6,6 +6,7 @@ import { subjectParticle } from "@/lib/korean";
 import { describeAge, describeSpan } from "@/lib/age";
 import { groupByYear } from "@/lib/group";
 import { SaidBy, emptyQuoteText } from "./artwork/said-by";
+import { Camera, Search } from "./icons";
 import { BooksStrip, type YearRow } from "./books-strip";
 import { DemoResetButton } from "./demo/reset-button";
 
@@ -223,6 +224,7 @@ export default async function ArtworkListPage({
 
         {/* 등록은 언제나 열려 있다. 주기·마감 규칙을 만들지 않았다. */}
         <Link href="/artwork/new" className="btn">
+          <Camera />
           사진 등록
         </Link>
       </header>
@@ -256,6 +258,7 @@ export default async function ArtworkListPage({
               ([책으로 묶기]는 테두리로 분리된 구역 안의 주 행동이라 그대로 둔다.)
           */}
           <button type="submit" className="btn btn--ghost">
+            <Search />
             찾기
           </button>
           {searching ? (
@@ -455,6 +458,7 @@ function EmptyList() {
         그 말은 그 자리에서 안 받으면 영영 얻을 수 없습니다.
       </p>
       <Link href="/artwork/new" className="btn">
+        <Camera />
         첫 한 점 남기기
       </Link>
     </div>

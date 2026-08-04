@@ -464,6 +464,27 @@ multipart 경계 문자열, 필드 이름, 그때의 말, 만든 날까지 다 �
 Next 16.2.12 / React 19.2.8 / Prisma 7.9.1 + `@prisma/adapter-pg` / PostgreSQL 18 / TypeScript 6.0.3
 · UI 라이브러리 없음 (CSS 직접 작성) · **외부 API·LLM 호출 없음**
 
+### 아이콘 — 패키지를 안 깔고 다섯 개만 베껴 왔습니다
+
+[Lucide](https://github.com/lucide-icons/lucide)(ISC)에서 **실제로 쓰는 다섯 개**의 `path`만
+`app/icons.tsx`에 옮겨 적었습니다. 라이선스 전문은 [`licenses/lucide-ISC.txt`](./licenses/lucide-ISC.txt)에
+동봉했습니다 — ISC가 저작권·허가 고지를 모든 사본에 남길 것을 요구합니다.
+
+`lucide-react`를 설치하면 런타임 의존성이 4개에서 5개가 됩니다. 1,500개짜리 묶음을 들여올
+재사용 압력이 아직 없습니다 — 바로 아래 Tailwind를 거절할 때 쓴 그 논거가 그대로 적용됩니다.
+
+> **🔴 `iconsax`를 조사했고 채택하지 않았습니다.**
+> 아이콘 그림이 *"다른 이름으로 재배포 금지, 템플릿·UI킷 사용은 허가 필요"*로 공지돼 있는데
+> **라이선스 전문을 확인하지 못했습니다** — `docs.iconsax.io/license`가 본문을 스크립트로 그려서
+> 받아지지 않았고, npm `iconsax-react`가 가리키는 저장소는 `GET /repos/…/license`가 **404**입니다.
+> 라이선스 파일이 없습니다.
+> 이 저장소는 공개고, 시드 사진 한 장의 출처까지 `docs/03-feasibility.md`에서 따졌습니다.
+> **그 기준을 아이콘에서만 낮출 수 없습니다.**
+> Lucide(ISC)와 Phosphor(MIT)는 저장소의 `LICENSE` 파일을 직접 받아 확인했습니다.
+
+**아이콘만 있는 버튼은 만들지 않았습니다.** 다섯 개 전부 `aria-hidden`이고 옆에 늘 글자가 있습니다.
+뜻을 아이콘에만 실으면 그 뜻은 화면을 못 보는 사람에게 도달하지 않습니다.
+
 > Prisma 7부터 `datasource` 블록에 `url`을 둘 수 없다. 연결 문자열은 `prisma.config.ts`가,
 > 실제 연결은 드라이버 어댑터가 맡는다. (이걸 어겨서 8분을 썼다 — `docs/worklog.md` 10:14)
 
