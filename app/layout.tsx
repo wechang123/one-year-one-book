@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { SiteNav } from "./site-nav";
+import { Shell } from "./shell";
+import { getOwnerName } from "@/lib/owner";
 
 /**
  * 본문 글꼴 — Pretendard(SIL OFL), 이 앱이 쓰는 만큼만 잘라낸 309KB.
@@ -59,7 +60,9 @@ export const metadata: Metadata = {
 // 주 사용자는 폰 세로, 심사자는 노트북 가로다. 둘 다 기준으로 둔다.
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const owner = await getOwnerName();
+
   return (
     <html lang="ko" className={pretendard.variable}>
       <body>
@@ -73,10 +76,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
 
         {/*
-          🔑 상단 바가 모든 화면에 있다. 오류 화면(error.tsx)과 없는 주소(not-found.tsx)도
-            레이아웃 안에서 그려지므로, **막힌 자리에서 나갈 길이 늘 하나는 있다.**
+          🔑 뼈대가 모든 화면에 있다 — 데스크탑은 왼쪽 사이드바, 폰은 하단 탭.
+            오류 화면(error.tsx)과 없는 주소(not-found.tsx)도 레이아웃 안에서 그려지므로
+            **막힌 자리에서 나갈 길이 늘 다섯은 있다.**
+
+          🔴 `owner`를 읽느라 레이아웃이 DB를 건드린다. v1에서 금지했던 것이라
+            조회 쪽을 던지지 않게 만들었다 — 근거는 lib/owner.ts에 있다.
         */}
-        <SiteNav />
+        <Shell owner={owner} />
 
         {/*
           🔴 `<main>`이 저장소에 **한 곳도 없었다.** 화면 열넷이 전부 `<div>`로 시작했다.

@@ -1,564 +1,182 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
-import { isOngoing } from "@/lib/book";
-import { subjectParticle } from "@/lib/korean";
-import { describeAge, describeSpan, timeBand } from "@/lib/age";
-import { groupByYear } from "@/lib/group";
+import { describeAge, timeBand, type TimeBand } from "@/lib/age";
 import { SaidBy, emptyQuoteText } from "./artwork/said-by";
-import { Camera, Search } from "./icons";
-import { BooksStrip, type YearRow } from "./books-strip";
-import { DemoResetButton } from "./demo/reset-button";
+import { Camera } from "./icons";
 
 /**
- * 작품 목록 — 이 서비스의 첫 화면.
+ * 타임라인 — v2의 첫 화면.
  *
- * 🔑 이 화면이 5초 안에 해야 하는 일 두 가지
- *   ① 이게 무슨 서비스인지 알린다  → 머리말 두 줄 + 그림이 깔린 격자
- *   ② 다음에 뭘 눌러야 하는지 알린다 → [사진 등록]이 화면에서 가장 뚜렷한 것 하나
+ * ═══════════════════════════════════════════════════════════
+ * 🔴 v1의 첫 화면은 **격자**였다. 그 격자는 `/grid`로 옮겼다.
+ *
+ *   격자는 **한 해 안에서 고르는 화면**이다. 열두 칸이 나란히 있고 눈이 훑는다.
+ *   그런데 이 서비스가 실제로 다루는 것은 **8~9년**이고, 격자는 그 길이를 못 보여준다.
+ *   해 제목을 얹어 나눠봐도(v1 #58) 여전히 **덩어리 넷이 위아래로 쌓인 것**이지
+ *   임신에서 초등까지 이어진 한 줄이 아니었다.
+ *
+ * 🔑 타임라인이 첫 화면인 이유
+ *   이 앱의 주인공은 **시간**이다. 같은 아이가 임신 14주였다가 만 7세가 되는 것,
+ *   그 사이에 실물이 하나씩 놓이는 것 — 그게 부모가 8년 뒤에 보고 싶은 모양이다.
+ *   격자·달력·말은 **그 축을 잘라 보는 방법들**이고, 사이드바에서 나란히 고른다.
+ *
+ * 🔑 위가 오래된 것이고 아래로 내려올수록 최근이다. 홈(v1)과 반대다.
+ *   홈은 방금 등록한 것을 **확인하러** 오는 화면이라 최신이 위였다.
+ *   타임라인은 **읽는** 화면이다. 자란 것을 보려면 자란 방향으로 읽혀야 한다.
  */
 
-// 등록·편집한 결과가 바로 보여야 한다. 캐시된 목록을 보여주면 방금 한 일이 사라진 것처럼 보인다.
 export const dynamic = "force-dynamic";
 
-/**
- * 검색어에서 매칭된 부분을 강조한다.
- *
- * 🔑 강조가 없으면 **왜 찾혔는지 모른다.**
- *   말이 두세 문장짜리라 결과만 보면 어느 낱말이 걸렸는지 안 보이고,
- *   그러면 사용자는 검색이 제대로 동작했는지 판단할 수 없다.
- */
-function highlight(text: string, q: string) {
-  if (!q) return text;
-  const lower = text.toLowerCase();
-  const needle = q.toLowerCase();
-  const out: React.ReactNode[] = [];
-  let from = 0;
-  for (;;) {
-    const at = lower.indexOf(needle, from);
-    if (at === -1) break;
-    if (at > from) out.push(text.slice(from, at));
-    out.push(<mark key={at}>{text.slice(at, at + q.length)}</mark>);
-    from = at + q.length;
-  }
-  out.push(text.slice(from));
-  return out;
-}
+/** 띠가 바뀌는 자리에 놓는 표. 축이 여기서 단위를 갈아탄다. */
+const BAND_MARK: Record<TimeBand, { title: string; note: string }> = {
+  before: { title: "태어나기 전", note: "주차로 센다" },
+  infant: { title: "태어났다", note: "날과 개월로 센다" },
+  child: { title: "두 돌", note: "이제 나이로 센다" },
+};
 
-/**
- * 검색어를 문장의 주어 자리에 놓는다. `"공룡"이` · `"이불"이` · `"바다"가`.
- *
- * 🔑 조사를 모르는 검색어(영문·숫자·이모지)는 **조사가 필요 없는 모양**으로 바꾼다.
- *   `"dino", 이 낱말이 …`. 앱이 발음을 지어내는 것보다 문장을 바꾸는 쪽이 정직하다.
- *   `말`이 아니라 `낱말`인 이유는 뒤에 오는 문장이 이미 *"…들어간 말"*이기 때문이다.
- */
-function QuotedSubject({ q }: { q: string }) {
-  const particle = subjectParticle(q);
-  return particle ? (
-    <>
-      &ldquo;{q}&rdquo;
-      {particle}
-    </>
-  ) : (
-    <>&ldquo;{q}&rdquo;, 이 낱말이</>
-  );
-}
-
-export default async function ArtworkListPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { q: qRaw } = await searchParams;
-  /**
-   * 🔑 GET 폼 + searchParams다. 서버에서 처리하므로 **JS가 꺼져도 검색된다.**
-   *   클라이언트에서 거르는 방법도 있지만, 그러면 목록을 통째로 받아야 하고
-   *   작품이 늘수록 안 쓰는 데이터를 더 많이 내려받는다.
-   */
-  const q = (qRaw ?? "").trim();
-  const searching = q !== "";
-
+export default async function TimelinePage() {
   const prisma = getPrisma();
-
-  /**
-   * 🔑 아이를 먼저 찾고, 그 아이의 것만 읽는다.
-   *   전에는 artwork.findMany에 where가 없어 **모든 아이의 작품**을 가져오고 있었다.
-   *   지금은 아이가 하나뿐이라 화면이 같아 보이지만, schema.prisma의 인덱스는
-   *   @@index([profileId, madeOn])로 "이 아이의 작품을 만든 날 역순"을 전제로 깔려 있다.
-   *   where가 없으면 그 인덱스를 쓰지 못하고, 무엇보다 **주석이 코드보다 앞서 있는 상태**가 된다.
-   *   조회를 두 단계로 나누는 값보다, 화면이 무엇을 보여주는지가 코드에 적혀 있는 값이 크다.
-   */
   const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
 
-  const [artworks, allMadeOn, books, orderCount, wordless] = await Promise.all([
-    prisma.artwork.findMany({
-      where: profile
-        ? {
-            profileId: profile.id,
-            /**
-             * 🔑 아이 말만 검색 대상이다. 날짜 텍스트도, 아이 이름도 아니다.
-             *   **이 서비스에서 색인을 만드는 사람은 아이여야 한다.**
-             *   대상을 넓힐수록 그 근거가 흐려진다 — "3월"로 찾히면 그건 달력이 만든 색인이고,
-             *   아이 이름으로 찾히면 그건 프로필이 만든 색인이다.
-             *
-             * 🔑 왜 full-text가 아니라 ILIKE인가 — 한국어에서 full-text가 안 먹는다.
-             *   Postgres에 한국어 형태소 분석 설정이 없어서 to_tsvector('simple')은 공백으로만 자른다.
-             *   실제로 확인했다:
-             *     to_tsvector('simple','내가 만든 공룡을 그렸어')
-             *       → '공룡을':3 '그렸어':4 '내가':1 '만든':2
-             *     @@ to_tsquery('simple','공룡')  →  f   (안 걸린다)
-             *     ILIKE '%공룡%'                   →  t   (걸린다)
-             *   조사가 붙는 언어라서 낱말 단위 색인이 부분 문자열보다 못하다.
-             *   pg_trgm은 확장 설치가 필요한데, "docker compose up 1회 기동" 요건에
-             *   설치 단계를 하나 더 얹을 근거가 지금 없다.
-             *
-             * 🔑 인덱스를 만들지 않았다.
-             *   지금 데이터는 10~60점 규모다. 이 규모에서 ILIKE는 seq scan이고 **그게 옳다** —
-             *   행이 수십 개인 테이블에서 인덱스를 타는 건 오히려 느리다.
-             *   근거 없이 인덱스를 만드는 것은 이 저장소가 지금까지 거절해온 종류의 결정이다.
-             *   언제부터 필요해지나: 한 아이가 **수천 점**을 넘고 검색이 눈에 띄게 느려질 때.
-             *   그때 필요한 건 인덱스 하나가 아니라 pg_trgm 확장 + GIN 인덱스이고,
-             *   확장을 깔 근거가 그 시점에 비로소 생긴다.
-             */
-            ...(searching ? { childQuote: { contains: q, mode: "insensitive" as const } } : {}),
-          }
-        : undefined,
-      orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
-      /**
-       * 🔑 사진 테이블을 건드리지 않는다.
-       *   사진 바이트는 <img src="/api/photo/[작품id]">가 따로 받아온다.
-       *   목록 쿼리가 바이트를 끌고 오면 10점만 있어도 매 요청이 1.7MB가 된다.
-       */
-      select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
-    }),
-    /**
-     * 🔴 연도 집계는 **검색과 무관한 별도 조회**다. 전에는 위 목록에서 셌는데,
-     *   그 목록에 검색 필터가 걸려 있어서 **검색이 책 줄을 오염시켰다.**
-     *   `?q=닭`이면 책 줄이 "지금까지 1점"이라고 말하고, 그 자리에서 [책으로 묶기]를 누르면
-     *   **10점짜리 책이 만들어진다.** 화면이 말한 수와 만들어진 것이 달랐다.
-     *   0건 검색이면 책 줄이 통째로 사라지기까지 했다.
-     *
-     * 🔑 갈림길: 검색 중일 때만 이 조회를 더 할까 vs 항상 할까 → **항상.**
-     *   조건부로 두면 "검색 중이 아닐 때는 위 목록에서 센다"는 두 번째 경로가 생기고,
-     *   두 경로는 갈라진다 — 방금 갈라져서 이 버그가 났다.
-     *   대가는 madeOn 한 열을 한 번 더 읽는 것뿐이다. 사진 바이트는 여기서도 안 읽는다.
-     */
-    prisma.artwork.findMany({
-      where: profile ? { profileId: profile.id } : undefined,
-      select: { madeOn: true },
-    }),
-    prisma.collection.findMany({
-      where: profile ? { profileId: profile.id } : undefined,
-      select: { year: true, title: true },
-    }),
-    prisma.order.count({
-      where: profile ? { collection: { profileId: profile.id } } : undefined,
-    }),
-    // 검색으로 영원히 못 찾는 것이 몇 점인지. 화면이 그 사실을 말하기 위해 센다.
-    prisma.artwork.count({
-      where: profile ? { profileId: profile.id, childQuote: null } : { childQuote: null },
-    }),
-  ]);
+  const artworks = await prisma.artwork.findMany({
+    where: profile ? { profileId: profile.id } : undefined,
+    // 🔑 오래된 것부터. 이 화면은 걸어 내려오는 화면이다.
+    orderBy: [{ madeOn: "asc" }, { createdAt: "asc" }],
+    select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
+  });
 
-  const owner = profile?.childName;
   const birth = { dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null };
+  const owner = profile?.childName ?? null;
 
-  /**
-   * 🔴 남긴 것이 하나도 없으면 **검색 칸을 안 그린다.**
-   *   전에는 빈 화면 위에 "아이가 한 말로 찾기" 입력칸이 그대로 떠 있었다.
-   *   찾을 것이 없는데 찾는 칸이 있으면, 처음 온 사람이 봐야 할 것
-   *   — *"다음에 뭘 눌러야 하는지"* — 가 입력칸과 버튼 사이에서 흐려진다.
-   *   빈 화면은 안내할 자리가 가장 넓은 화면이고, 그 자리를 검색에 내주지 않는다.
-   */
-  const nothingYet = allMadeOn.length === 0;
+  if (artworks.length === 0) {
+    return (
+      <div className="page">
+        <header className="masthead">
+          <div className="masthead__text">
+            <h1 className="masthead__title">아이가 남긴 것을, 그때의 말과 함께.</h1>
+            <p className="masthead__lede">
+              초음파 사진부터 상장까지, 한 해가 지나면 한 권으로 묶습니다.
+              <strong> 그래서 실물은 마음 편히 정리하셔도 됩니다.</strong>
+            </p>
+          </div>
+        </header>
 
-  /**
-   * 🔑 이 아카이브가 어디까지 거슬러 올라가는가. 머리말 요약에 쓴다.
-   *   8~9년을 쌓는 서비스에서 **가장 먼저 남긴 것이 언제인지**가 규모를 말하는 수치다.
-   *   `allMadeOn`을 한 번 훑을 뿐 조회를 늘리지 않는다.
-   */
-  const firstYear = nothingYet
-    ? null
-    : Math.min(...allMadeOn.map((a) => a.madeOn.getUTCFullYear()));
-
-  /**
-   * 🔑 수록작은 madeOn의 연도로 정해진다. 그래서 여기서도 그 규칙 그대로 센다.
-   *   madeOn은 date 컬럼이라 UTC 자정이다 — 연도도 UTC로 읽어야 1월 1일이 옆 해로 안 샌다.
-   *
-   * 🔴 세는 대상이 화면에 보이는 목록이 아니라 **그 아이의 전체**다.
-   *   책에 담기는 것은 검색 결과가 아니라 그 해에 남긴 전부이기 때문이다.
-   */
-  const byYear = new Map<number, number>();
-  for (const a of allMadeOn) {
-    const y = a.madeOn.getUTCFullYear();
-    byYear.set(y, (byYear.get(y) ?? 0) + 1);
+        <div className="blank">
+          <h2 className="blank__title">아직 남긴 것이 없어요.</h2>
+          <p className="blank__body">
+            아이가 그림을 내밀면, 병원에서 초음파 사진을 받아 나오면, <strong>그 자리에서</strong>
+            사진을 찍고 <strong>그때의 말</strong>을 그대로 적어두세요. 그 말은 그 자리에서 안
+            받으면 영영 얻을 수 없습니다.
+          </p>
+          <Link href="/artwork/new" className="btn">
+            <Camera />첫 한 점 남기기
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  const titleOf = new Map(books.map((b) => [b.year, b.title]));
+  /*
+    🔑 띠가 바뀌는 지점을 미리 찾아둔다. 렌더 중에 "앞 항목과 띠가 다른가"를 보면
+      될 것 같지만, 그러면 **생일을 안 넣어 띠가 전부 null인 경우**에 표가 하나도
+      안 나오는 대신 조건문이 여기저기 흩어진다. 자리를 먼저 정하고 그 다음에 그린다.
+  */
+  const rows = artworks.map((a) => {
+    const when = describeAge(a.madeOn, birth);
+    return { ...a, when, band: timeBand(when.scale) };
+  });
 
-  const yearRows: YearRow[] = [...byYear.entries()]
-    .sort((a, b) => b[0] - a[0])
-    .map(([year, count]) => ({
-      year,
-      count,
-      ongoing: isOngoing(year),
-      bookTitle: titleOf.get(year) ?? null,
-    }));
+  const marks = new Map<string, TimeBand>();
+  let previous: TimeBand | null = null;
+  for (const row of rows) {
+    if (row.band && row.band !== previous) marks.set(row.id, row.band);
+    previous = row.band ?? previous;
+  }
+
+  const first = rows[0];
+  const last = rows[rows.length - 1];
 
   return (
     <div className="page">
       <header className="masthead">
         <div className="masthead__text">
-          {/*
-            🔴 두 줄이었다. `하늘의 기록`이 왼쪽에, `남긴 것 12점 · 2018년부터`가 오른쪽에
-              따로 있었고 **둘 다 작은 회색 메타 줄**이었다. 같은 성격의 것이 좌우로 갈려서
-              머리말이 2단처럼 읽혔다. 한 줄로 합쳤다.
-
-            🔑 아이 이름이 링크다. 여기가 생일을 넣는 자리로 가는 유일한 입구다.
-              별도 메뉴를 만들지 않은 이유: 이 값은 **한 번 넣고 다시 안 여는 값**이다.
-              자주 쓰는 것과 같은 무게로 두면 화면이 그만큼 흐려진다.
-          */}
-          {/*
-            🔴 `하늘의 기록 · 남긴 것 12점 · 2018년부터`로 가운뎃점이 **둘**이었다.
-              한 줄에 구분자가 둘이면 어느 쪽이 더 큰 나눔인지 화면이 말하지 못한다.
-              `남긴 것`을 빼고 어순을 바꿔 하나로 줄였다 — `하늘의 기록 · 2018년부터 12점`.
-              센 것이 무엇인지는 바로 아래 해 제목들이 이어서 말한다.
-          */}
-          {owner || !nothingYet ? (
-            <p className="masthead__meta">
-              {owner ? <Link href="/child">{owner}의 기록</Link> : null}
-              {owner && !nothingYet ? " · " : null}
-              {nothingYet ? null : (
-                <>
-                  {firstYear}년부터 <strong>{allMadeOn.length}점</strong>
-                </>
-              )}
-            </p>
-          ) : null}
-          <h1 className="masthead__title">아이가 남긴 것을, 그때의 말과 함께.</h1>
+          <p className="masthead__meta">
+            {owner ? `${owner}의 기록 · ` : null}
+            {first.when.scale === "none"
+              ? `${artworks.length}점`
+              : `${first.when.label}부터 ${last.when.label}까지 ${artworks.length}점`}
+          </p>
+          <h1 className="masthead__title">타임라인</h1>
           <p className="masthead__lede">
-            {/*
-              🔴 전에는 "아이가 만든 것"이었다. 초음파 사진은 아이가 만든 것이 아니다.
-                그리고 "아이의 말"도 아니다 — 그 시기에 말을 남기는 사람은 부모다.
-                한 줄 정의에서 살린 것은 **버리려고 기록한다** 하나다. 그게 이 서비스의 서명이다.
-            */}
-            초음파 사진부터 상장까지, 한 해가 지나면 한 권으로 묶습니다.
-            <strong> 그래서 실물은 마음 편히 정리하셔도 됩니다.</strong>
+            위에서 아래로 <strong>자란 순서</strong>입니다. 축이 주차에서 개월로, 개월에서
+            나이로 바뀝니다.
           </p>
         </div>
-
-        {/*
-          🔑 오른쪽에는 이제 버튼 하나뿐이다. 요약을 왼쪽 메타 줄로 옮기면서
-            감싸던 `div`가 할 일이 없어져서 걷어냈다 — 아이 하나짜리 상자는 상자가 아니다.
-
-          등록은 언제나 열려 있다. 주기·마감 규칙을 만들지 않았다.
-        */}
-        <Link href="/artwork/new" className="btn">
-          <Camera />
-          사진 등록
-        </Link>
       </header>
 
-      {/*
-        🔑 GET 폼이다. method가 기본 get이고 action이 "/"라 JS 없이 동작한다.
-          🔑 태그를 안 만들고 검색을 만든 이유가 이 한 칸에 들어 있다 —
-            태그는 부모가 분류를 미리 정하는 것이고, 검색은 아이가 한 말을 그대로 찾는 것이다.
-            이 서비스에서 색인을 만드는 사람은 아이여야 한다.
-      */}
-      {nothingYet ? null : (
-      /*
-        🔴 한 번 `<details>`로 접었다가 폈다. 접은 근거가 세로 168px이었는데,
-          **그 168px을 안 쪼개봤다.** 쪼개보니 이렇다(375px):
-
-            이름표 줄 42 + 입력칸 줄 50 + 도움말 줄 42 + 여백 24  =  168
-            접었을 때                                            =   66
-            입력칸 줄만 남겼을 때                                  =   74
-
-          **차이가 8px이다.** 아낀 102px 중 94px은 이름표와 도움말이 만든 것이고,
-          토글이 실제로 산 것은 8px이었다. **8px을 벌자고 기능 하나를 클릭 뒤에 숨긴 셈이다.**
-          부 사용자는 노트북 1440px에서 5분인데, 세로가 남아도는 화면에서도 같이 접혀 있었다.
-
-        🔑 그래서 줄 두 개를 없앤다 — 이름표는 자리표시자로 내리고,
-          도움말은 **검색 중일 때만** 띄운다. 못 찾는 것이 있다는 안내는 그때 필요하고,
-          0건 화면(`.blank`)이 이미 같은 말을 한다.
-      */
-      <form className="search" action="/">
-        <div className="search__row">
-          <input
-            id="q"
-            name="q"
-            type="search"
-            className="field__input"
-            defaultValue={q}
-            /*
-              🔑 자리표시자가 이름표 노릇을 한다. 예시(`공룡, 이불…`)를 뺀 것은
-                375px에서 입력칸이 224px이라 둘 다 넣으면 잘리기 때문이다.
-                무엇을 넣는 칸인지가 예시보다 앞선다.
-            */
-            placeholder="아이가 한 말로 찾기"
-            aria-label="아이가 한 말로 찾기"
-            aria-describedby={searching ? "search-help" : undefined}
-          />
-          {/*
-            🔑 진한 버튼은 이 화면에 **하나뿐이어야 한다** — [사진 등록].
-              전에는 [사진 등록]·[찾기]·[책으로 묶기] 셋이 같은 무게였고,
-              처음 온 사람의 눈은 그중 무엇을 눌러야 할지 고르는 데 시간을 쓴다.
-              검색은 **이미 있는 것을 좁히는 행동**이라 새로 만드는 행동과 무게가 같으면 안 된다.
-              ([책으로 묶기]는 테두리로 분리된 구역 안의 주 행동이라 그대로 둔다.)
-          */}
-          <button type="submit" className="btn btn--ghost">
-            <Search />
-            찾기
-          </button>
-          {searching ? (
-            <Link href="/" className="btn btn--ghost">
-              전체 보기
-            </Link>
-          ) : null}
-        </div>
-        {/*
-          🔴 전에는 이 도움말이 **항상** 떠 있었고, 375px에서 두 줄로 감겨 42px을 먹었다.
-            지금은 검색 중일 때만 나온다.
-
-          🔑 못 찾는 것이 있다는 사실은 **찾고 나서** 필요하다. 아직 안 찾은 사람에게
-            "이건 못 찾습니다"를 먼저 말하면, 아직 하지도 않은 일의 한계를 먼저 읽는 셈이다.
-            말이 빈 작품은 검색으로 영원히 안 나온다 — 그건 버그가 아니라
-            "말은 지금만 받을 수 있다"의 대가이고, 침묵하면 사용자는 그 작품이 사라졌다고 본다.
-            0건 화면(`.blank`)도 같은 말을 한다. 두 자리 다 살아 있다.
-        */}
-        {searching ? (
-          <>
-            <p className="field__help" id="search-help">
-              그림이 아니라 <strong>아이가 한 말</strong>에서 찾습니다.
-              {wordless > 0 ? ` 말이 비어 있는 ${wordless}점은 여기서 찾을 수 없습니다.` : null}
-            </p>
-            {/*
-              🔑 찾은 총량은 여기다. 해 제목은 그 해 안에서 몇 점인지만 말하므로
-                여러 해에 걸쳐 찾혔을 때 전부 몇 점인지는 아무도 말하지 않는다.
-            */}
-            {artworks.length > 0 ? (
-              <p className="search__result">
-                <QuotedSubject q={q} /> 들어간 말 <strong>{artworks.length}점</strong>
-              </p>
-            ) : null}
-          </>
-        ) : null}
-      </form>
-      )}
-
-      {searching && artworks.length === 0 ? (
-        /*
-         * 🔑 0건 문구를 "아이가 그 말을 한 적이 없어요"로 쓰지 않는다.
-         *   말이 빈 작품이 있는 한 그 문장은 **검산되지 않는다** —
-         *   아이가 말했는데 우리가 안 받아둔 것일 수 있다.
-         *   앱은 저장된 것만 안다. 아는 것까지만 말한다.
-         */
-        <div className="blank">
-          <h2 className="blank__title">
-            <QuotedSubject q={q} /> 들어간 말이 없어요.
-          </h2>
-          <p className="blank__body">
-            저장된 아이 말 중에는 없습니다.
-            {wordless > 0 ? (
-              <>
-                {" "}
-                <strong>말이 비어 있는 {wordless}점</strong>은 검색에 걸리지 않으니,
-                거기 있던 말일 수도 있습니다.
-              </>
-            ) : null}
-          </p>
-          <Link href="/" className="btn">
-            전체 보기
-          </Link>
-        </div>
-      ) : artworks.length === 0 ? (
-        <EmptyList />
-      ) : (
-        <>
-          {/*
-            🔴 여기 `남긴 것 12점 · 되짚어보기` 한 줄이 있었다. 지웠다.
-              세 조각이 전부 다른 곳으로 갔기 때문이다 —
-              **점수**는 머리말 요약이, **해별 점수**는 해 제목이, **되짚어보기**는 상단 바가 맡는다.
-              한 줄 안에 남은 것이 없는데 줄만 남아 있었다.
-          */}
-
-          {/*
-            🔴 전에는 격자 하나에 전부 쏟아부었다. 시드가 한 해(10점)짜리였을 때 만든 모양이라
-              구분이 필요 없었고, 네 해로 넓어질 때 **격자만 그대로 남았다.**
-              그래서 `만 3세 2개월` 옆 칸이 `생후 6개월`이었고 그 사이에 아무 표시가 없었다.
-
-            🔑 묶는 단위를 해로 고른 이유는 lib/group.ts에 적었다 — 책의 단위와 같아진다.
-          */}
-          {groupByYear(artworks).map(({ year, items }) => (
-            <section
-              className={
-                /*
-                  🔑 제목 밑줄이 **그 아래 카드들의 시기**를 띤다.
-                    격자가 최신순이라 제목 바로 밑에 오는 것이 그 해의 마지막 시기이고,
-                    `items[0]`이 바로 그것이다. 선이 자기 밑에 있는 것과 같은 색이 된다.
-                */
-                (() => {
-                  const b = timeBand(describeAge(items[0].madeOn, birth).scale);
-                  return b ? `span span--${b}` : "span";
-                })()
-              }
-              key={year}
-              aria-labelledby={`span-${year}`}
-            >
+      <ol className="tl">
+        {rows.map((row) => {
+          const mark = marks.get(row.id);
+          return (
+            <li key={row.id} className="tl__item">
               {/*
-                🔑 제목이 화면 위에 붙어 있는다(sticky). 격자를 내리는 동안
-                  **지금 보고 있는 것이 어느 해인지**가 화면에서 사라지지 않아야
-                  구분이 구분 구실을 한다. 한 번 지나가고 마는 제목은 표지판이 아니다.
+                🔑 띠가 바뀌는 자리에만 표가 선다. 이 표가 이 화면의 전부다 —
+                  **부르는 단위가 갈아타는 순간**이 아이가 자란 순간이라서다.
               */}
-              <h2 className="span__head" id={`span-${year}`}>
-                <span className="span__year">{year}년</span>
-                {/*
-                  🔑 그 해가 아이의 어느 시절이었는지. items가 만든 날 역순이라
-                    **끝이 그 해의 처음**이다. 생일을 안 넣었으면 이 자리가 통째로 없다.
-                */}
-                {(() => {
-                  const span = describeSpan(items[items.length - 1].madeOn, items[0].madeOn, birth);
-                  if (!span) return null;
-                  /*
-                    🔑 양 끝을 각자 자기 시기 색으로 칠한다.
-                      `임신 32주 5일 ~ 생후 6개월`이 보라에서 청록으로 넘어가면서,
-                      **그 해에 아이가 태어났다는 사실**이 제목 한 줄에 그대로 보인다.
-                  */
-                  return (
-                    <span className="span__age">
-                      <span className={`age--${span.from.band}`}>{span.from.label}</span>
-                      {span.to ? (
-                        <>
-                          {" ~ "}
-                          <span className={`age--${span.to.band}`}>{span.to.label}</span>
-                        </>
-                      ) : null}
+              {mark ? (
+                <p className={`tl__mark age--${mark}`}>
+                  <span className="tl__mark-title">{BAND_MARK[mark].title}</span>
+                  <span className="tl__mark-note">{BAND_MARK[mark].note}</span>
+                </p>
+              ) : null}
+
+              <Link
+                href={`/artwork/${row.id}`}
+                className={row.band ? `tl__row tl__row--${row.band}` : "tl__row"}
+              >
+                <span className="tl__dot" aria-hidden />
+
+                <span className="tl__thumb">
+                  <img src={`/api/photo/${row.id}`} alt="" loading="lazy" decoding="async" />
+                </span>
+
+                <span className="tl__body">
+                  <span className="tl__when">
+                    {row.band ? (
+                      <span className={`tl__age age--${row.band}`}>{row.when.label}</span>
+                    ) : null}
+                    <time dateTime={row.madeOn.toISOString()}>{formatMadeOn(row.madeOn)}</time>
+                  </span>
+
+                  {row.childQuote ? (
+                    <span className="tl__quote">
+                      <SaidBy by={row.quoteBy} />
+                      {row.childQuote}
                     </span>
-                  );
-                })()}
-                {/*
-                  🔴 평소에도 `· 6점`이 붙어 있었다. 뺐다.
-                    ① 한 줄에 가운뎃점이 둘이 됐고, ② 바로 아래 책 줄이 같은 해를
-                    `진행 중 · 지금까지 6점`으로 이미 센다. **같은 수를 두 번 말하고 있었다.**
-
-                  🔑 검색 중에는 다르다. 화면에 보이는 것이 그 해 전부가 아니라서
-                    몇 점이 걸린 것인지 여기가 아니면 아무도 말하지 않는다.
-                    구분자를 또 쓰지 않으려고 괄호로 붙인다.
-                */}
-                {searching ? (
-                  <span className="span__count">(찾은 것 {items.length}점)</span>
-                ) : null}
-              </h2>
-
-              <ul className="grid">
-                {items.map((artwork) => {
-                  /*
-                    🔑 시기를 카드 전체가 안다. 라벨 색과 사진 틀 바탕이 같은 값에서 나와야
-                      둘이 어긋나지 않는다 — 한 곳에서 정하고 두 곳이 쓴다.
-                  */
-                  const when = describeAge(artwork.madeOn, birth);
-                  const band = timeBand(when.scale);
-                  return (
-                  <li key={artwork.id}>
-                    <Link
-                      href={`/artwork/${artwork.id}`}
-                      className={band ? `card card--${band}` : "card"}
-                    >
-                      <div className="card__frame">
-                        <img
-                          className="card__img"
-                          src={`/api/photo/${artwork.id}`}
-                          /*
-                           * alt에 아이 말을 넣지 않는다. 그건 그림의 설명이 아니라
-                           * 그림을 보고 아이가 한 말이라, 화면에 이미 글로 나와 있다.
-                           * 스크린리더가 같은 문장을 두 번 읽게 된다.
-                           */
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-
-                      <div className="card__body">
-                        {artwork.childQuote ? (
-                          <p className="quote">
-                            <SaidBy by={artwork.quoteBy} />
-                            {highlight(artwork.childQuote, q)}
-                          </p>
-                        ) : (
-                          <p className="quote quote--empty">{emptyQuoteText(artwork.quoteBy)}</p>
-                        )}
-                        <p className="card__when">
-                          {/*
-                            🔑 날짜 앞에 시간 축을 둔다. 부모가 그 시절을 부르는 단위가 그쪽이다 —
-                              "임신 24주"가 "2018년 9월 12일"보다 먼저 떠오른다.
-                              생일을 안 넣었으면 축이 없고, 그때는 날짜만 남는다.
-                          */}
-                          {band === null ? null : (
-                            <span className={`card__age age--${band}`}>{when.label}</span>
-                          )}
-                          <time className="card__date" dateTime={artwork.madeOn.toISOString()}>
-                            {formatMadeOn(artwork.madeOn)}
-                          </time>
-                        </p>
-                      </div>
-                    </Link>
-                  </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-        </>
-      )}
+                  ) : (
+                    <span className="tl__quote tl__quote--empty">
+                      {emptyQuoteText(row.quoteBy)}
+                    </span>
+                  )}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
 
       {/*
-        🔑 책 줄은 작품 아래다. 위가 아니다.
-          이 서비스의 주인공은 **아이가 만든 것과 아이가 한 말**이고,
-          책은 그 콘텐츠를 활용하는 쪽이다. 화면에서 먼저 보이는 것이 주인공이라,
-          책이 위에 있으면 첫 5초가 "책 만드는 서비스"라고 말한다.
-
-          그렇다고 홈에서 빼지는 않는다. 빼면 책 만들기 → 주문 → 상태 변경으로 가는
-          동선이 끊기고, "직접 만들어보라고 비워둔" 시드 배치가 무의미해진다.
-          위가 아니라 아래 — 그게 부가 기능의 자리다.
+        🔑 축이 여기서 끝나지 않는다는 표시. 마지막 기록 아래에 오늘이 있고,
+          그 사이가 비어 있다는 것 자체가 **다음에 할 일**을 말한다.
+          재촉하는 문구는 쓰지 않는다 — 비어 있는 자리가 이미 그 말을 한다.
       */}
-      <BooksStrip rows={yearRows} orderCount={orderCount} />
-
-      {/*
-        🔑 맨 아래에 조용히 둔다.
-          처음 여는 사람에게는 필요하고 주 사용자에게는 필요 없는 기능이라,
-          찾으면 보이되 먼저 보이지는 않아야 한다.
-          그리고 이게 있어야 위의 버튼들이 눌린다 — 되돌릴 수 없으면 아무도 안 눌러본다.
-      */}
-      <footer className="demo">
-        <p className="demo__lede">
-          마음껏 등록하고 고치고 주문해 보세요. 언제든 처음 상태로 되돌릴 수 있습니다.
-        </p>
-        <DemoResetButton />
-      </footer>
-    </div>
-  );
-}
-
-/**
- * 빈 목록.
- *
- * 🔑 "작품이 없습니다"로 끝내지 않는다. 빈 화면은 안내할 자리가 가장 넓은 화면이다.
- *   무엇을 하는 곳인지 다시 말하고, 다음 동작 하나만 남긴다.
- */
-function EmptyList() {
-  return (
-    <div className="blank">
-      <h2 className="blank__title">아직 남긴 것이 없어요.</h2>
-      <p className="blank__body">
-        아이가 그림을 내밀면, 병원에서 초음파 사진을 받아 나오면, <strong>그 자리에서</strong>
-        사진을 찍고 <strong>그때의 말</strong>을 그대로 적어두세요.
-        그 말은 그 자리에서 안 받으면 영영 얻을 수 없습니다.
+      <p className="tl__end">
+        여기까지가 지금입니다.
+        <Link href="/artwork/new" className="btn btn--ghost tl__end-btn">
+          <Camera />한 점 더 남기기
+        </Link>
       </p>
-      <Link href="/artwork/new" className="btn">
-        <Camera />
-        첫 한 점 남기기
-      </Link>
     </div>
   );
 }
