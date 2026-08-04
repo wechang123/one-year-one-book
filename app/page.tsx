@@ -262,21 +262,22 @@ export default async function ArtworkListPage({
       */}
       {nothingYet ? null : (
       /*
-        🔴 접었다. 전에는 펼쳐진 채로 첫 화면에 있었고, 375px에서 **142px**을 먹었다.
-          검색은 **이미 있는 것을 좁히는 행동**이라 새로 남기는 행동·남긴 것보다 뒤다 —
-          [찾기] 버튼을 진한 것에서 테두리만 있는 것으로 내린 것과 같은 판단의 연장이다.
-          첫 화면에서 되찾은 자리는 그림이 가져간다. 이게 무슨 서비스인지 5초에 말하는 것이 그림이다.
+        🔴 한 번 `<details>`로 접었다가 폈다. 접은 근거가 세로 168px이었는데,
+          **그 168px을 안 쪼개봤다.** 쪼개보니 이렇다(375px):
 
-        🔑 `<details>`라 JS가 꺼져도 열리고 닫힌다. 데모 초기화(`.reset`)가 이미 쓰는 방식이다.
-        🔑 검색 중이면 열려 있다(`open={searching}`). 결과를 보고 있는데 검색어와 [전체 보기]가
-          접혀 있으면, 무엇으로 찾았는지 확인할 방법이 사라진다.
+            이름표 줄 42 + 입력칸 줄 50 + 도움말 줄 42 + 여백 24  =  168
+            접었을 때                                            =   66
+            입력칸 줄만 남겼을 때                                  =   74
+
+          **차이가 8px이다.** 아낀 102px 중 94px은 이름표와 도움말이 만든 것이고,
+          토글이 실제로 산 것은 8px이었다. **8px을 벌자고 기능 하나를 클릭 뒤에 숨긴 셈이다.**
+          부 사용자는 노트북 1440px에서 5분인데, 세로가 남아도는 화면에서도 같이 접혀 있었다.
+
+        🔑 그래서 줄 두 개를 없앤다 — 이름표는 자리표시자로 내리고,
+          도움말은 **검색 중일 때만** 띄운다. 못 찾는 것이 있다는 안내는 그때 필요하고,
+          0건 화면(`.blank`)이 이미 같은 말을 한다.
       */
-      <details className="search" open={searching}>
-        <summary className="search__toggle">
-          <Search />
-          아이가 한 말로 찾기
-        </summary>
-        <form action="/">
+      <form className="search" action="/">
         <div className="search__row">
           <input
             id="q"
@@ -284,10 +285,14 @@ export default async function ArtworkListPage({
             type="search"
             className="field__input"
             defaultValue={q}
-            placeholder="공룡, 이불, 선생님…"
-            /* 보이는 이름표가 <summary>로 옮겨갔다. 접힌 상태에서도 이름이 남아야 한다. */
+            /*
+              🔑 자리표시자가 이름표 노릇을 한다. 예시(`공룡, 이불…`)를 뺀 것은
+                375px에서 입력칸이 224px이라 둘 다 넣으면 잘리기 때문이다.
+                무엇을 넣는 칸인지가 예시보다 앞선다.
+            */
+            placeholder="아이가 한 말로 찾기"
             aria-label="아이가 한 말로 찾기"
-            aria-describedby="search-help"
+            aria-describedby={searching ? "search-help" : undefined}
           />
           {/*
             🔑 진한 버튼은 이 화면에 **하나뿐이어야 한다** — [사진 등록].
@@ -306,28 +311,34 @@ export default async function ArtworkListPage({
             </Link>
           ) : null}
         </div>
-        <p className="field__help" id="search-help">
-          {/*
-            🔑 못 찾는 것이 있다는 사실을 검색 옆에서 미리 말한다.
-              말이 빈 작품은 검색으로 영원히 안 나온다. 그건 버그가 아니라
-              "말은 지금만 받을 수 있다"의 대가가 화면에 드러나는 자리다.
-              침묵하면 사용자는 그 작품이 사라졌다고 생각한다.
-          */}
-          그림이 아니라 <strong>아이가 한 말</strong>에서 찾습니다.
-          {wordless > 0 ? ` 말이 비어 있는 ${wordless}점은 여기서 찾을 수 없습니다.` : null}
-        </p>
-        </form>
-
         {/*
-          🔑 찾은 총량은 여기다. 해 제목은 그 해 안에서 몇 점인지만 말하므로
-            여러 해에 걸쳐 찾혔을 때 전부 몇 점인지는 아무도 말하지 않는다.
+          🔴 전에는 이 도움말이 **항상** 떠 있었고, 375px에서 두 줄로 감겨 42px을 먹었다.
+            지금은 검색 중일 때만 나온다.
+
+          🔑 못 찾는 것이 있다는 사실은 **찾고 나서** 필요하다. 아직 안 찾은 사람에게
+            "이건 못 찾습니다"를 먼저 말하면, 아직 하지도 않은 일의 한계를 먼저 읽는 셈이다.
+            말이 빈 작품은 검색으로 영원히 안 나온다 — 그건 버그가 아니라
+            "말은 지금만 받을 수 있다"의 대가이고, 침묵하면 사용자는 그 작품이 사라졌다고 본다.
+            0건 화면(`.blank`)도 같은 말을 한다. 두 자리 다 살아 있다.
         */}
-        {searching && artworks.length > 0 ? (
-          <p className="search__result">
-            <QuotedSubject q={q} /> 들어간 말 <strong>{artworks.length}점</strong>
-          </p>
+        {searching ? (
+          <>
+            <p className="field__help" id="search-help">
+              그림이 아니라 <strong>아이가 한 말</strong>에서 찾습니다.
+              {wordless > 0 ? ` 말이 비어 있는 ${wordless}점은 여기서 찾을 수 없습니다.` : null}
+            </p>
+            {/*
+              🔑 찾은 총량은 여기다. 해 제목은 그 해 안에서 몇 점인지만 말하므로
+                여러 해에 걸쳐 찾혔을 때 전부 몇 점인지는 아무도 말하지 않는다.
+            */}
+            {artworks.length > 0 ? (
+              <p className="search__result">
+                <QuotedSubject q={q} /> 들어간 말 <strong>{artworks.length}점</strong>
+              </p>
+            ) : null}
+          </>
         ) : null}
-      </details>
+      </form>
       )}
 
       {searching && artworks.length === 0 ? (
