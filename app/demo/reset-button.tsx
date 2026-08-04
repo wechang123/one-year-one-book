@@ -40,9 +40,9 @@ export function DemoResetButton() {
         ) : null}
 
         <p className="reset__what">
-          <strong>지워지는 것</strong> — 직접 등록한 사진과 말, 직접 만든 책과 그 책의 주문·이력
+          <strong>지워지는 것</strong>: 직접 등록한 사진과 말, 직접 만든 책과 그 책의 주문·이력
           <br />
-          <strong>남는 것</strong> — 처음부터 있던 것. 그중 말이나 날짜를 고치셨다면{" "}
+          <strong>남는 것</strong>: 처음부터 있던 것. 그중 말이나 날짜를 고치셨다면{" "}
           <strong>원래 문장으로 되돌아갑니다.</strong>
         </p>
 

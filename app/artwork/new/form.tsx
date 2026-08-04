@@ -148,7 +148,7 @@ export function NewArtworkForm({
           <label className="dropslot" htmlFor="photo">
             <span className="dropslot__title">여기에 사진이 들어갑니다</span>
             <span className="dropslot__body">
-              그림 · 만들기 · 상장 · 초음파 사진 — <strong>손에 들려 있는 것이면 됩니다</strong>
+              그림, 만들기, 상장, 초음파 사진. <strong>손에 들려 있는 것이면 됩니다.</strong>
             </span>
             <span className="dropslot__body">원본 비율 그대로 보입니다. 잘리지 않아요.</span>
           </label>
@@ -175,7 +175,12 @@ export function NewArtworkForm({
           aria-describedby="photo-help"
         />
         <p className="field__help" id="photo-help">
-          JPG · PNG · WebP, 8MB까지. 벽에 붙은 채로 찍어도 됩니다.
+          {/*
+            🔴 `JPG · PNG · WebP`였다. 가운뎃점이 한 줄에 둘이었다.
+              **띄어쓴 ` · `는 구분자**이고 구분자는 한 줄에 하나까지다.
+              (붙여 쓴 `며칠·몇 개월`은 한국어 맞춤법의 가운뎃점이라 그대로 둔다 — 문장부호다.)
+          */}
+          JPG, PNG, WebP. 8MB까지. 벽에 붙은 채로 찍어도 됩니다.
         </p>
 
         {/*
@@ -219,7 +224,7 @@ export function NewArtworkForm({
             사진 찍은 날이 아니라 만든 날이다. 벽에 붙어 있던 그림을 오늘 찍는 일이 흔하다.
             그래서 EXIF에서 자동으로 채우지 않는다. (docs/03-feasibility.md §3-2)
           */}
-          오늘로 채워뒀습니다. 예전 것이면 바꿔주세요 — <strong>초음파 사진처럼 몇 해 전 것도 됩니다.</strong>
+          오늘로 채워뒀습니다. 예전 것이면 바꿔주세요. <strong>초음파 사진처럼 몇 해 전 것도 됩니다.</strong>
           {/*
             🔑 고른 날짜가 아이의 어느 시점이었는지 그 자리에서 말한다.
               날짜만으로는 "2018년 9월 12일"이 임신 몇 주였는지 부모도 바로 안 떠오른다.

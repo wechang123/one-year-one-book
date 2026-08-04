@@ -90,10 +90,53 @@ body {
   line-height: 1.6;
   /* 폰에서 가로로 밀리는 것을 원천 차단한다. 한 손으로 쓰는 화면이다. */
   overflow-wrap: break-word;
+  /*
+   * 🔑 마지막 줄에 낱말 하나만 남는 것을 막는다.
+   *   카드 말이 `…밥 먹으래서 못` / `그린 거야.`처럼 끊기고 있었다.
+   *   `balance`가 아니라 `pretty`인 이유: `balance`는 줄 수가 적은 제목용이고,
+   *   여러 줄짜리 본문에 걸면 브라우저가 포기하거나 느려진다.
+   */
+  text-wrap: pretty;
+}
+
+/*
+ * 🔑 수치는 고정폭 숫자로. 날짜·점수가 세로로 쌓이는 화면이라
+ *   비례폭이면 `2026년 5월 9일`과 `2026년 7월 19일`의 자릿수가 안 맞는다.
+ */
+time,
+.card__age,
+.span__count,
+.masthead__meta,
+.books__count {
+  font-variant-numeric: tabular-nums;
 }
 
 a {
   color: inherit;
+}
+
+/*
+ * 건너뛰기 링크. 평소에는 화면 밖에 있다가 탭으로 포커스가 오면 제자리로 온다.
+ * `display: none`으로 숨기면 탭 순서에서도 사라져서 있으나 마나가 된다.
+ */
+.skip {
+  position: fixed;
+  top: var(--s-3);
+  left: var(--s-3);
+  z-index: 10;
+  padding: var(--s-3) var(--s-5);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--paper);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  /* 화면 왼쪽 밖. `transform`이라 레이아웃에 자리를 안 만든다. */
+  transform: translateX(-120%);
+}
+
+.skip:focus-visible {
+  transform: none;
 }
 
 /* ── 조작 상태 ────────────────────────────────────────────
@@ -453,11 +496,18 @@ a {
   color: var(--ink-soft);
 }
 
-.span__age::before,
-.span__count::before {
+/*
+ * 🔴 `.span__count`에도 같은 점이 붙어 있었다. 한 줄에 가운뎃점이 둘이 됐다.
+ *   점은 **한 줄에 하나**만 둔다. 점수는 검색 중에만 나오고 괄호로 붙는다.
+ */
+.span__age::before {
   content: "·";
   margin-right:var(--s-3);
   font-weight: 400;
+}
+
+.span__count {
+  margin-left:var(--s-3);
 }
 
 /*

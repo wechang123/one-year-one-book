@@ -218,13 +218,19 @@ export default async function ArtworkListPage({
               별도 메뉴를 만들지 않은 이유: 이 값은 **한 번 넣고 다시 안 여는 값**이다.
               자주 쓰는 것과 같은 무게로 두면 화면이 그만큼 흐려진다.
           */}
+          {/*
+            🔴 `하늘의 기록 · 남긴 것 12점 · 2018년부터`로 가운뎃점이 **둘**이었다.
+              한 줄에 구분자가 둘이면 어느 쪽이 더 큰 나눔인지 화면이 말하지 못한다.
+              `남긴 것`을 빼고 어순을 바꿔 하나로 줄였다 — `하늘의 기록 · 2018년부터 12점`.
+              센 것이 무엇인지는 바로 아래 해 제목들이 이어서 말한다.
+          */}
           {owner || !nothingYet ? (
             <p className="masthead__meta">
               {owner ? <Link href="/child">{owner}의 기록</Link> : null}
               {owner && !nothingYet ? " · " : null}
               {nothingYet ? null : (
                 <>
-                  남긴 것 <strong>{allMadeOn.length}점</strong> · {firstYear}년부터
+                  {firstYear}년부터 <strong>{allMadeOn.length}점</strong>
                 </>
               )}
             </p>
@@ -431,13 +437,17 @@ export default async function ArtworkListPage({
                   );
                 })()}
                 {/*
-                  🔑 검색 중이면 `찾은 것 n점`이다. 그냥 `n점`이라고 쓰면
-                    그 해에 남긴 것이 n점이라는 말로 읽히는데, 그건 아래 책 줄이 세는 수와 다르다.
-                    화면에 보이는 것만 세고, 무엇을 셌는지 같이 쓴다.
+                  🔴 평소에도 `· 6점`이 붙어 있었다. 뺐다.
+                    ① 한 줄에 가운뎃점이 둘이 됐고, ② 바로 아래 책 줄이 같은 해를
+                    `진행 중 · 지금까지 6점`으로 이미 센다. **같은 수를 두 번 말하고 있었다.**
+
+                  🔑 검색 중에는 다르다. 화면에 보이는 것이 그 해 전부가 아니라서
+                    몇 점이 걸린 것인지 여기가 아니면 아무도 말하지 않는다.
+                    구분자를 또 쓰지 않으려고 괄호로 붙인다.
                 */}
-                <span className="span__count">
-                  {searching ? `찾은 것 ${items.length}점` : `${items.length}점`}
-                </span>
+                {searching ? (
+                  <span className="span__count">(찾은 것 {items.length}점)</span>
+                ) : null}
               </h2>
 
               <ul className="grid">
@@ -541,7 +551,7 @@ function EmptyList() {
     <div className="blank">
       <h2 className="blank__title">아직 남긴 것이 없어요.</h2>
       <p className="blank__body">
-        아이가 그림을 내밀면, 병원에서 초음파 사진을 받아 나오면 — <strong>그 자리에서</strong>
+        아이가 그림을 내밀면, 병원에서 초음파 사진을 받아 나오면, <strong>그 자리에서</strong>
         사진을 찍고 <strong>그때의 말</strong>을 그대로 적어두세요.
         그 말은 그 자리에서 안 받으면 영영 얻을 수 없습니다.
       </p>
