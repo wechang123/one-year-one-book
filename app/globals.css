@@ -1371,8 +1371,15 @@ a.recall:hover {
   justify-content: center;
   gap: 0.35rem;
   aspect-ratio: 1 / 1;
-  /* 폰 세로에서 화면을 다 먹지 않게. 저장 버튼이 밀려나면 오히려 손해다. */
-  max-height: 42vh;
+  /*
+   * 🔴 여기가 한 번 틀렸다. 전에는 `max-height: 42vh`로 높이를 잘랐는데,
+   *   그러면 폼이 넓은 화면에서 **정사각이 깨진다** — 1440px에서 실측 비율이 1.78이었다.
+   *   바로 위 주석이 *"목록 카드와 같은 비율"*이라고 말하는데 화면은 아니었던 것이다.
+   *   높이가 아니라 **폭을 막으면** 어느 폭에서도 정사각이 남고,
+   *   "저장 버튼이 밀려나면 손해다"라는 원래 목적도 그대로 지켜진다.
+   */
+  max-width: min(100%, 22rem);
+  margin-inline: auto;
   margin-bottom: 0.6rem;
   padding: 1.25rem;
   border: 2px dashed var(--line);
