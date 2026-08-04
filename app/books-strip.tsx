@@ -94,10 +94,24 @@ export function BooksStrip({ rows, orderCount }: { rows: YearRow[]; orderCount: 
   );
 }
 
+/**
+ * 🔴 진한 버튼이었다. 내렸다.
+ *
+ *   화면의 진한 버튼은 **하나**여야 한다는 규칙을 세울 때 이 버튼은 하나였고,
+ *   그래서 *"테두리로 분리된 구역의 주 행동"*이라는 예외를 줬다.
+ *   그 뒤 시드가 넓어지면서 **연도가 넷이 됐고 이 버튼도 넷이 됐다.**
+ *   홈 아래쪽에 검은 알약 네 개가 세로로 쌓이면 위의 [사진 등록]과 무게가 맞선다.
+ *
+ * 🔑 **강조는 개수에 반비례한다.** 넷이 다 진하면 어느 것도 두드러지지 않는다.
+ *   발견성은 **구역이 담당한다** — 테두리와 `한 해가 한 권` 제목이 이미 그 일을 하고 있어서
+ *   버튼이 그걸 또 할 필요가 없다.
+ *
+ * 🔑 조건이 바뀌면 예외도 다시 본다. 예외를 준 근거가 *"하나뿐이라서"*였기 때문이다.
+ */
 function MakeButton() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" className="btn" disabled={pending}>
+    <button type="submit" className="btn btn--ghost" disabled={pending}>
       {pending ? "묶는 중…" : "책으로 묶기"}
     </button>
   );
