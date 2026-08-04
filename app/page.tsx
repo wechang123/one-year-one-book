@@ -16,7 +16,44 @@ import { DemoResetButton } from "./demo/reset-button";
 // 등록·편집한 결과가 바로 보여야 한다. 캐시된 목록을 보여주면 방금 한 일이 사라진 것처럼 보인다.
 export const dynamic = "force-dynamic";
 
-export default async function ArtworkListPage() {
+/**
+ * 검색어에서 매칭된 부분을 강조한다.
+ *
+ * 🔑 강조가 없으면 **왜 찾혔는지 모른다.**
+ *   말이 두세 문장짜리라 결과만 보면 어느 낱말이 걸렸는지 안 보이고,
+ *   그러면 사용자는 검색이 제대로 동작했는지 판단할 수 없다.
+ */
+function highlight(text: string, q: string) {
+  if (!q) return text;
+  const lower = text.toLowerCase();
+  const needle = q.toLowerCase();
+  const out: React.ReactNode[] = [];
+  let from = 0;
+  for (;;) {
+    const at = lower.indexOf(needle, from);
+    if (at === -1) break;
+    if (at > from) out.push(text.slice(from, at));
+    out.push(<mark key={at}>{text.slice(at, at + q.length)}</mark>);
+    from = at + q.length;
+  }
+  out.push(text.slice(from));
+  return out;
+}
+
+export default async function ArtworkListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q: qRaw } = await searchParams;
+  /**
+   * 🔑 GET 폼 + searchParams다. 서버에서 처리하므로 **JS가 꺼져도 검색된다.**
+   *   클라이언트에서 거르는 방법도 있지만, 그러면 목록을 통째로 받아야 하고
+   *   작품이 늘수록 안 쓰는 데이터를 더 많이 내려받는다.
+   */
+  const q = (qRaw ?? "").trim();
+  const searching = q !== "";
+
   const prisma = getPrisma();
 
   /**
@@ -29,9 +66,39 @@ export default async function ArtworkListPage() {
    */
   const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
 
-  const [artworks, books, orderCount] = await Promise.all([
+  const [artworks, books, orderCount, wordless] = await Promise.all([
     prisma.artwork.findMany({
-      where: profile ? { profileId: profile.id } : undefined,
+      where: profile
+        ? {
+            profileId: profile.id,
+            /**
+             * 🔑 아이 말만 검색 대상이다. 날짜 텍스트도, 아이 이름도 아니다.
+             *   **이 서비스에서 색인을 만드는 사람은 아이여야 한다.**
+             *   대상을 넓힐수록 그 근거가 흐려진다 — "3월"로 찾히면 그건 달력이 만든 색인이고,
+             *   아이 이름으로 찾히면 그건 프로필이 만든 색인이다.
+             *
+             * 🔑 왜 full-text가 아니라 ILIKE인가 — 한국어에서 full-text가 안 먹는다.
+             *   Postgres에 한국어 형태소 분석 설정이 없어서 to_tsvector('simple')은 공백으로만 자른다.
+             *   실제로 확인했다:
+             *     to_tsvector('simple','내가 만든 공룡을 그렸어')
+             *       → '공룡을':3 '그렸어':4 '내가':1 '만든':2
+             *     @@ to_tsquery('simple','공룡')  →  f   (안 걸린다)
+             *     ILIKE '%공룡%'                   →  t   (걸린다)
+             *   조사가 붙는 언어라서 낱말 단위 색인이 부분 문자열보다 못하다.
+             *   pg_trgm은 확장 설치가 필요한데, "docker compose up 1회 기동" 요건에
+             *   설치 단계를 하나 더 얹을 근거가 지금 없다.
+             *
+             * 🔑 인덱스를 만들지 않았다.
+             *   지금 데이터는 10~60점 규모다. 이 규모에서 ILIKE는 seq scan이고 **그게 옳다** —
+             *   행이 수십 개인 테이블에서 인덱스를 타는 건 오히려 느리다.
+             *   근거 없이 인덱스를 만드는 것은 이 저장소가 지금까지 거절해온 종류의 결정이다.
+             *   언제부터 필요해지나: 한 아이가 **수천 점**을 넘고 검색이 눈에 띄게 느려질 때.
+             *   그때 필요한 건 인덱스 하나가 아니라 pg_trgm 확장 + GIN 인덱스이고,
+             *   확장을 깔 근거가 그 시점에 비로소 생긴다.
+             */
+            ...(searching ? { childQuote: { contains: q, mode: "insensitive" as const } } : {}),
+          }
+        : undefined,
       orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
       /**
        * 🔑 사진 테이블을 건드리지 않는다.
@@ -46,6 +113,10 @@ export default async function ArtworkListPage() {
     }),
     prisma.order.count({
       where: profile ? { collection: { profileId: profile.id } } : undefined,
+    }),
+    // 검색으로 영원히 못 찾는 것이 몇 점인지. 화면이 그 사실을 말하기 위해 센다.
+    prisma.artwork.count({
+      where: profile ? { profileId: profile.id, childQuote: null } : { childQuote: null },
     }),
   ]);
 
@@ -91,7 +162,71 @@ export default async function ArtworkListPage() {
         </Link>
       </header>
 
-      {artworks.length === 0 ? (
+      {/*
+        🔑 GET 폼이다. method가 기본 get이고 action이 "/"라 JS 없이 동작한다.
+          🔑 태그를 안 만들고 검색을 만든 이유가 이 한 칸에 들어 있다 —
+            태그는 부모가 분류를 미리 정하는 것이고, 검색은 아이가 한 말을 그대로 찾는 것이다.
+            이 서비스에서 색인을 만드는 사람은 아이여야 한다.
+      */}
+      <form className="search" action="/">
+        <label className="search__label" htmlFor="q">
+          아이가 한 말로 찾기
+        </label>
+        <div className="search__row">
+          <input
+            id="q"
+            name="q"
+            type="search"
+            className="field__input"
+            defaultValue={q}
+            placeholder="공룡, 이불, 선생님…"
+            aria-describedby="search-help"
+          />
+          <button type="submit" className="btn">
+            찾기
+          </button>
+          {searching ? (
+            <Link href="/" className="btn btn--ghost">
+              전체 보기
+            </Link>
+          ) : null}
+        </div>
+        <p className="field__help" id="search-help">
+          {/*
+            🔑 못 찾는 것이 있다는 사실을 검색 옆에서 미리 말한다.
+              말이 빈 작품은 검색으로 영원히 안 나온다. 그건 버그가 아니라
+              "말은 지금만 받을 수 있다"의 대가가 화면에 드러나는 자리다.
+              침묵하면 사용자는 그 작품이 사라졌다고 생각한다.
+          */}
+          그림이 아니라 <strong>아이가 한 말</strong>에서 찾습니다.
+          {wordless > 0 ? ` 말이 비어 있는 ${wordless}점은 여기서 찾을 수 없습니다.` : null}
+        </p>
+      </form>
+
+      {searching && artworks.length === 0 ? (
+        /*
+         * 🔑 0건 문구를 "아이가 그 말을 한 적이 없어요"로 쓰지 않는다.
+         *   말이 빈 작품이 있는 한 그 문장은 **검산되지 않는다** —
+         *   아이가 말했는데 우리가 안 받아둔 것일 수 있다.
+         *   앱은 저장된 것만 안다. 아는 것까지만 말한다.
+         */
+        <div className="blank">
+          <h2 className="blank__title">&ldquo;{q}&rdquo;가 들어간 말이 없어요.</h2>
+          <p className="blank__body">
+            저장된 아이 말 중에는 없습니다.
+            {wordless > 0 ? (
+              <>
+                {" "}
+                <strong>말이 비어 있는 {wordless}점</strong>은 검색에 걸리지 않으니,
+                거기 있던 말일 수도 있습니다.
+              </>
+            ) : null}
+          </p>
+          <Link href="/" className="btn">
+            전체 보기
+          </Link>
+        </div>
+      ) : artworks.length === 0 ? (
         <EmptyList />
       ) : (
         <>
@@ -101,7 +236,15 @@ export default async function ArtworkListPage() {
               빈도가 높은 것이 크고, 낮은 것은 그 목록을 설명하는 자리에 조용히 붙인다.
           */}
           <p className="tally">
-            작품 {artworks.length}점 · <Link href="/recall">되짚어보기</Link>
+            {searching ? (
+              <>
+                &ldquo;{q}&rdquo;가 들어간 말 {artworks.length}점
+              </>
+            ) : (
+              <>
+                작품 {artworks.length}점 · <Link href="/recall">되짚어보기</Link>
+              </>
+            )}
           </p>
 
           <ul className="grid">
@@ -125,7 +268,7 @@ export default async function ArtworkListPage() {
 
                   <div className="card__body">
                     {artwork.childQuote ? (
-                      <p className="quote">{artwork.childQuote}</p>
+                      <p className="quote">{highlight(artwork.childQuote, q)}</p>
                     ) : (
                       <p className="quote quote--empty">아직 안 물어봤어요</p>
                     )}
