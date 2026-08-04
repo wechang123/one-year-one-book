@@ -309,36 +309,47 @@ PORT=8080 DB_PORT=5555 docker compose up --build
 
 ---
 
-## 시드 이미지 출처
+## 시드 이미지 — 저장소 안의 코드가 만든다
 
-`public/seed/01~10.jpg` · **전부 CC0 / Public Domain** · 출처는 전부 Wikimedia Commons · 합계 1.7MB
+`public/seed/01~12.jpg`는 **`scripts/seed-images.mjs`가 그린다.**
+SVG 도형을 코드로 그리고 `sharp`가 JPEG로 굽는다. 합계 **334KB.**
 
-**CC0/PD는 표기 의무가 없다. 의무가 없어도 밝히는 것이 맞다고 봤다.**
+```bash
+node scripts/seed-images.mjs   # 12장을 다시 만든다
+```
 
-| 파일 | 원본 | 라이선스 |
-|---|---|---|
-| `01-girl.jpg` | [Dessin efant.jpg](https://commons.wikimedia.org/wiki/File:Dessin_efant.jpg) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
-| `02-family.jpg` | [Family1.20110425.jpg](https://commons.wikimedia.org/wiki/File:Family1.20110425.jpg) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
-| `03-rooster.jpg` | [IMG Kinderbild Hahn.jpg](https://commons.wikimedia.org/wiki/File:IMG_Kinderbild_Hahn.jpg) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
-| `04-mom-and-me.jpg` | [27 de mayo 2026 - dia de la madre.jpg](https://commons.wikimedia.org/wiki/File:27_de_mayo_2026_-_dia_de_la_madre.jpg) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
-| `05-car.jpg` | [Barnteckning.jpg](https://commons.wikimedia.org/wiki/File:Barnteckning.jpg) | Public domain (PD-self) |
-| `06-house.jpg` | [2009.04.01 - Fachada - 7 anos.jpg](https://commons.wikimedia.org/wiki/File:2009.04.01_-_Fachada_-_7_anos.jpg) | Public domain · 저작자 Alessandro Gomes |
-| `07-people.jpg` | [Monigotes con amor.jpg](https://commons.wikimedia.org/wiki/File:Monigotes_con_amor.jpg) | Public domain (PD-self) |
-| `08-comic.jpg` | [Más monigotes con amor.jpg](https://commons.wikimedia.org/wiki/File:M%C3%A1s_monigotes_con_amor.jpg) | Public domain (PD-self) |
-| `09-tadpole.jpg` | [Huvudfoting 070226 JonathanHermin3yo.jpg](https://commons.wikimedia.org/wiki/File:Huvudfoting_070226_JonathanHermin3yo.jpg) | Public domain (PD-self) |
-| `10-self-portrait.jpg` | [Ephraim33 Self Portrait.jpg](https://commons.wikimedia.org/wiki/File:Ephraim33_Self_Portrait.jpg) | Public domain (PD-self) |
+**난수까지 고정 시드라 몇 번을 돌려도 같은 바이트가 나온다.**
 
-전부 리사이즈만 했고 그림 자체는 손대지 않았다(07·08의 스페인어 낙서도 그대로 두고, 아이 말이 그걸 받아 옮기게 썼다).
+| | |
+|---|---|
+| **실존 인물·기관** | 없다. 상장과 초음파에 들어가는 이름은 **가상의 시드 아이 이름 하나**뿐이고, 병원명·학교명은 넣지 않았다 — 실재하는 이름과 겹칠 수 있다 |
+| **아이 얼굴 사진** | 없다. 그림 속 얼굴은 **아이가 크레용으로 그린 낙서**다 |
+| **저작권** | 좌표와 색뿐이라 학습 데이터 논란이 걸리지 않는다 |
 
-**라이선스 위에 두 가지를 더 걸었다.**
+### 🔴 처음에는 CC0 실물 사진 10장이었다
 
-1. **아이 얼굴이 프레임에 없을 것** — 초상권은 라이선스와 무관하게 걸린다. 10장 중 얼굴이 나온 것은 없다.
-2. **업로더가 곧 권리자일 것** — 🔑 저작권이 두 겹이다. ① 그림을 그린 아이 ② 사진을 찍은 사람.
-   남의 아이 그림을 찍어 올린 사람은 ②만 라이선스할 수 있고 ①에는 권한이 없다.
-   실제로 `PD-USGov-EPA` 태그가 붙었지만 **그림을 그린 건 연방 직원이 아니라 5학년생**인 파일을 발견해 배제했다.
+Wikimedia Commons의 CC0/Public Domain 아동 그림을 썼고,
+*"AI 생성은 채택하지 않는다"*고 문서에 적어뒀다. **그 판단을 뒤집었다.**
 
-**디지털 그림판 작품은 전량 배제했다.** 전부 실물을 촬영·스캔한 것이다 —
-이 서비스의 전제가 *"실물이 쌓여서 버려야 한다"*인데 **디지털은 버릴 실물이 없다.**
+- **초음파 사진과 상장은 CC0로 구할 수 없다.** 실제 출력지에는 산모 이름·병원명이,
+  상장에는 아이 실명과 학교명이 찍혀 있다. 구해지더라도 그건 **실존하는 누군가의 임신 기록**이고,
+  이 저장소의 *"제3자 실명을 쓰지 않는다"*는 규칙과 정면으로 부딪힌다
+- **한 아이의 8년이 이어져 보여야 한다.** 서로 다른 여덟 아이의 그림을 모아두면
+  데모가 이 서비스의 주장을 부정한다
+- 접었던 이유 중 *"실물이 아니다"*는 **지금도 유효하다.** 그래서 종이를 기울여 놓고
+  그림자를 깔고 종이 결을 얹었다. 완전히 속이지는 못하고, **속이려는 것도 아니다**
+
+### ⚠️ "생성형 AI로 만들었습니다"라고는 안 쓴다
+
+**픽셀을 만든 것은 이미지 모델이 아니라 코드다.** 이미지 모델을 안 쓴 이유:
+
+| | |
+|---|---|
+| **재현성** | 확산 모델은 같은 프롬프트로 같은 그림을 다시 주지 않는다. 그러면 **저장소가 자기 시드를 다시 만들 수 없다** |
+| **글자** | 이미지 모델은 한글을 거의 못 쓴다. **상장은 글자가 본체다** |
+| **대가** | 사진 같은 질감이 안 나온다. **자세히 보면 생성물인 게 보인다.** 받아들였다 — 시드는 소품이다 |
+
+전말과 생성 규칙(프롬프트 형태)은 [`docs/04b-생성이미지.md`](./docs/04b-%EC%83%9D%EC%84%B1%EC%9D%B4%EB%AF%B8%EC%A7%80.md)에 있다.
 
 ---
 
@@ -472,7 +483,7 @@ Tailwind로 쓰면 `grid-cols-1 md:grid-cols-2 lg:grid-cols-4`가 되는데,
 | **Claude (Claude Code)** | 코드 · 문서 전반 | 페어 프로그래밍. 화면·스키마·검증을 같이 짜고, **채택 전에 왜 그런지 설명하게 했습니다** |
 | 〃 | 시드 문장 10개 | 그림을 **한 장씩 실제로 열어보고** 그 그림에 맞는 말을 씀 |
 | 〃 | 타당성 조사 | 경쟁 서비스·라이선스 조사. **출처를 확인할 수 없는 수치는 버렸습니다** |
-| **Wikimedia Commons** | 시드 이미지 10장 | CC0/PD 실물 촬영본. 생성형 AI 이미지는 **검토했다가 접었습니다**([이유](./docs/04b-대안-생성이미지%28채택안함%29.md)) |
+| **Claude (Claude Code)** | 시드 이미지 12장 | **저장소 안의 코드가 그립니다**(`scripts/seed-images.mjs`). 이미지 모델을 쓰지 않은 이유는 [04b](./docs/04b-%EC%83%9D%EC%84%B1%EC%9D%B4%EB%AF%B8%EC%A7%80.md) — 같은 프롬프트로 같은 그림이 다시 안 나오면 **저장소가 자기 시드를 재현할 수 없습니다** |
 
 **규칙 하나를 처음부터 걸어뒀습니다** — *이해하지 못한 코드는 채택하지 않는다.*
 그래서 커밋이 **논리 단위로** 쪼개져 있고, 각 커밋 본문에 **왜 그렇게 했는지**가 적혀 있습니다.
@@ -530,5 +541,5 @@ Tailwind로 쓰면 `grid-cols-1 md:grid-cols-2 lg:grid-cols-4`가 되는데,
 | [`docs/02-user.md`](./docs/02-user.md) | 사용자 정의 (주 사용자 / 이 저장소를 처음 여는 사람) |
 | [`docs/03-feasibility.md`](./docs/03-feasibility.md) | 타당성 판정 — 경제·기술·법 3축 |
 | [`docs/04-content.md`](./docs/04-content.md) | 시드 문장 10개와 그 근거 |
-| [`docs/04b-…(채택안함).md`](./docs/04b-대안-생성이미지%28채택안함%29.md) | **검토했다가 접은 경로**와 왜 접었는지 |
+| [`docs/04b-생성이미지.md`](./docs/04b-%EC%83%9D%EC%84%B1%EC%9D%B4%EB%AF%B8%EC%A7%80.md) | 시드 이미지를 만드는 규칙 — **접었다가 다시 편 경로**와 양쪽 이유 |
 | [`docs/worklog.md`](./docs/worklog.md) | 🔴 **무엇이 틀렸고 어떻게 발견했는지**, 시각과 함께 |
