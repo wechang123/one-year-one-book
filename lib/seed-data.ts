@@ -70,93 +70,118 @@ export type SeedArtwork = {
 };
 
 /**
- * 그림을 먼저 보고 나서 쓴 말이다.
+ * 12점. 임신 14주부터 초등 저학년까지.
  *
- * 이 순서(만든 날 오름차순)에는 의도가 있다.
- * 1월 그림에는 몸통이 없고 3월 그림에는 몸이 생긴다. 그리고 3월의 말이
- * "이번엔 몸도 그렸어"다. 두 장이 나란히 놓이면 왜 한 권으로 묶어야 하는지가
- * 저절로 설명된다.
+ * 🔑 **말이 먼저가 아니라 그림이 먼저다.** 그림을 그려놓고 그 그림에 맞는 말을 썼다.
+ *   반대로 하면 *"문장에 정확히 맞는 그림"*을 구해야 하는데, 실제 순서는 언제나
+ *   물건이 먼저고 말이 나중이다. (docs/04b가 접힌 이유 중 하나가 그 순서였다)
+ *
+ * 🔑 열 개의 말이 전부 **사진만으로는 알 수 없는 것**을 담는다.
+ *   아홉은 사진에 없는 사실이고(심장 소리·퇴원복·반 전체가 받은 상장),
+ *   하나는 **앞 장과 나란히 놓여야 읽히는 것**이다 — `10-self-b`의 *"이번엔"*.
+ *   이건 자연 표본이 아니라 **골라 쓴 것**이다. 이 서비스가 지키겠다는 것이
+ *   *"안 물어보면 사라지는 말"*이라, 시드가 그걸 한 번도 안 보여주면 주장에 증거가 없다.
+ *
+ * 🔑 두 점은 비워뒀다(`06-scribble`·`11-paper-fold`).
+ *   한 점만 비우면 사고로 보이고, 둘이면 *"가끔 못 물어보는 날이 있다"*는 상태로 읽힌다.
+ *   `11-paper-fold`가 **최신 두 번째**라 격자 첫 줄에 빈 말이 뜬다 — 숨기지 않으려면 잘 보여야 한다.
+ *
+ * 🔑 `09-self-a`와 `10-self-b`는 **3주 차이로 붙여뒀다.**
+ *   상세 화면의 병치가 앞뒤 한 점씩을 보여주므로 둘이 실제로 한 화면에서 만난다.
+ *   *"머리만 그린 거 아니야. 그리다가 밥 먹으래서 못 그린 거야"* 다음에
+ *   *"이번엔 몸도 그렸어"*가 온다. 앞의 말이 없으면 어른은 그 그림을
+ *   **"아직 몸을 못 그리는 아이"로 읽는다.** 이 서비스가 막으려는 것이 정확히 그거다.
  */
 export const ARTWORKS: SeedArtwork[] = [
   {
-    file: "09-tadpole.jpg",
-    madeOn: "2026-01-08",
+    file: "01-scan-14w.jpg",
+    madeOn: "2018-09-12",
+    quote: "오늘 처음 심장 소리 들었어. 생각보다 훨씬 빨라서 잘못 들은 줄 알았다.",
+    by: "PARENT",
+    width: 900,
+    height: 1200,
+  },
+  {
+    file: "02-scan-32w.jpg",
+    madeOn: "2019-01-16",
+    quote: "계속 손으로 얼굴을 가리고 있어서, 사진 한 장 찍는 데 삼십 분 걸렸다.",
+    by: "PARENT",
+    width: 900,
+    height: 1200,
+  },
+  {
+    file: "03-first-clothes.jpg",
+    madeOn: "2019-04-22",
+    quote: "퇴원할 때 입혔던 옷. 소매가 남아서 손이 아예 안 나왔다.",
+    by: "PARENT",
+    width: 1280,
+    height: 960,
+  },
+  {
+    file: "04-handprint.jpg",
+    madeOn: "2019-09-14",
+    quote: "손도장 찍는 데 세 번 실패했다. 주먹을 안 펴서.",
+    by: "PARENT",
+    width: 900,
+    height: 1200,
+  },
+  {
+    file: "05-tadpole.jpg",
+    madeOn: "2022-06-11",
     quote: "몸통은 안 그렸어. 옷 입고 있으니까 안 보이잖아.",
-    width: 359,
-    height: 606,
+    width: 900,
+    height: 1240,
   },
   {
-    file: "04-mom-and-me.jpg",
-    madeOn: "2026-01-23",
-    quote: "엄마랑 나야. 얼굴에 있는 이 줄은 이불이야. 같이 누워 있는 거야.",
-    width: 1157,
-    height: 1294,
+    file: "06-scribble.jpg",
+    madeOn: "2022-10-05",
+    // 비운 것 ①. 아이는 말할 수 있는 나이라 화면에 "아직 안 물어봤어요"가 뜬다.
+    quote: null,
+    width: 1280,
+    height: 930,
   },
   {
-    file: "02-family.jpg",
-    madeOn: "2026-02-09",
+    file: "07-family.jpg",
+    madeOn: "2026-01-24",
     quote: "이빨 무서운 거 아니야. 다 웃는 거야.",
     width: 1280,
-    height: 964,
+    height: 930,
   },
   {
-    file: "10-self-portrait.jpg",
-    madeOn: "2026-03-03",
+    file: "08-award.jpg",
+    madeOn: "2026-03-20",
+    quote: "이거 나 혼자 받은 거 아니야. 우리 반 다 받았어.",
+    width: 880,
+    height: 1244,
+  },
+  {
+    file: "09-self-a.jpg",
+    madeOn: "2026-05-09",
+    quote: "머리만 그린 거 아니야. 그리다가 밥 먹으래서 못 그린 거야.",
+    width: 900,
+    height: 1240,
+  },
+  {
+    file: "10-self-b.jpg",
+    madeOn: "2026-05-30",
     quote: "이건 나. 이번엔 몸도 그렸어.",
-    width: 618,
-    height: 863,
+    width: 900,
+    height: 1240,
   },
   {
-    file: "06-house.jpg",
-    madeOn: "2026-03-30",
-    quote: "창문 앞에 있는 거 커튼 아니야. 다 나야. 내가 네 명이면 좋겠어서.",
-    width: 1280,
-    height: 881,
-  },
-  {
-    file: "07-people.jpg",
-    madeOn: "2026-04-11",
-    /**
-     * 두 번째로 비운 것. 한 점만 비우면 사고처럼 보이고, 둘이면 패턴이 보인다 —
-     * "가끔 못 물어보는 날이 있다"가 이 서비스의 전제이기 때문이다.
-     */
+    file: "11-paper-fold.jpg",
+    madeOn: "2026-06-27",
+    // 비운 것 ②. 최신 두 번째라 격자 첫 줄에 뜬다.
     quote: null,
-    width: 830,
-    height: 1161,
-  },
-  {
-    file: "01-girl.jpg",
-    madeOn: "2026-05-14",
-    quote: "나 아니야. 선생님이야. 오늘 이 옷 입고 왔어.",
-    width: 1194,
-    height: 1843,
-  },
-  {
-    file: "05-car.jpg",
-    madeOn: "2026-06-02",
-    quote: "아빠 차야. 근데 진짜는 이렇게 안 생겼어. 내가 더 좋게 고쳤어.",
     width: 1280,
-    height: 741,
+    height: 960,
   },
   {
-    file: "08-comic.jpg",
-    madeOn: "2026-07-05",
-    /**
-     * 🔑 일부러 비웠다. 목록 최신 두 번째라 **격자 첫 줄에 빈 말이 뜬다.**
-     *   눈에 안 띄는 자리에 두면 "우연히 하나 빠진 것"으로 읽힌다.
-     *   비어 있다는 사실을 숨기지 않는 것이 이 서비스의 원칙이고(04-content §2-1),
-     *   숨기지 않으려면 **잘 보이는 자리**에 있어야 한다.
-     */
-    quote: null,
-    width: 830,
-    height: 1166,
-  },
-  {
-    file: "03-rooster.jpg",
+    file: "12-rooster.jpg",
     madeOn: "2026-07-19",
     quote: "닭이 나 쫓아왔어. 근데 안 울었어.",
     width: 1280,
-    height: 905,
+    height: 930,
   },
 ];
 
@@ -183,6 +208,17 @@ export async function applySeed(prisma: SeedClient): Promise<number> {
     where: { id: SEED_PROFILE_ID },
     create: { id: SEED_PROFILE_ID, childName: CHILD_NAME, origin: "SEED", ...birth },
     update: { childName: CHILD_NAME, ...birth },
+  });
+
+  /**
+   * 🔴 목록에서 빠진 시드 행을 지운다.
+   *   시드를 12점으로 갈아엎으면서 **옛 10점의 id가 목록에서 사라졌다.**
+   *   upsert만 돌리면 옛 행은 `origin = SEED`라 [처음 상태로 되돌리기]에도 안 지워지고,
+   *   그대로 남아 **22점짜리 데모**가 된다. 실제로 밟기 전에 여기서 막는다.
+   *   "시드를 적용한다"는 곧 **목록과 DB를 같게 만든다**는 뜻이어야 한다.
+   */
+  await prisma.artwork.deleteMany({
+    where: { origin: "SEED", id: { notIn: ARTWORKS.map((a) => seedArtworkId(a.file)) } },
   });
 
   for (const item of ARTWORKS) {
