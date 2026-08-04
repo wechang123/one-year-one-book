@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { isOngoing } from "@/lib/book";
+import { subjectParticle } from "@/lib/korean";
 import { BooksStrip, type YearRow } from "./books-strip";
 import { DemoResetButton } from "./demo/reset-button";
 
@@ -40,6 +41,25 @@ function highlight(text: string, q: string) {
   return out;
 }
 
+/**
+ * 검색어를 문장의 주어 자리에 놓는다. `"공룡"이` · `"이불"이` · `"바다"가`.
+ *
+ * 🔑 조사를 모르는 검색어(영문·숫자·이모지)는 **조사가 필요 없는 모양**으로 바꾼다.
+ *   `"dino", 이 낱말이 …`. 앱이 발음을 지어내는 것보다 문장을 바꾸는 쪽이 정직하다.
+ *   `말`이 아니라 `낱말`인 이유는 뒤에 오는 문장이 이미 *"…들어간 말"*이기 때문이다.
+ */
+function QuotedSubject({ q }: { q: string }) {
+  const particle = subjectParticle(q);
+  return particle ? (
+    <>
+      &ldquo;{q}&rdquo;
+      {particle}
+    </>
+  ) : (
+    <>&ldquo;{q}&rdquo;, 이 낱말이</>
+  );
+}
+
 export default async function ArtworkListPage({
   searchParams,
 }: {
@@ -66,7 +86,7 @@ export default async function ArtworkListPage({
    */
   const profile = await prisma.profile.findFirst({ orderBy: { createdAt: "asc" } });
 
-  const [artworks, books, orderCount, wordless] = await Promise.all([
+  const [artworks, allMadeOn, books, orderCount, wordless] = await Promise.all([
     prisma.artwork.findMany({
       where: profile
         ? {
@@ -107,6 +127,22 @@ export default async function ArtworkListPage({
        */
       select: { id: true, childQuote: true, madeOn: true },
     }),
+    /**
+     * 🔴 연도 집계는 **검색과 무관한 별도 조회**다. 전에는 위 목록에서 셌는데,
+     *   그 목록에 검색 필터가 걸려 있어서 **검색이 책 줄을 오염시켰다.**
+     *   `?q=닭`이면 책 줄이 "지금까지 1점"이라고 말하고, 그 자리에서 [책으로 묶기]를 누르면
+     *   **10점짜리 책이 만들어진다.** 화면이 말한 수와 만들어진 것이 달랐다.
+     *   0건 검색이면 책 줄이 통째로 사라지기까지 했다.
+     *
+     * 🔑 갈림길: 검색 중일 때만 이 조회를 더 할까 vs 항상 할까 → **항상.**
+     *   조건부로 두면 "검색 중이 아닐 때는 위 목록에서 센다"는 두 번째 경로가 생기고,
+     *   두 경로는 갈라진다 — 방금 갈라져서 이 버그가 났다.
+     *   대가는 madeOn 한 열을 한 번 더 읽는 것뿐이다. 사진 바이트는 여기서도 안 읽는다.
+     */
+    prisma.artwork.findMany({
+      where: profile ? { profileId: profile.id } : undefined,
+      select: { madeOn: true },
+    }),
     prisma.collection.findMany({
       where: profile ? { profileId: profile.id } : undefined,
       select: { year: true, title: true },
@@ -123,13 +159,14 @@ export default async function ArtworkListPage({
   const owner = profile?.childName;
 
   /**
-   * 🔑 연도별 묶음을 DB에 다시 묻지 않는다.
-   *   수록작은 madeOn의 연도로 정해지므로, 방금 받아온 목록에서 세면 답이 나온다.
-   *   같은 사실을 두 곳에서 계산하면 두 곳이 갈라진다.
+   * 🔑 수록작은 madeOn의 연도로 정해진다. 그래서 여기서도 그 규칙 그대로 센다.
    *   madeOn은 date 컬럼이라 UTC 자정이다 — 연도도 UTC로 읽어야 1월 1일이 옆 해로 안 샌다.
+   *
+   * 🔴 세는 대상이 화면에 보이는 목록이 아니라 **그 아이의 전체**다.
+   *   책에 담기는 것은 검색 결과가 아니라 그 해에 남긴 전부이기 때문이다.
    */
   const byYear = new Map<number, number>();
-  for (const a of artworks) {
+  for (const a of allMadeOn) {
     const y = a.madeOn.getUTCFullYear();
     byYear.set(y, (byYear.get(y) ?? 0) + 1);
   }
@@ -211,7 +248,9 @@ export default async function ArtworkListPage({
          *   앱은 저장된 것만 안다. 아는 것까지만 말한다.
          */
         <div className="blank">
-          <h2 className="blank__title">&ldquo;{q}&rdquo;가 들어간 말이 없어요.</h2>
+          <h2 className="blank__title">
+            <QuotedSubject q={q} /> 들어간 말이 없어요.
+          </h2>
           <p className="blank__body">
             저장된 아이 말 중에는 없습니다.
             {wordless > 0 ? (
@@ -238,7 +277,7 @@ export default async function ArtworkListPage({
           <p className="tally">
             {searching ? (
               <>
-                &ldquo;{q}&rdquo;가 들어간 말 {artworks.length}점
+                <QuotedSubject q={q} /> 들어간 말 {artworks.length}점
               </>
             ) : (
               <>

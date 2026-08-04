@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { redirect } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { parseYear, yearRange } from "@/lib/book";
@@ -34,7 +35,7 @@ const ADDRESS_MAX = 200;
 const DEDUP_WINDOW_MS = 60_000;
 
 /**
- * DB가 막을 열쇠. `책id|연락처|시간버킷`.
+ * DB가 막을 열쇠. **아래 findFirst가 같다고 보는 것과 정확히 같은 것**으로 만든다.
  *
  * 🔑 조회로는 못 막는 것이 있다.
  *   아래 findFirst는 **순차 재제출**(새로고침·뒤로가기)을 정확히 막는다.
@@ -44,13 +45,26 @@ const DEDUP_WINDOW_MS = 60_000;
  *
  *   상용 결제 API가 `POST /orders`에 `Idempotency-Key`를 **필수**로 두는 이유가 정확히 이것이다.
  *   클라이언트가 키를 만들어 보내면 재시도가 몇 번이든 결과가 하나다.
- *   여기서는 클라이언트가 키를 안 보내므로 **서버가 요청 내용으로 키를 조립한다** —
- *   같은 사람이 같은 책을 같은 순간에 주문하는 것은 한 번의 의도로 본다.
+ *   여기서는 클라이언트가 키를 안 보내므로 **서버가 요청 내용으로 키를 조립한다.**
+ *
+ * 🔴 이 열쇠가 **연락처만 보던 시절이 있었다. 그게 버그였다.**
+ *   아래 findFirst는 이름·연락처·주소 셋이 다 같아야 중복으로 봤는데,
+ *   열쇠는 연락처만 봤다. 그래서 **받는 사람과 주소가 달라도 연락처가 같으면**
+ *   둘째 주문이 유니크 제약에 걸렸고, 코드는 그걸 "동시 제출"로 해석해
+ *   **첫 주문의 번호로 보내버렸다.** 화면은 "접수됐습니다"라고 말하고 DB에는 한 건뿐이다.
+ *   한 연락처로 여러 곳에 보내는 것(집·처가·할머니 댁)은 이 서비스에서 정상적인 일이다.
+ *
+ *   교훈은 "필드를 빠뜨렸다"가 아니다 — **같은 판정을 두 곳에서 따로 정의했다**는 것이다.
+ *   그래서 지금은 아래 findFirst의 where와 이 함수의 인자가 **같은 값 묶음**을 받는다.
  *
  * 🔴 버킷 경계는 완전하지 않다. 59.9초와 60.1초에 도착한 **동시** 요청은 다른 버킷이 된다.
  *   그 경우는 아래 findFirst가 60초를 되돌아보며 잡는다. 둘을 같이 써야 덮인다.
  */
-function makeDedupKey(collectionId: string, phoneRaw: string, now: Date): string {
+function makeDedupKey(
+  collectionId: string,
+  who: { recipientName: string; phoneRaw: string; address: string },
+  now: Date,
+): string {
   const bucket = Math.floor(now.getTime() / DEDUP_WINDOW_MS);
   /**
    * 🔑 숫자만 남겨서 키를 만든다.
@@ -58,7 +72,27 @@ function makeDedupKey(collectionId: string, phoneRaw: string, now: Date): string
    *   `010-1234-5678`과 `01012345678`이 **다른 키가 되어 중복이 안 걸린다.**
    *   비교하는 값과 보여주는 값은 다를 수 있다.
    */
-  return `${collectionId}|${phoneDigits(phoneRaw)}|${bucket}`;
+  const material = [
+    collectionId,
+    who.recipientName,
+    phoneDigits(who.phoneRaw),
+    who.address,
+    bucket,
+  ].join("\u0000");
+
+  /**
+   * 🔑 갈림길: 값을 그대로 이어붙일까 vs 해시할까 → **해시.**
+   *   그대로 이어붙이면 키를 눈으로 읽을 수 있어 디버깅이 쉽다. 대신 두 가지가 걸린다.
+   *     ① 이름과 주소가 **자기 열에 이미 평문으로 있는데 키에 또 들어간다.**
+   *        같은 개인정보가 두 벌이 되고, 지울 때 한 곳을 잊으면 남는다.
+   *     ② 키 길이가 주소 길이를 따라 늘어난다. btree 유니크 인덱스에는 길이 상한이 있다.
+   *   해시는 둘 다 없앤다. 잃는 것은 "키만 보고 어떤 주문인지 아는 것"인데,
+   *   그건 이 열의 일이 아니다 — 이 열은 **같은지 다른지**만 판정한다. 사람이 찾을 때는 orderNo로 찾는다.
+   *
+   *   구분자로 `\0`을 쓴 이유: 이름·주소에 절대 들어갈 수 없는 문자여야
+   *   `"김하늘|서울"`과 `"김하|늘서울"`이 같은 키가 되는 일이 없다.
+   */
+  return createHash("sha256").update(material).digest("base64url");
 }
 
 /** 주문번호가 겹치면 다시 뽑는다. 31^4 중에서 겹칠 확률은 낮지만 0은 아니다. */
@@ -162,7 +196,8 @@ export async function createOrder(_prev: NewOrderState, formData: FormData): Pro
     redirect(`/book/${year}?ordered=${duplicate.orderNo}`);
   }
 
-  const dedupKey = makeDedupKey(collection.id, phoneRaw, getNow());
+  // 위 where와 같은 값 묶음을 넘긴다. 둘이 갈라지면 그게 그대로 버그가 된다.
+  const dedupKey = makeDedupKey(collection.id, { recipientName, phoneRaw, address }, getNow());
 
   let orderNo = "";
   let lastError: unknown = null;
