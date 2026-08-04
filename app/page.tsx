@@ -162,6 +162,15 @@ export default async function ArtworkListPage({
   const birth = { dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null };
 
   /**
+   * 🔴 남긴 것이 하나도 없으면 **검색 칸을 안 그린다.**
+   *   전에는 빈 화면 위에 "아이가 한 말로 찾기" 입력칸이 그대로 떠 있었다.
+   *   찾을 것이 없는데 찾는 칸이 있으면, 처음 온 사람이 봐야 할 것
+   *   — *"다음에 뭘 눌러야 하는지"* — 가 입력칸과 버튼 사이에서 흐려진다.
+   *   빈 화면은 안내할 자리가 가장 넓은 화면이고, 그 자리를 검색에 내주지 않는다.
+   */
+  const nothingYet = allMadeOn.length === 0;
+
+  /**
    * 🔑 수록작은 madeOn의 연도로 정해진다. 그래서 여기서도 그 규칙 그대로 센다.
    *   madeOn은 date 컬럼이라 UTC 자정이다 — 연도도 UTC로 읽어야 1월 1일이 옆 해로 안 샌다.
    *
@@ -223,6 +232,7 @@ export default async function ArtworkListPage({
             태그는 부모가 분류를 미리 정하는 것이고, 검색은 아이가 한 말을 그대로 찾는 것이다.
             이 서비스에서 색인을 만드는 사람은 아이여야 한다.
       */}
+      {nothingYet ? null : (
       <form className="search" action="/">
         <label className="search__label" htmlFor="q">
           아이가 한 말로 찾기
@@ -237,7 +247,14 @@ export default async function ArtworkListPage({
             placeholder="공룡, 이불, 선생님…"
             aria-describedby="search-help"
           />
-          <button type="submit" className="btn">
+          {/*
+            🔑 진한 버튼은 이 화면에 **하나뿐이어야 한다** — [사진 등록].
+              전에는 [사진 등록]·[찾기]·[책으로 묶기] 셋이 같은 무게였고,
+              처음 온 사람의 눈은 그중 무엇을 눌러야 할지 고르는 데 시간을 쓴다.
+              검색은 **이미 있는 것을 좁히는 행동**이라 새로 만드는 행동과 무게가 같으면 안 된다.
+              ([책으로 묶기]는 테두리로 분리된 구역 안의 주 행동이라 그대로 둔다.)
+          */}
+          <button type="submit" className="btn btn--ghost">
             찾기
           </button>
           {searching ? (
@@ -257,6 +274,7 @@ export default async function ArtworkListPage({
           {wordless > 0 ? ` 말이 비어 있는 ${wordless}점은 여기서 찾을 수 없습니다.` : null}
         </p>
       </form>
+      )}
 
       {searching && artworks.length === 0 ? (
         /*
