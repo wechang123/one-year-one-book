@@ -40,14 +40,21 @@ export default async function RecallDonePage() {
       </nav>
 
       <div className="closing">
+        {/*
+          🔴 전에는 *"{total}점을 되짚어봤습니다"*라고 적혀 있었다. **앱이 모르는 것을 말한 것이다.**
+            이 화면은 마지막 한 점에서 [다음]을 눌러 오기도 하지만 주소로 바로 열 수도 있다.
+            두 점만 보고 와도 화면은 *"10점을 되짚어봤습니다"*라고 말했다.
+            그리고 이 서비스가 사용자에게 주려는 것이 **허락**이라, 그 앞에 놓인 문장이
+            사실이 아니면 허락 자체가 값을 잃는다. 지금은 **센 것만 말한다.**
+        */}
         <p className="closing__lede">
-          {total}점을 되짚어봤습니다. 그중 <strong>{withQuote}점에 아이의 말이 남아 있습니다.</strong>
+          남긴 것은 {total}점, 그중 <strong>{withQuote}점에 그때의 말이 남아 있습니다.</strong>
         </p>
 
         <h1 className="closing__title">이제 정리하셔도 됩니다.</h1>
 
         <p className="closing__body">
-          방금 보신 것이 <strong>그림을 버리고 나서도 남는 전부</strong>입니다.
+          <strong>여기 남은 것이 실물을 버리고 나서도 남는 전부</strong>입니다.
           {/*
             🔑 남지 않은 것도 같이 말한다.
               말이 빈 점이 있으면 그 사실을 여기서 숨기지 않는다 —
@@ -56,7 +63,7 @@ export default async function RecallDonePage() {
           {total > withQuote ? (
             <>
               {" "}
-              {total - withQuote}점은 말이 비어 있어 <strong>그림만 남습니다.</strong> 그게 이 서비스가
+              {total - withQuote}점은 말이 비어 있어 <strong>사진만 남습니다.</strong> 그게 이 서비스가
               말을 그 자리에서 받으려는 이유입니다.
             </>
           ) : null}
