@@ -5,6 +5,7 @@ import { formatMadeOn } from "@/lib/date";
 import { isOngoing, parseYear, yearRange } from "@/lib/book";
 import { BookTitleForm } from "./title-form";
 import { ArrowLeft, Package } from "../../icons";
+import { describeAge, timeBand } from "@/lib/age";
 
 /**
  * 책 한 권 = 한 해.
@@ -141,9 +142,22 @@ export default async function BookPage({
           <p className="tally">1월부터 순서대로 {artworks.length}점</p>
 
           <ul className="grid">
-            {artworks.map((artwork) => (
+            {artworks.map((artwork) => {
+              /*
+                🔴 여기가 시기 색을 안 쓰고 있었다. 시기 띠(#72)를 넣을 때 **홈 격자만** 손봐서,
+                  같은 작품이 홈에서는 청록 틀인데 책에서는 기본 틀이었다.
+                  기본값이 `--t-child-fill`이라 **생후 19개월짜리가 책에서는 만 N세 색**으로 보였다.
+                  같은 것이 화면마다 다르게 보이면 색이 축 노릇을 못 한다.
+              */
+              const band = timeBand(
+                describeAge(artwork.madeOn, { dueOn: profile.dueOn, bornOn: profile.bornOn }).scale,
+              );
+              return (
               <li key={artwork.id}>
-                <Link href={`/artwork/${artwork.id}`} className="card">
+                <Link
+                  href={`/artwork/${artwork.id}`}
+                  className={band ? `card card--${band}` : "card"}
+                >
                   <div className="card__frame">
                     <img
                       className="card__img"
@@ -165,7 +179,8 @@ export default async function BookPage({
                   </div>
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </>
       )}
