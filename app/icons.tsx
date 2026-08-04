@@ -1,128 +1,119 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowLeft as LArrowLeft,
+  ArrowRight as LArrowRight,
+  Baby as LBaby,
+  BookOpen as LBookOpen,
+  BookPlus as LBookPlus,
+  Camera as LCamera,
+  MessageSquareQuote as LMessageSquareQuote,
+  Package as LPackage,
+  RotateCcw as LRotateCcw,
+  Search as LSearch,
+  SquarePen as LSquarePen,
+} from "lucide-react";
+
 /**
- * 아이콘 — Lucide에서 **쓰는 것만** 베껴 왔다.
+ * 아이콘 — [Lucide](https://github.com/lucide-icons/lucide) (ISC).
+ * 라이선스 전문은 `licenses/lucide-ISC.txt`. ISC가 고지를 모든 사본에 남길 것을 요구한다.
  *
- * 출처: https://github.com/lucide-icons/lucide (ISC) · 전문은 `licenses/lucide-ISC.txt`
- *   ISC는 "저작권 고지와 허가 고지를 모든 사본에 남길 것"을 요구한다. 그래서 파일을 동봉했다.
+ * ─────────────────────────────────────────────────────────────
+ * 🔴 전에는 `path`를 **손으로 옮겨 적었다.** 근거가 두 개였는데 하나가 순환이었다.
  *
- * 🔴 iconsax를 조사했고 채택하지 않았다
- *   iconsax의 아이콘 그림은 *"다른 이름으로 재배포 금지, 템플릿·UI킷 사용은 허가 필요"*로
- *   공지돼 있는데, **라이선스 전문을 확인하지 못했다** — docs.iconsax.io/license가
- *   본문을 스크립트로 그려서 받아지지 않았다. npm `iconsax-react`가 가리키는 저장소
- *   (premier213/iconsax-react)는 `GET /repos/…/license`가 **404**다. 라이선스 파일이 없다.
- *   이 저장소는 공개고, `docs/03-feasibility.md`를 출처·라이선스 판정의 정본으로 두고
- *   시드 사진 한 장까지 따졌다. **그 기준을 아이콘에서만 낮출 수 없다.**
- *   Lucide(ISC)·Phosphor(MIT)는 저장소의 LICENSE 파일을 직접 받아 확인했다.
+ *   ① 런타임 의존성이 4개에서 5개가 된다 — 맞는 말이지만 값을 안 재고 썼다.
+ *      `.next/static/chunks`의 JS 합계를 전후로 재보니 **654KB → 657KB**다.
+ *      아이콘 열한 개에 **3KB**. 트리셰이킹이 되는 패키지라 안 쓰는 6,003개는 안 실린다.
+ *   ② *"쓰는 것이 여섯 개뿐이라 1,500개짜리를 들여올 압력이 없다"* — **이게 순환이었다.**
+ *      손으로 옮겨야 하니까 적게 썼고, 적게 쓰니까 패키지가 필요 없다고 결론지었다.
  *
- * 🔑 패키지를 안 깔고 인라인한 이유
- *   `lucide-react`를 넣으면 런타임 의존성이 4개에서 5개가 된다. 지금 쓰는 아이콘은 다섯이고,
- *   1,500개짜리 묶음을 들여올 재사용 압력이 아직 없다 — README가 Tailwind를 거절할 때 쓴
- *   그 논거가 여기에도 그대로 적용된다. **여기 있는 path는 전부 눈으로 읽고 넣은 것이다.**
- *   쓰는 아이콘이 열댓 개를 넘고 손으로 옮기는 것이 실수의 원인이 되면 그때 패키지를 넣는다.
+ * 🔑 패키지의 값은 여섯 개를 대신 넣어주는 데 있지 않다.
+ *   **아이콘을 바꾸고 더하는 값이 0에 가까워지는 것**이 값이다.
+ *   실제로 이 파일이 패키지로 바뀌자마자 은유 하나를 고치고(책 만들기 ≠ 책 보기)
+ *   네 자리에 아이콘을 새로 붙였다. 손으로 옮기던 동안에는 **둘 다 안 했다.**
  *
- * 🔑 전부 `aria-hidden`이다
- *   이 저장소는 **글자 없는 아이콘 버튼을 만들지 않는다.** 아이콘 옆에는 늘 말이 있고,
- *   그러면 아이콘까지 읽히는 것은 같은 말을 두 번 읽는 것이다.
+ * ─────────────────────────────────────────────────────────────
+ * 🔑 어디에 붙이는가 — 규칙 하나
+ *
+ *   **"어디로 가는가"와 "무엇에 대한 것인가"에만 붙인다. "무엇을 하는가"에는 안 붙인다.**
+ *
+ *     어디로      뒤로 · 다음 단계 · 상단 바
+ *     무엇에 대해  사진 · 책 · 아이 · 말 · 주문 · 고치기
+ *     안 붙임      저장하기 · 그만두기 · 다시 시도 · 전체 보기 · 한 장씩 보기
+ *
+ *   안 붙이는 쪽은 **자리와 색이 이미 무게를 말한다.** 폼 맨 아래 진한 버튼이 저장이라는 것은
+ *   아이콘 없이도 안다. 전부에 붙이면 **아이콘이 더는 무게를 못 만든다.**
+ *
+ *   ⚠️ [찾기]만 예외다. 폼 제출 버튼이지만 검색 이름표를 자리표시자로 내려서
+ *     **이 폼이 검색이라는 것을 말하는 유일한 표시**가 그 아이콘이다.
+ *
+ * 🔑 전부 `aria-hidden`이다. 옆에 늘 글자가 있고, **글자 없는 아이콘 버튼을 만들지 않는다.**
  *   뜻을 아이콘에만 실으면 그 뜻은 보이지 않는 사람에게 도달하지 않는다.
  *
- * 🔑 크기가 `em`이다
- *   글자 옆에 서는 것이라 글자 크기를 따라가야 줄이 흐트러지지 않는다(globals.css `.icon`).
+ * 🔑 크기는 CSS가 `em`으로 정한다(globals.css `.icon`). 글자 옆에 서는 것이라
+ *   글자 크기를 따라가야 줄이 흐트러지지 않는다.
  */
-
-function Glyph({ children }: { children: React.ReactNode }) {
-  return (
-    <svg
-      className="icon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {children}
-    </svg>
-  );
-}
 
 /**
- * 되짚어보기 — 사진을 빼고 아이 말만 남기는 화면.
- *
- * 🔴 처음에 lucide `quote`(따옴표 두 개)를 넣었다가 바꿨다.
- *   14px에서 실제로 렌더해 보니 **`))` 두 글자로 읽혔다.** 따옴표는 글자 옆에 있을 때
- *   따옴표지, 혼자 서면 그냥 곡선 두 개다. 말풍선은 그 크기에서도 말풍선이다.
+ * 🔑 `strokeWidth`가 2.25다. Lucide 기본값은 2인데, 그건 24px에 그릴 때의 값이다.
+ *   이 앱은 아이콘을 **14px 글자 옆 16px**에 그린다 — 기본값이면 획이 1.33px이라
+ *   옆의 굵은 글자(600)보다 가늘어 보인다. 실제로 렌더해서 맞췄다.
  */
-export function SpeechQuote() {
-  return (
-    <Glyph>
-      <path d="M14 14a2 2 0 0 0 2-2V8h-2" />
-      <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
-      <path d="M8 14a2 2 0 0 0 2-2V8H8" />
-    </Glyph>
-  );
+function wrap(Glyph: LucideIcon, name: string) {
+  const Icon = () => <Glyph className="icon" strokeWidth={2.25} aria-hidden focusable="false" />;
+  Icon.displayName = name;
+  return Icon;
 }
 
-/**
- * 뒤로.
- *
- * 🔴 화면 열한 곳이 `←` **글자**였다. #61에서 아이콘 다섯 개를 넣으면서
- *   *"얻는 게 생김새뿐"*이라고 남겨뒀는데, 그 뒤 주 버튼들이 전부 아이콘을 달아서
- *   **한 화면에서 어떤 버튼은 SVG를, 어떤 버튼은 글자를 쓰는 상태**가 됐다.
- *   `←`는 글꼴이 그리는 글자라 굵기·크기·기준선이 옆 글자를 따라가고 OS마다 모양이 다르다.
- */
-export function ArrowLeft() {
-  return (
-    <Glyph>
-      <path d="m12 19-7-7 7-7" />
-      <path d="M19 12H5" />
-    </Glyph>
-  );
-}
+/** 뒤로. 화면 11곳의 되돌아가는 링크. */
+export const ArrowLeft = wrap(LArrowLeft, "ArrowLeft");
+
+/** 다음 단계로. 주문 상태를 앞으로 미는 버튼. */
+export const ArrowRight = wrap(LArrowRight, "ArrowRight");
 
 /** 아이 정보 — 이름·예정일·태어난 날을 넣는 자리. */
-export function Baby() {
-  return (
-    <Glyph>
-      <path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5" />
-      <path d="M15 12h.01" />
-      <path d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1" />
-      <path d="M9 12h.01" />
-    </Glyph>
-  );
-}
+export const Baby = wrap(LBaby, "Baby");
 
 /**
  * 사진 등록.
- *
- * 🔑 `plus`가 아니라 `camera`다. 더하기는 "항목을 하나 만든다"는 말이고,
+ * 🔑 `Plus`가 아니라 `Camera`다. 더하기는 *"항목을 하나 만든다"*는 말이고,
  *   이 서비스에서 실제로 하는 일은 **손에 들려 있는 것을 찍는 것**이다.
  */
-export function Camera() {
-  return (
-    <Glyph>
-      <path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" />
-      <circle cx="12" cy="13" r="3" />
-    </Glyph>
-  );
-}
+export const Camera = wrap(LCamera, "Camera");
 
-/** 찾기. */
-export function Search() {
-  return (
-    <Glyph>
-      <path d="m21 21-4.34-4.34" />
-      <circle cx="11" cy="11" r="8" />
-    </Glyph>
-  );
-}
+/**
+ * 찾기.
+ * ⚠️ 유일한 폼 제출 아이콘이다. 이름표를 자리표시자로 내려서
+ *   이 폼이 검색이라는 것을 말하는 표시가 이것뿐이다.
+ */
+export const Search = wrap(LSearch, "Search");
 
-/** 책. */
-export function BookOpen() {
-  return (
-    <Glyph>
-      <path d="M12 5v16" />
-      <path d="M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z" />
-    </Glyph>
-  );
-}
+/** 책 보기 — 이미 있는 책을 여는 자리. */
+export const BookOpen = wrap(LBookOpen, "BookOpen");
+
+/**
+ * 책으로 묶기.
+ * 🔴 전에는 [책 보기]와 **같은 아이콘**이었다. 한 해에 둘 중 하나만 뜨니까 헷갈릴 일이
+ *   없다고 넘겼는데, 그건 *"구별이 필요 없다"*가 아니라 *"구별을 안 해도 안 들킨다"*였다.
+ *   **없는 것을 만드는 행동**과 **있는 것을 여는 행동**은 다른 일이다.
+ */
+export const BookPlus = wrap(LBookPlus, "BookPlus");
+
+/**
+ * 되짚어보기 — 사진을 빼고 아이 말만 남기는 화면.
+ * 🔴 처음에 `Quote`(따옴표 두 개)를 넣었다가 바꿨다. 14px로 렌더해 보니
+ *   **`))` 두 글자로 읽혔다.** 따옴표는 글자 옆에 있을 때 따옴표지 혼자 서면 곡선 두 개다.
+ */
+export const SpeechQuote = wrap(LMessageSquareQuote, "SpeechQuote");
+
+/**
+ * 주문.
+ * 🔑 `Truck`이 아니라 `Package`다. 배송사 연동이 없어서 **배송 상태를 만들지 않았는데**
+ *   트럭을 그리면 화면이 앱이 안 하는 일을 약속한다. 받는 것은 상자 하나다.
+ */
+export const Package = wrap(LPackage, "Package");
+
+/** 고치기 — 말·날짜·표지 제목을 나중에 채우거나 바로잡는 자리. */
+export const SquarePen = wrap(LSquarePen, "SquarePen");
+
+/** 처음 상태로 되돌리기. 데모를 마음껏 망가뜨릴 수 있게 하는 자리. */
+export const RotateCcw = wrap(LRotateCcw, "RotateCcw");

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { createOrder, type NewOrderState } from "./actions";
+import { Package } from "../../../icons";
 
 const INITIAL: NewOrderState = {};
 
@@ -116,6 +117,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="btn" disabled={pending}>
+      <Package />
       {pending ? "주문을 넣는 중…" : "주문 넣기"}
     </button>
   );

@@ -4,7 +4,7 @@ import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { isOngoing, parseYear, yearRange } from "@/lib/book";
 import { BookTitleForm } from "./title-form";
-import { ArrowLeft } from "../../icons";
+import { ArrowLeft, Package } from "../../icons";
 
 /**
  * 책 한 권 = 한 해.
@@ -98,6 +98,7 @@ export default async function BookPage({
         */}
         {artworks.length > 0 ? (
           <Link href={`/book/${year}/order`} className="btn">
+            <Package />
             주문하기
           </Link>
         ) : null}
