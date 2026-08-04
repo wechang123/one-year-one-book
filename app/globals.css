@@ -86,7 +86,14 @@ body {
   margin:0;
   background: var(--paper);
   color: var(--ink);
-  font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  /*
+   * 🔴 전에는 시스템 글꼴만 있었다. macOS는 Apple SD Gothic Neo, Windows는 맑은 고딕이라
+   *   **보는 사람마다 다른 화면**이었고, 그래서 README에 적어둔 px 값들이
+   *   재는 사람의 OS에 달려 있었다. 앞은 Pretendard 서브셋(layout.tsx),
+   *   뒤는 그대로 둔다 — KS X 1001 밖의 희귀 음절은 여기로 떨어진다.
+   */
+  font-family: var(--font-sans), system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic",
+    sans-serif;
   line-height: 1.6;
   /* 폰에서 가로로 밀리는 것을 원천 차단한다. 한 손으로 쓰는 화면이다. */
   overflow-wrap: break-word;
