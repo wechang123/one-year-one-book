@@ -125,6 +125,44 @@ export function NewArtworkForm({
         <label className="field__label" htmlFor="photo">
           사진 <span className="field__req">필수</span>
         </label>
+
+        {/*
+          🔴 **고르기 전에는 이 자리가 아무 말도 안 했다.** 파일 입력 한 칸과
+            형식·크기 안내가 전부였다 — 무엇을 받는 곳인지도, 올리면 어떻게 보일지도
+            말하지 않았다. 시드 이미지가 없는 상태(빈 DB)로 처음 여는 사람에게는
+            이 화면이 서비스를 설명하는 **유일한 자리**인데 비어 있었던 것이다.
+
+          🔑 갈림길: 문구만 / 크기 안내만 / **종횡비 틀 + 문구** → 셋째.
+            문구만 두면 "어떻게 보일지"는 여전히 안 보이고,
+            크기 안내는 이미 아래에 있으며 그건 **제약이지 설명이 아니다.**
+            자리를 실제로 그려두면 고른 뒤 **같은 자리에 미리보기가 들어서면서**
+            방금 읽은 말이 그 자리에서 증명된다.
+
+          🔑 틀이 정사각인 이유는 목록 카드와 같은 비율이기 때문이다.
+            여기서 본 자리가 목록에서도 같은 모양이라야 "이렇게 보이는구나"가 맞는 말이 된다.
+
+          🔑 label이라 눌러도 파일 선택이 열린다. 아래 입력칸도 그대로 둔다 —
+            틀은 설명이고, 입력칸은 키보드·JS 없는 경로에서도 동작해야 하는 진짜 컨트롤이다.
+        */}
+        {!preview ? (
+          <label className="dropslot" htmlFor="photo">
+            <span className="dropslot__title">여기에 사진이 들어갑니다</span>
+            <span className="dropslot__body">
+              그림 · 만들기 · 상장 · 초음파 사진 — <strong>손에 들려 있는 것이면 됩니다</strong>
+            </span>
+            <span className="dropslot__body">원본 비율 그대로 보입니다. 잘리지 않아요.</span>
+          </label>
+        ) : (
+          <figure className="preview">
+            {/* next/image는 원격 이미지 최적화가 목적이라 blob: URL에 쓸 자리가 아니다. */}
+            <img className="preview__img" src={preview} alt="고른 사진 미리보기" />
+            <figcaption className="preview__caption">
+              이 사진이 맞나요?
+              {size ? ` (${size.width}×${size.height})` : null}
+            </figcaption>
+          </figure>
+        )}
+
         <input
           ref={photoRef}
           id="photo"
@@ -148,17 +186,6 @@ export function NewArtworkForm({
           <p className="form__error" role="alert">
             {tooBig}
           </p>
-        ) : null}
-
-        {preview ? (
-          <figure className="preview">
-            {/* next/image는 원격 이미지 최적화가 목적이라 blob: URL에 쓸 자리가 아니다. */}
-            <img className="preview__img" src={preview} alt="고른 사진 미리보기" />
-            <figcaption className="preview__caption">
-              이 사진이 맞나요?
-              {size ? ` (${size.width}×${size.height})` : null}
-            </figcaption>
-          </figure>
         ) : null}
 
         {/* 상세 화면이 자리를 미리 잡는 데 쓴다. 없으면 서버가 그냥 버린다. */}
