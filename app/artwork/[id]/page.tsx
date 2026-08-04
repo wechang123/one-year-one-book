@@ -39,8 +39,11 @@ export default async function ArtworkDetailPage({
      */
     select: {
       id: true,
+      profileId: true,
       childQuote: true,
       madeOn: true,
+      // 같은 날 여러 점일 때 순서를 가르는 값. 홈 격자와 같은 축을 쓴다.
+      createdAt: true,
       photo: { select: { width: true, height: true } },
     },
   });
@@ -51,6 +54,40 @@ export default async function ArtworkDetailPage({
    * 주소를 잘못 친 것과 지워진 작품을 사용자는 구분할 수 없고, 할 일도 같다 — 목록으로 돌아가는 것.
    */
   if (!artwork) notFound();
+
+  /**
+   * 등록 직후에만 조회한다.
+   *
+   * 🔑 왜 이 자리인가
+   *   이 서비스는 알림을 만들지 않는다. 트리거가 앱 밖에 있기 때문이다 —
+   *   아이가 그림을 들고 오는 것이 트리거고, 앱이 주기를 만들면 그 설계가 무너진다.
+   *   그러면 **보장된 방문이 등록 직후 하나뿐**이다. 모든 방문에 소비를 붙일 자리가 여기다.
+   *
+   * 🔑 규칙은 한 문장이다 — **"이 작품보다 앞에 만든 것 중, 말이 남아 있는 가장 최근 것."**
+   *   무작위로 뽑으면 예쁜 위젯은 되지만 설명할 수 없다.
+   *   말이 없는 점을 건너뛰는 이유: 이 블록의 일이 **말을 돌려주는 것**이라
+   *   돌려줄 게 없는 점을 가리키면 "지난번엔 안 물어보셨네요"로 읽힌다. 그건 질책이다.
+   *
+   * 🔑 사진을 안 읽는다. 바이트도, width/height도 아니다.
+   *   바로 위에서 "이제 원본은 정리하셔도 됩니다"라고 해놓고 옛 그림을 눈앞에 놓으면
+   *   그 문구를 배신한다. **말만 얹으면 그 문구의 증거가 된다.**
+   *   쿼리도 @@index([profileId, madeOn])을 그대로 탄다.
+   */
+  const lastWords =
+    saved === undefined
+      ? null
+      : await prisma.artwork.findFirst({
+          where: {
+            profileId: artwork.profileId,
+            childQuote: { not: null },
+            OR: [
+              { madeOn: { lt: artwork.madeOn } },
+              { madeOn: artwork.madeOn, createdAt: { lt: artwork.createdAt } },
+            ],
+          },
+          orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
+          select: { id: true, childQuote: true, madeOn: true },
+        });
 
   const { width, height } = artwork.photo ?? {};
 
@@ -76,6 +113,36 @@ export default async function ArtworkDetailPage({
           <strong>남았습니다. 이제 원본은 정리하셔도 됩니다.</strong>
           <span className="saved__sub">아이 말과 만든 날까지 같이 저장했습니다.</span>
         </p>
+      ) : null}
+
+      {/*
+        🔑 등록 직후에만 나오는 자리. 사진은 없다 — 위 문구를 배신하지 않기 위해서다.
+      */}
+      {saved !== undefined ? (
+        lastWords ? (
+          <Link href={`/artwork/${lastWords.id}`} className="recall">
+            <span className="recall__label">지난번엔 이렇게 말했어요</span>
+            <span className="recall__quote">{lastWords.childQuote}</span>
+            <time className="recall__date" dateTime={lastWords.madeOn.toISOString()}>
+              {formatMadeOn(lastWords.madeOn)}
+            </time>
+          </Link>
+        ) : (
+          /*
+           * 🔑 첫 등록. 여기가 이 블록의 진짜 설계다.
+           *   "다음에 등록하면 여기에 지난 말이 옵니다"라고 쓸 수도 있었다.
+           *   그건 **줄 게 없는 앱이 하는 약속**이고, 알림을 만들지 않기로 한 서비스가
+           *   같은 일을 문장으로 하는 것이다.
+           *   대신 지금 줄 수 있는 것을 준다 — 방금 한 일이 무엇이었는지.
+           */
+          <p className="recall recall--first">
+            <span className="recall__label">이게 첫 점입니다</span>
+            <span className="recall__quote">
+              그림은 사진으로 남고, <strong>그때 한 말은 지금만 받을 수 있습니다.</strong>
+            </span>
+            <span className="recall__date">이 서비스가 남기는 건 그 두 가지입니다</span>
+          </p>
+        )
       ) : null}
 
       <article className="detail">
