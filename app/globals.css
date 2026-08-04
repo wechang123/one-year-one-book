@@ -535,6 +535,44 @@ a {
   font-size: 0.8125rem;
 }
 
+/* ───────────────────────── 검색 ───────────────────────── */
+
+.search {
+  margin: 0 0 1.5rem;
+}
+
+.search__label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-bottom: 0.4rem;
+}
+
+.search__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+/* 입력칸이 남는 폭을 먹되, 좁은 화면에서 버튼이 아래로 내려가도 되게 최소폭을 둔다. */
+.search .field__input {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+/*
+ * 매칭 강조. 배경색만 쓰지 않는다 — 밑줄을 같이 그어
+ * 색을 못 보는 경우에도 어디가 걸렸는지 보이게 한다.
+ */
+mark {
+  background: #fdf3d0;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* ───────────────────────── 되짚어보기 ───────────────────────── */
 
 /*
