@@ -85,7 +85,7 @@ export default async function BooksPage() {
           </Link>
         </div>
       ) : (
-        <BooksStrip rows={rows} orderCount={orderCount} />
+        <BooksStrip rows={rows} />
       )}
     </div>
   );

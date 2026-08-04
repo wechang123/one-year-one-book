@@ -834,23 +834,12 @@ a {
  *   *"발견성은 구역이 담당한다"*는 근거는 그대로다 — 제목 `한 해가 한 권`과
  *   칸들의 배경이 그 일을 하고 있고, 테두리는 거기에 아무것도 더하지 않았다.
  */
+/* 🔑 v2에서는 이게 `/books` 화면의 본문 전체다. 구역을 가르는 선이 필요 없다. */
 .books {
-  margin:var(--s-6) 0 0;
-  padding:var(--s-5) 0 0;
-  border-top: 1px solid var(--line);
+  margin: 0;
 }
 
-.books__h {
-  margin:0 0 var(--s-4);
-  font-size: 0.8125rem;
-  letter-spacing: 0.04em;
-  color: var(--ink-soft);
-  font-weight: 600;
-}
 
-.books__link {
-  font-weight: 500;
-}
 
 /*
  * 🔴 세로로 쌓인 줄이었다. 각 줄이 `space-between`이라 1440px에서
