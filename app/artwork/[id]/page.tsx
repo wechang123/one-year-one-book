@@ -90,6 +90,65 @@ export default async function ArtworkDetailPage({
           select: { id: true, childQuote: true, madeOn: true },
         });
 
+  /**
+   * 앞뒤 한 점씩. 이동 링크가 아니라 **병치**다.
+   *
+   * 🔑 왜 링크가 아니라 나란히 놓나
+   *   docs/04-content.md §4-3이 이 저장소의 최대 논거로 적어둔 것이 이거다 —
+   *   "두 장이 나란히 놓이면 책으로 묶을 이유가 저절로 설명된다."
+   *   그런데 그게 문서에만 있었다. 화면에서 두 장이 만난 적이 없다.
+   *
+   *   이전/다음 **링크**만 두면 편의 기능이라 설명할 것이 없다.
+   *   그림과 말을 같이 보여야 **비교가 생긴다** — 1월 "몸통은 안 그렸어"와
+   *   3월 "이번엔 몸도 그렸어"가 같은 화면에 있어야 '이번엔'이 무슨 뜻인지 읽힌다.
+   *
+   *   그리고 이걸 **콘텐츠 화면이** 해야 한다. 책 화면이 먼저 설명하면
+   *   책이 부가 기능 자리로 내려간다.
+   *
+   * 🔑 걷는 축은 madeOn이다. createdAt이 아니다.
+   *   madeOn은 부모가 적은 "아이가 만든 날"이고, 성장이 실려 있는 축이다.
+   *   createdAt은 사진을 올린 날이라 아이의 발달과 아무 관계가 없다.
+   *   EXIF를 안 쓴 판단과 같은 축이다 — 사진 찍은 날 ≠ 아이가 만든 날.
+   *
+   *   대가가 있다: 벽에 붙어 있던 옛 그림을 오늘 등록하면 **시간축 중간에 끼어든다.**
+   *   그게 맞다. 그 그림이 있어야 할 자리는 만든 때이지 올린 때가 아니다.
+   *
+   * 🔑 등록 직후(?saved)에는 안 띄운다.
+   *   바로 위에서 "이제 원본은 정리하셔도 됩니다"라고 해놓고 옛 그림 사진을 붙이면
+   *   그 문구를 배신한다(D단계와 같은 이유). 비교는 평소에 둘러볼 때 한다.
+   */
+  const neighbors =
+    saved !== undefined
+      ? { older: null, newer: null }
+      : await (async () => {
+          const [older, newer] = await Promise.all([
+            prisma.artwork.findFirst({
+              where: {
+                profileId: artwork.profileId,
+                OR: [
+                  { madeOn: { lt: artwork.madeOn } },
+                  { madeOn: artwork.madeOn, createdAt: { lt: artwork.createdAt } },
+                ],
+              },
+              // 홈 격자와 같은 축. 화면마다 다르면 "앞"이 화면마다 달라진다.
+              orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
+              select: { id: true, childQuote: true, madeOn: true },
+            }),
+            prisma.artwork.findFirst({
+              where: {
+                profileId: artwork.profileId,
+                OR: [
+                  { madeOn: { gt: artwork.madeOn } },
+                  { madeOn: artwork.madeOn, createdAt: { gt: artwork.createdAt } },
+                ],
+              },
+              orderBy: [{ madeOn: "asc" }, { createdAt: "asc" }],
+              select: { id: true, childQuote: true, madeOn: true },
+            }),
+          ]);
+          return { older, newer };
+        })();
+
   const { width, height } = artwork.photo ?? {};
 
   return (
@@ -227,6 +286,70 @@ export default async function ArtworkDetailPage({
           </div>
         </div>
       </article>
+
+      {/*
+        🔑 앞뒤 한 점씩 나란히. 이동 링크가 아니라 비교를 만드는 자리다.
+          이 저장소가 최대 논거로 적어둔 "두 장이 나란히 놓이면 책으로 묶을 이유가
+          저절로 설명된다"가 지금까지 문서에만 있었다.
+      */}
+      {neighbors.older || neighbors.newer ? (
+        <section className="pair" aria-labelledby="pair-h">
+          <h2 className="section__h" id="pair-h">
+            앞뒤로 보기
+          </h2>
+          <ul className="pair__list">
+            {neighbors.older ? (
+              <li>
+                <Link href={`/artwork/${neighbors.older.id}`} className="pair__item">
+                  <img
+                    className="pair__img"
+                    src={`/api/photo/${neighbors.older.id}`}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span className="pair__body">
+                    <span className="pair__when">이 앞에</span>
+                    {neighbors.older.childQuote ? (
+                      <span className="pair__quote">{neighbors.older.childQuote}</span>
+                    ) : (
+                      <span className="pair__quote pair__quote--empty">아직 안 물어봤어요</span>
+                    )}
+                    <time className="pair__date" dateTime={neighbors.older.madeOn.toISOString()}>
+                      {formatMadeOn(neighbors.older.madeOn)}
+                    </time>
+                  </span>
+                </Link>
+              </li>
+            ) : null}
+
+            {neighbors.newer ? (
+              <li>
+                <Link href={`/artwork/${neighbors.newer.id}`} className="pair__item">
+                  <img
+                    className="pair__img"
+                    src={`/api/photo/${neighbors.newer.id}`}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span className="pair__body">
+                    <span className="pair__when">이 뒤에</span>
+                    {neighbors.newer.childQuote ? (
+                      <span className="pair__quote">{neighbors.newer.childQuote}</span>
+                    ) : (
+                      <span className="pair__quote pair__quote--empty">아직 안 물어봤어요</span>
+                    )}
+                    <time className="pair__date" dateTime={neighbors.newer.madeOn.toISOString()}>
+                      {formatMadeOn(neighbors.newer.madeOn)}
+                    </time>
+                  </span>
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }
