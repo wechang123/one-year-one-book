@@ -28,6 +28,7 @@
 | [`10-order-status.md`](./10-order-status.md) | 주문 상태 전진 | Lv2 |
 | [`11-demo-reset.md`](./11-demo-reset.md) | 데모 초기화 | Lv3 |
 | [`12-self-explaining.md`](./12-self-explaining.md) | 자기설명 UI — 업로드 자리 · 빈 상태 전수 · CTA 사슬 · 격자 비율 | Lv3 |
+| [`13-taste-audit.md`](./13-taste-audit.md) | 외부 디자인 스킬로 자기 화면 감사 — 따른 것 12 / 안 따른 것 6 / 좁혀 적용한 것 2 | Lv3 |
 
 각 문서의 구성은 같다.
 
