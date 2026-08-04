@@ -485,6 +485,25 @@ Next 16.2.12 / React 19.2.8 / Prisma 7.9.1 + `@prisma/adapter-pg` / PostgreSQL 1
 **아이콘만 있는 버튼은 만들지 않았습니다.** 다섯 개 전부 `aria-hidden`이고 옆에 늘 글자가 있습니다.
 뜻을 아이콘에만 실으면 그 뜻은 화면을 못 보는 사람에게 도달하지 않습니다.
 
+### 웹폰트를 안 넣었습니다 — 2MB를 재보고 접었습니다
+
+[Pretendard](https://github.com/orioncactus/pretendard)(SIL OFL)를 넣으려다 **파일 크기를 재고 접었습니다.**
+
+```
+PretendardVariable.woff2                 2,009KB
+Pretendard-Regular/SemiBold/Bold (정적)   747 + 767 + 772KB
+```
+
+**첫 방문자가 2MB를 받습니다.** 이 저장소는 목록 쿼리에서 사진 바이트를 뺀 적이 있는데,
+그 이유가 *"10점만 있어도 매 요청이 1.7MB가 된다"*였습니다(`app/page.tsx`).
+**1.7MB를 비싸다고 판단해놓고 2MB를 글꼴로 얹는 것은 앞뒤가 안 맞습니다.**
+직접 서브셋하면 300KB 안쪽으로 줄일 수 있지만, 그러려면 서브셋을 만드는 코드가 저장소에 있어야 하고
+(시드 이미지에 적용한 기준입니다) 그 값이 지금의 대가보다 크지 않습니다.
+
+대가는 있습니다 — **심사자의 OS에 따라 글꼴이 다릅니다.** macOS는 Apple SD Gothic Neo,
+Windows는 맑은 고딕입니다. 자간과 자폭이 달라서 **줄바꿈 위치가 달라질 수 있습니다.**
+README의 반응형 실측값은 전부 macOS/Chrome 기준입니다.
+
 > Prisma 7부터 `datasource` 블록에 `url`을 둘 수 없다. 연결 문자열은 `prisma.config.ts`가,
 > 실제 연결은 드라이버 어댑터가 맡는다. (이걸 어겨서 8분을 썼다 — `docs/worklog.md` 10:14)
 
