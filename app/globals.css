@@ -535,6 +535,52 @@ a {
   font-size: 0.8125rem;
 }
 
+/* ───────────────────────── 등록 직후 되돌아오는 말 ───────────────────────── */
+
+/*
+ * 🔑 사진이 없는 블록이다. 그래서 글자만으로 "옛것"이라는 게 읽혀야 한다.
+ *   왼쪽 세로선 하나로 인용처럼 보이게 했다 — 지금 화면의 주인공(방금 등록한 사진)과
+ *   섞이지 않으면서, 별개의 카드로 떠서 시선을 뺏지도 않는다.
+ */
+.recall {
+  display: block;
+  margin: 0 0 1.5rem;
+  padding: 0.9rem 0 0.9rem 1rem;
+  border-left: 3px solid var(--line);
+  text-decoration: none;
+}
+
+a.recall:hover {
+  border-left-color: var(--ink-soft);
+}
+
+.recall__label {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.3rem;
+}
+
+.recall__quote {
+  display: block;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  /* 읽는 글이라 폭을 제한한다. 상세의 아이 말과 같은 이유다. */
+  max-width: 34ch;
+}
+
+.recall__date {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* 첫 등록이라 돌려줄 말이 없는 경우. 누를 곳이 없으므로 링크가 아니다. */
+.recall--first .recall__quote {
+  color: var(--ink-soft);
+}
+
 /* ───────────────────────── 작품 상세 ───────────────────────── */
 
 .detail__nav {
