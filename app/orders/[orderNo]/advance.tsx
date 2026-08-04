@@ -25,7 +25,7 @@ export function AdvanceButton({ orderNo, from }: { orderNo: string; from: OrderS
   if (!to) {
     return (
       <p className="notice">
-        마지막 단계입니다. <strong>배송완료 상태는 만들지 않았습니다</strong> — 배송사 연동 없이는
+        마지막 단계입니다. <strong>배송완료 상태는 만들지 않았습니다.</strong> 배송사 연동 없이는
         누가 언제 그 상태로 바꾸는지 설명할 수 없기 때문입니다.
       </p>
     );
