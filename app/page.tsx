@@ -210,13 +210,23 @@ export default async function ArtworkListPage({
       <header className="masthead">
         <div className="masthead__text">
           {/*
+            🔴 두 줄이었다. `하늘의 기록`이 왼쪽에, `남긴 것 12점 · 2018년부터`가 오른쪽에
+              따로 있었고 **둘 다 작은 회색 메타 줄**이었다. 같은 성격의 것이 좌우로 갈려서
+              머리말이 2단처럼 읽혔다. 한 줄로 합쳤다.
+
             🔑 아이 이름이 링크다. 여기가 생일을 넣는 자리로 가는 유일한 입구다.
               별도 메뉴를 만들지 않은 이유: 이 값은 **한 번 넣고 다시 안 여는 값**이다.
               자주 쓰는 것과 같은 무게로 두면 화면이 그만큼 흐려진다.
           */}
-          {owner ? (
-            <p className="masthead__owner">
-              <Link href="/child">{owner}의 기록</Link>
+          {owner || !nothingYet ? (
+            <p className="masthead__meta">
+              {owner ? <Link href="/child">{owner}의 기록</Link> : null}
+              {owner && !nothingYet ? " · " : null}
+              {nothingYet ? null : (
+                <>
+                  남긴 것 <strong>{allMadeOn.length}점</strong> · {firstYear}년부터
+                </>
+              )}
             </p>
           ) : null}
           <h1 className="masthead__title">아이가 남긴 것을, 그때의 말과 함께.</h1>
@@ -232,26 +242,15 @@ export default async function ArtworkListPage({
         </div>
 
         {/*
-          🔴 여기가 1440px에서 **805px 비어 있던 자리**다. 머리말 글은 46ch(435px)에 묶여 있는데
-            버튼만 오른쪽 끝으로 밀려 있어서, 그 사이가 통째로 빈칸이었다.
-            이 저장소가 `.grid`에 적어둔 원칙 — *"넓어지면 칸이 커지는 게 아니라 더 많이 보인다"* —
-            을 격자만 지키고 머리말은 어기고 있었다.
+          🔑 오른쪽에는 이제 버튼 하나뿐이다. 요약을 왼쪽 메타 줄로 옮기면서
+            감싸던 `div`가 할 일이 없어져서 걷어냈다 — 아이 하나짜리 상자는 상자가 아니다.
 
-          🔑 빈칸을 여백으로 두지 않고 **요약으로 채운다.** 새 조회는 없다 —
-            `allMadeOn`은 연도 집계 때문에 이미 읽고 있다.
+          등록은 언제나 열려 있다. 주기·마감 규칙을 만들지 않았다.
         */}
-        <div className="masthead__side">
-          {nothingYet ? null : (
-            <p className="masthead__sum">
-              남긴 것 <strong>{allMadeOn.length}점</strong> · {firstYear}년부터
-            </p>
-          )}
-          {/* 등록은 언제나 열려 있다. 주기·마감 규칙을 만들지 않았다. */}
-          <Link href="/artwork/new" className="btn">
-            <Camera />
-            사진 등록
-          </Link>
-        </div>
+        <Link href="/artwork/new" className="btn">
+          <Camera />
+          사진 등록
+        </Link>
       </header>
 
       {/*

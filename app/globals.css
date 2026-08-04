@@ -176,26 +176,41 @@ a {
 
 /* ───────────────────────── 머리말 ───────────────────────── */
 
+/*
+ * 🔴 밑줄이 있었다. 지웠다.
+ *   45px 위의 상단 바가 이미 같은 색 1px 선을 긋고 있어서, **그림이 나오기 전에
+ *   같은 선이 두 번** 그어졌다. 머리말과 아래를 가르는 일은 여백이 한다.
+ *
+ * 🔴 `align-items: flex-end`였다. 오른쪽이 요약+버튼 두 층일 때 맞춘 값인데
+ *   지금은 버튼 하나라 글 덩어리의 세로 가운데가 맞다.
+ */
 .masthead {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .masthead__text {
   min-width: 0;
 }
 
-.masthead__owner {
-  margin: 0;
+/*
+ * 🔴 `하늘의 기록`(왼쪽)과 `남긴 것 12점 · 2018년부터`(오른쪽)로 나뉘어 있었다.
+ *   둘 다 같은 크기·같은 색의 메타 줄인데 좌우로 갈려서 머리말이 2단처럼 읽혔다.
+ *   한 줄로 합치면서 세로 21px과 오른쪽 블록 하나가 같이 사라졌다.
+ */
+.masthead__meta {
+  margin: 0 0 0.1rem;
   font-size: 0.8125rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   color: var(--ink-soft);
+}
+
+.masthead__meta strong {
+  color: var(--ink);
 }
 
 .masthead__title {
@@ -228,40 +243,20 @@ a {
   color: var(--ink);
 }
 
+/*
+ * 🔴 1440px에서 두 줄로 감겼다. `46ch`가 435px로 묶어서다. 상한을 올려 한 줄로 만든다.
+ *
+ * 🔴 그 상한을 `64ch`로 잡았다가 다시 고쳤다 — **한국어에서 `ch`는 쓸 수 없는 단위였다.**
+ *   `ch`는 숫자 `0` 한 글자의 폭인데 한글은 그 두 배 가까이 넓다.
+ *   그래서 `64ch`가 "64자"가 아니라 대략 **34자**였고, 55자짜리 이 문장은 그대로 감겼다.
+ *   재보고 `rem`으로 바꿨다. 이 문장은 렌더된 폭이 약 666px이라 46rem(736px)이면 한 줄이다.
+ *   폰에서는 어차피 감기므로 이 상한은 700px 이상에서만 걸린다.
+ */
 @media (min-width: 700px) {
   .masthead__lede {
+    max-width: 46rem;
     font-size: 1rem;
   }
-}
-
-/*
- * 🔴 여기가 1440px에서 805px 비어 있던 자리다.
- *   머리말 글은 46ch(435px)에 묶여 있는데 버튼만 오른쪽 끝으로 밀려 있었다.
- *   빈칸을 여백으로 두지 않고 요약으로 채운다 — `.grid`가 지키는 원칙
- *   ("넓어지면 칸이 커지는 게 아니라 더 많이 보인다")을 머리말도 지키게 한다.
- */
-.masthead__side {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  /* 폰에서는 줄이 아래로 접혀 내려온다. 그때 오른쪽에 붙으면 본문과 축이 어긋난다. */
-  align-items: flex-start;
-}
-
-@media (min-width: 700px) {
-  .masthead__side {
-    align-items: flex-end;
-  }
-}
-
-.masthead__sum {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--ink-soft);
-}
-
-.masthead__sum strong {
-  color: var(--ink);
 }
 
 /* ───────────────────────── 버튼 ───────────────────────── */
@@ -416,10 +411,15 @@ a {
   flex-direction: column;
   height: 100%;
   background: #fff;
-  border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
   text-decoration: none;
+  /*
+   * 🔴 `border: 1px solid var(--line)`이 같이 있었다. 지웠다.
+   *   경계를 **선과 그림자 두 방법으로 두 번** 말하고 있었고, 카드가 12칸이라
+   *   화면에서 선이 12개 늘어난 것이었다. 종이가 책상 위에 놓였다는 은유에서
+   *   테두리는 원래 없는 것이다 — 종이에 윤곽선을 그리지는 않는다.
+   */
   /*
    * 🔑 그림자를 넣은 이유는 예뻐서가 아니라 **은유가 이미 그렇게 그려져 있어서**다.
    *   시드 이미지는 하나같이 "책상 위에 놓인 종이"를 그리고, 그 종이에 그림자가 있다
@@ -432,8 +432,11 @@ a {
     0 6px 16px rgba(28, 26, 23, 0.035);
 }
 
+/* 테두리를 뺐으니 hover도 그림자로 말한다. 한 장 더 들어올린다. */
 .card:hover {
-  border-color: var(--ink-soft);
+  box-shadow:
+    0 2px 4px rgba(28, 26, 23, 0.07),
+    0 10px 24px rgba(28, 26, 23, 0.07);
 }
 
 .card__frame {
@@ -587,12 +590,17 @@ a {
 
 /* ───────────────────────── 책 ───────────────────────── */
 
+/*
+ * 🔴 흰 배경 + 테두리 상자였고, 그 안의 각 해도 배경 칸이었다 — **상자 안의 상자.**
+ *   테두리를 걷고 위에 선 하나만 남긴다. 맨 아래 데모 구역(`.demo`)이 이미 같은 방식이라
+ *   홈 아래쪽 두 구역이 같은 문법으로 갈린다.
+ *   *"발견성은 구역이 담당한다"*는 근거는 그대로다 — 제목 `한 해가 한 권`과
+ *   칸들의 배경이 그 일을 하고 있고, 테두리는 거기에 아무것도 더하지 않았다.
+ */
 .books {
-  margin: 0 0 1.75rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: #fff;
+  margin: 1.75rem 0 0;
+  padding: 1.25rem 0 0;
+  border-top: 1px solid var(--line);
 }
 
 .books__h {
@@ -626,15 +634,16 @@ a {
  * 한 해가 한 칸이다. 연도·점수 위에, 행동은 아래.
  * 칸 안에서 가로로 벌리지 않는다 — 그게 방금 고친 그 배치다.
  */
+/*
+ * 🔴 종이색 배경 칸이었다. 감싸던 흰 상자를 걷어내면서 **바탕이 같은 색이 돼 안 보이게 됐고**,
+ *   보이지 않는 칸의 안쪽 여백만 남아 연도가 구역 제목보다 14px 안쪽으로 밀려 있었다.
+ *   칸을 지우고 왼쪽 끝을 맞춘다 — 격자가 줄을 나누고 있어서 칸이 할 일이 없다.
+ */
 .books__row {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.55rem;
-  padding: 0.8rem 0.85rem 0.85rem;
-  border-radius: var(--radius);
-  /* 흰 구역 안의 칸이라 종이색이면 테두리 없이 갈라진다. 선을 하나 더 긋지 않는다. */
-  background: var(--paper);
+  gap: 0.5rem;
 }
 
 .books__meta {
