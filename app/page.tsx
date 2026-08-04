@@ -3,7 +3,8 @@ import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { isOngoing } from "@/lib/book";
 import { subjectParticle } from "@/lib/korean";
-import { describeAge } from "@/lib/age";
+import { describeAge, describeSpan } from "@/lib/age";
+import { groupByYear } from "@/lib/group";
 import { SaidBy, emptyQuoteText } from "./artwork/said-by";
 import { BooksStrip, type YearRow } from "./books-strip";
 import { DemoResetButton } from "./demo/reset-button";
@@ -322,55 +323,91 @@ export default async function ArtworkListPage({
             )}
           </p>
 
-          <ul className="grid">
-            {artworks.map((artwork) => (
-              <li key={artwork.id}>
-                <Link href={`/artwork/${artwork.id}`} className="card">
-                  <div className="card__frame">
-                    <img
-                      className="card__img"
-                      src={`/api/photo/${artwork.id}`}
-                      /*
-                       * alt에 아이 말을 넣지 않는다. 그건 그림의 설명이 아니라
-                       * 그림을 보고 아이가 한 말이라, 화면에 이미 글로 나와 있다.
-                       * 스크린리더가 같은 문장을 두 번 읽게 된다.
-                       */
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
+          {/*
+            🔴 전에는 격자 하나에 전부 쏟아부었다. 시드가 한 해(10점)짜리였을 때 만든 모양이라
+              구분이 필요 없었고, 네 해로 넓어질 때 **격자만 그대로 남았다.**
+              그래서 `만 3세 2개월` 옆 칸이 `생후 6개월`이었고 그 사이에 아무 표시가 없었다.
 
-                  <div className="card__body">
-                    {artwork.childQuote ? (
-                      <p className="quote">
-                        <SaidBy by={artwork.quoteBy} />
-                        {highlight(artwork.childQuote, q)}
-                      </p>
-                    ) : (
-                      <p className="quote quote--empty">{emptyQuoteText(artwork.quoteBy)}</p>
-                    )}
-                    <p className="card__when">
-                      {/*
-                        🔑 날짜 앞에 시간 축을 둔다. 부모가 그 시절을 부르는 단위가 그쪽이다 —
-                          "임신 24주"가 "2018년 9월 12일"보다 먼저 떠오른다.
-                          생일을 안 넣었으면 축이 없고, 그때는 날짜만 남는다.
-                      */}
-                      {(() => {
-                        const when = describeAge(artwork.madeOn, birth);
-                        return when.scale === "none" ? null : (
-                          <span className="card__age">{when.label}</span>
-                        );
-                      })()}
-                      <time className="card__date" dateTime={artwork.madeOn.toISOString()}>
-                        {formatMadeOn(artwork.madeOn)}
-                      </time>
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+            🔑 묶는 단위를 해로 고른 이유는 lib/group.ts에 적었다 — 책의 단위와 같아진다.
+          */}
+          {groupByYear(artworks).map(({ year, items }) => (
+            <section className="span" key={year} aria-labelledby={`span-${year}`}>
+              {/*
+                🔑 제목이 화면 위에 붙어 있는다(sticky). 격자를 내리는 동안
+                  **지금 보고 있는 것이 어느 해인지**가 화면에서 사라지지 않아야
+                  구분이 구분 구실을 한다. 한 번 지나가고 마는 제목은 표지판이 아니다.
+              */}
+              <h2 className="span__head" id={`span-${year}`}>
+                <span className="span__year">{year}년</span>
+                {/*
+                  🔑 그 해가 아이의 어느 시절이었는지. items가 만든 날 역순이라
+                    **끝이 그 해의 처음**이다. 생일을 안 넣었으면 이 자리가 통째로 없다.
+                */}
+                {(() => {
+                  const span = describeSpan(items[items.length - 1].madeOn, items[0].madeOn, birth);
+                  return span ? <span className="span__age">{span}</span> : null;
+                })()}
+                {/*
+                  🔑 검색 중이면 `찾은 것 n점`이다. 그냥 `n점`이라고 쓰면
+                    그 해에 남긴 것이 n점이라는 말로 읽히는데, 그건 아래 책 줄이 세는 수와 다르다.
+                    화면에 보이는 것만 세고, 무엇을 셌는지 같이 쓴다.
+                */}
+                <span className="span__count">
+                  {searching ? `찾은 것 ${items.length}점` : `${items.length}점`}
+                </span>
+              </h2>
+
+              <ul className="grid">
+                {items.map((artwork) => (
+                  <li key={artwork.id}>
+                    <Link href={`/artwork/${artwork.id}`} className="card">
+                      <div className="card__frame">
+                        <img
+                          className="card__img"
+                          src={`/api/photo/${artwork.id}`}
+                          /*
+                           * alt에 아이 말을 넣지 않는다. 그건 그림의 설명이 아니라
+                           * 그림을 보고 아이가 한 말이라, 화면에 이미 글로 나와 있다.
+                           * 스크린리더가 같은 문장을 두 번 읽게 된다.
+                           */
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+
+                      <div className="card__body">
+                        {artwork.childQuote ? (
+                          <p className="quote">
+                            <SaidBy by={artwork.quoteBy} />
+                            {highlight(artwork.childQuote, q)}
+                          </p>
+                        ) : (
+                          <p className="quote quote--empty">{emptyQuoteText(artwork.quoteBy)}</p>
+                        )}
+                        <p className="card__when">
+                          {/*
+                            🔑 날짜 앞에 시간 축을 둔다. 부모가 그 시절을 부르는 단위가 그쪽이다 —
+                              "임신 24주"가 "2018년 9월 12일"보다 먼저 떠오른다.
+                              생일을 안 넣었으면 축이 없고, 그때는 날짜만 남는다.
+                          */}
+                          {(() => {
+                            const when = describeAge(artwork.madeOn, birth);
+                            return when.scale === "none" ? null : (
+                              <span className="card__age">{when.label}</span>
+                            );
+                          })()}
+                          <time className="card__date" dateTime={artwork.madeOn.toISOString()}>
+                            {formatMadeOn(artwork.madeOn)}
+                          </time>
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </>
       )}
 

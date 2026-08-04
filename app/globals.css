@@ -139,6 +139,67 @@ a {
   color: var(--ink-soft);
 }
 
+/* ── 해 구간 ──────────────────────────────────────────────
+ * 격자를 해 단위로 쪼개고 그 위에 제목을 얹는다.
+ * 왜 해인지는 lib/group.ts에 있다 — 책이 묶이는 단위와 같아진다.
+ */
+
+.span + .span {
+  margin-top: 1.5rem;
+}
+
+.span__head {
+  /*
+   * 🔑 화면 위에 붙어 있는다. 격자를 내리는 동안 지금이 어느 해인지가
+   *   화면에서 사라지면, 구분선을 그은 값이 스크롤 한 번에 없어진다.
+   *   한 번 지나가고 마는 제목은 표지판이 아니라 장식이다.
+   */
+  position: sticky;
+  top: 0;
+  /* 카드가 이 밑으로 지나간다. 배경과 z-index가 없으면 글자가 그림 위에 겹쳐 읽힌다. */
+  z-index: 1;
+  background: var(--paper);
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.45rem;
+  margin: 0 0 0.7rem;
+  padding: 0.5rem 0 0.45rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.span__year {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * 🔑 셋을 왼쪽에 붙여 한 문장처럼 읽힌다.
+ *   `2026년 · 만 6세 10개월 ~ 만 7세 4개월 · 6점`
+ *   점수를 오른쪽 끝으로 밀면 1400px에서 그 사이가 통째로 빈다 —
+ *   이 저장소가 책 줄에서 이미 한 번 저지른 배치라 여기서 반복하지 않는다.
+ */
+.span__age,
+.span__count {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.span__age {
+  font-weight: 600;
+}
+
+.span__age::before,
+.span__count::before {
+  content: "·";
+  margin-right: 0.45rem;
+  font-weight: 400;
+}
+
 /*
  * 🔑 이 서비스의 반응형 원칙이 이 한 줄에 있다.
  *   "화면이 넓어지면 칸이 커지는 게 아니라 더 많이 보인다."

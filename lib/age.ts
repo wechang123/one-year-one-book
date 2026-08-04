@@ -103,6 +103,23 @@ export function describeAge(madeOn: Date, birth: Birth): Timescale {
 }
 
 /**
+ * 한 구간이 아이의 어느 시절이었나. `임신 14주 5일` · `생후 39일 ~ 생후 6개월`
+ *
+ * 🔑 양 끝만 부른다. 구간 안을 채우지 않는 이유는 **채울 것이 이미 아래에 있기 때문**이다 —
+ *   구간을 여는 제목은 "이 아래가 어느 시절인지"만 말하면 되고,
+ *   한 점 한 점이 언제였는지는 각 카드가 자기 자리에서 말한다.
+ *
+ * 🔑 생일이 없으면 `null`이다. `describeAge`가 그 경우 날짜를 그대로 돌려주는데,
+ *   그 날짜는 카드마다 이미 찍혀 있어서 제목이 같은 말을 두 번 하게 된다.
+ */
+export function describeSpan(from: Date, to: Date, birth: Birth): string | null {
+  const a = describeAge(from, birth);
+  const b = describeAge(to, birth);
+  if (a.scale === "none" || b.scale === "none") return null;
+  return a.label === b.label ? a.label : `${a.label} ~ ${b.label}`;
+}
+
+/**
  * 이 시점에 말을 할 수 있었나.
  *
  * 🔑 앱이 아는 것은 **태어났는가** 하나다. 그건 날짜가 확정한다.
