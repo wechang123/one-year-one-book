@@ -73,7 +73,7 @@ export default async function BookPage({
 
       <header className="masthead">
         <div className="masthead__text">
-          <p className="masthead__owner">{year}년 · 한 해가 한 권</p>
+          <p className="masthead__meta">{year}년 · 한 해가 한 권</p>
           <h1 className="masthead__title">{book.title}</h1>
           <p className="masthead__lede">
             {ongoing ? (
