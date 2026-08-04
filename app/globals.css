@@ -96,6 +96,55 @@ a {
   color: inherit;
 }
 
+/* ── 조작 상태 ────────────────────────────────────────────
+ *
+ * 🔴 전에는 포커스 링이 **입력칸 두 곳에만** 설계돼 있었다.
+ *   버튼도, 격자 카드 열두 칸도, 상단 바 링크도 브라우저 기본 링에 맡겨져 있었다.
+ *   키보드로만 쓰는 사람에게 이 앱은 **격자를 지나가는 화면**인데 그 격자가 설계 밖이었다.
+ *
+ * 🔑 한 곳에서 정한다. 요소마다 따로 적으면 갈라진다 — 실제로 갈라져 있었다.
+ * 🔑 색은 `--accent`다. 이 저장소에서 강조색이 뜻하는 것이 *"지금 눌러야 할 것"*이고
+ *   포커스는 **지금 관여 중인 것**이라 같은 계열이다.
+ */
+/*
+ * 🔴 여기에 `border-radius: inherit`을 넣었다가 **바로 뺐다.**
+ *   "알약 버튼에서는 링도 알약이어야 한다"고 생각했는데, `outline`은 이미 요소 자신의
+ *   반지름을 따라간다. `border-radius`를 다시 지정하면 **버튼 자체가 포커스되는 순간
+ *   부모의 반지름(0)으로 바뀐다** — 링을 고치려다 버튼을 네모로 만드는 코드였다.
+ */
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/*
+ * 🔑 눌림 피드백. 폰에는 hover가 없어서 **터치 사용자에게는 이게 유일한 피드백**이다.
+ *   1px 내려앉는 것으로 충분하다 — 실제 버튼이 그만큼 들어간다.
+ *   `transition`을 안 걸어서 애니메이션이 아니라 **상태 두 개**다.
+ */
+:where(a.btn, button, summary):active {
+  transform: translateY(1px);
+}
+
+/*
+ * 🔴 `transition`이 한 곳도 없어서 hover가 계단처럼 끊겼다.
+ *
+ * ⚠️ 이 저장소는 *"애니메이션을 만들지 마라"*를 지켜왔다. 그 규칙은 **장식 모션**을
+ *   막으려던 것이고 이건 상태가 바뀌는 것을 알리는 피드백이다. 그래도 스스로 그은 선이라
+ *   범위를 좁힌다 — **색과 그림자만, 120ms, 움직임 없음.**
+ *   그리고 시스템에서 모션을 줄이기로 한 사람에게는 아예 걸지 않는다.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  :where(a, button, summary, .card, input, textarea) {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      box-shadow 120ms ease,
+      color 120ms ease,
+      opacity 120ms ease;
+  }
+}
+
 /* ───────────────────────── 상단 바 ───────────────────────── */
 
 /*
@@ -791,9 +840,13 @@ a {
   font-size: 1rem;
 }
 
+/*
+ * 🔴 이 두 줄이 저장소의 **유일한** 포커스 설계였다. 지금은 전역 규칙(맨 위 `뼈대`)이
+ *   모든 조작 요소를 덮어서 여기 따로 적을 것이 없다. 입력칸만 여백을 1px로 좁힌다 —
+ *   테두리가 이미 있어서 2px을 띄우면 링이 글자에서 너무 멀어진다.
+ */
 .field__input:focus-visible,
 .field__file:focus-visible {
-  outline: 2px solid var(--ink);
   outline-offset: 1px;
 }
 
