@@ -1,13 +1,31 @@
 :root {
   color-scheme: light;
 
-  /* 색은 다섯 개만 쓴다. 아이 그림이 화면에서 제일 화려한 것이어야 한다. */
+  /*
+   * 색은 여섯 개만 쓴다. 아이 그림이 화면에서 제일 화려한 것이어야 한다.
+   *
+   * 🔴 `--accent`가 `--ink`와 **같은 값(#1c1a17)이었다.** 강조색이라는 이름의 토큰이
+   *   본문 색을 들고 있었으니, 이 화면에는 강조색이 아예 없었던 것이다.
+   *   실제로 홈에 렌더된 글자를 색으로 세어보니 먹 498자 · 회색 463자 · 종이색 5자,
+   *   **셋 다 무채색**이었고 그중 48%가 회색이었다.
+   *
+   * 🔑 색을 어디에 쓸지가 규칙이다 — 면적이 아니라 자리다.
+   *   화면에서 색을 가진 것은 **둘뿐**이다: 아이가 남긴 것, 그리고 지금 눌러야 할 것 하나.
+   *   진한 버튼이 화면에 하나뿐이라는 기존 규칙과 맞물려, 색이 늘어날 길이 막혀 있다.
+   *
+   * 🔑 왜 파랑인가 — 남는 자리가 그것뿐이다.
+   *   붉은 계열은 `--danger`가 이미 쓴다(같으면 주 행동과 위험이 같은 색이 된다).
+   *   초록·노랑·주황은 시드 그림의 크레용 색과 겹쳐서 그림이 덜 두드러진다.
+   *   종이색(#faf8f4) 위에서 대비 9.3:1이라 글자색으로도 버튼 배경으로도 쓸 수 있다.
+   */
   --ink: #1c1a17;
   --ink-soft: #6b6560;
   --line: #e5e0d8;
   --paper: #faf8f4;
-  --accent: #1c1a17;
+  --accent: #28456b;
   --danger: #a4362b;
+  /* 검색 강조. 전에는 mark 규칙 안에 값이 박혀 있어서 팔레트에 안 잡혔다. */
+  --mark: #fdf3d0;
 
   --radius: 12px;
   --page-max: 1400px;
@@ -101,7 +119,8 @@ a {
  *   둘은 갈라진다. 속성 하나가 뜻과 생김새를 같이 정하게 둔다.
  */
 .sitenav__link[aria-current="page"] {
-  color: var(--ink);
+  /* 지금 있는 화면. 화면에서 강조색을 쓰는 두 자리 중 하나다(다른 하나는 진한 버튼). */
+  color: var(--accent);
   font-weight: 600;
   background: var(--paper);
 }
@@ -161,17 +180,33 @@ a {
   letter-spacing: -0.01em;
 }
 
+/*
+ * 🔑 1440px에서 28px은 1400px짜리 페이지의 제목치고 작다. 32px로 올리고 자간을 조인다.
+ *   폰(375px)은 그대로 22px이다 — 좁은 화면에서 키우면 두 줄이 세 줄이 된다.
+ */
 @media (min-width: 700px) {
   .masthead__title {
-    font-size: 1.75rem;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
   }
 }
 
+/*
+ * 🔴 `--ink-soft`였다. 올렸다.
+ *   이 줄은 **이 서비스가 뭐 하는 곳인지 말하는 문장**이다. 화면에서 두 번째로 중요한데
+ *   가장 흐린 색이었다. 회색은 "덜 봐도 되는 것"에 쓰는 색이고 이건 그게 아니다.
+ */
 .masthead__lede {
   margin: 0;
   max-width: 46ch;
   font-size: 0.9375rem;
-  color: var(--ink-soft);
+  color: var(--ink);
+}
+
+@media (min-width: 700px) {
+  .masthead__lede {
+    font-size: 1rem;
+  }
 }
 
 /*
@@ -341,6 +376,16 @@ a {
   border-radius: var(--radius);
   overflow: hidden;
   text-decoration: none;
+  /*
+   * 🔑 그림자를 넣은 이유는 예뻐서가 아니라 **은유가 이미 그렇게 그려져 있어서**다.
+   *   시드 이미지는 하나같이 "책상 위에 놓인 종이"를 그리고, 그 종이에 그림자가 있다
+   *   (scripts/seed-images.mjs의 sheet()). 카드가 그 은유를 이어받는다 —
+   *   격자는 책상이고 카드는 그 위에 놓인 실물이다.
+   *   그라데이션도 애니메이션도 아니다. 종이 한 장 두께만큼만 띄운다.
+   */
+  box-shadow:
+    0 1px 2px rgba(28, 26, 23, 0.04),
+    0 6px 16px rgba(28, 26, 23, 0.035);
 }
 
 .card:hover {
@@ -923,7 +968,7 @@ a {
  * 색을 못 보는 경우에도 어디가 걸렸는지 보이게 한다.
  */
 mark {
-  background: #fdf3d0;
+  background: var(--mark);
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
