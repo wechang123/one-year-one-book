@@ -113,8 +113,8 @@ export default async function ArtworkDetailPage({
               아직 안 물어봤어요.
               <br />
               <span className="detail__hint">
-                지금 물어봐도 늦지 않습니다. 그때 한 말은 그때만 얻을 수 있지만,
-                기억나는 말은 지금 적어둘 수 있어요.
+                지금 <strong>&ldquo;이거 무슨 얘기야?&rdquo;</strong>라고 물어봐도 늦지 않습니다.
+                그때 한 말은 그때만 얻을 수 있지만, 기억나는 말은 지금 적어둘 수 있어요.
               </span>
             </p>
           )}

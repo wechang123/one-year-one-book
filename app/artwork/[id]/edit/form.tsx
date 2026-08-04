@@ -50,10 +50,13 @@ export function EditArtworkForm({
            *   그 상태를 관리할 이유가 없다 — 이 폼은 제출할 때 한 번만 값을 읽는다.
            */
           defaultValue={state.values?.childQuote ?? childQuote}
-          placeholder="이건 뭐야? 하고 물어보고, 대답을 그대로 적어보세요."
+          placeholder="아이가 한 말을 그대로 적어주세요"
           aria-describedby="quote-help"
         />
         <p className="field__help" id="quote-help">
+          {/* 등록 폼과 같은 질문을 제안한다. 두 화면이 다른 질문을 시키면 말이 갈린다. */}
+          <strong>&ldquo;이거 무슨 얘기야?&rdquo;</strong> 하고 물어보면 이야기가 나옵니다.
+          <br />
           비우면 &ldquo;아직 안 물어봤어요&rdquo;로 돌아갑니다.
         </p>
       </div>
