@@ -6,7 +6,7 @@ import { describeAge, timeBand } from "@/lib/age";
 import { settleQuoteBy } from "@/lib/speaker";
 import { InlineQuoteForm } from "./inline-quote";
 import { SaidBy, emptyQuoteText } from "../said-by";
-import { ArrowLeft } from "../../icons";
+import { ArrowLeft, SquarePen } from "../../icons";
 
 /**
  * 작품 상세.
@@ -322,6 +322,7 @@ export default async function ArtworkDetailPage({
           */}
           <div className="detail__actions">
             <Link href={`/artwork/${artwork.id}/edit`} className="btn btn--ghost">
+              <SquarePen />
               {artwork.childQuote ? "설명 고치기" : "아이 말 채우기"}
             </Link>
           </div>

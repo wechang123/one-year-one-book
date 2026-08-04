@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { STATUS, stepOf, TOTAL_STEPS, type OrderStatus } from "@/lib/order-status";
 import { formatDay } from "@/lib/date";
-import { ArrowLeft } from "../icons";
+import { ArrowLeft, BookPlus } from "../icons";
 
 /**
  * 주문 목록.
@@ -86,6 +86,7 @@ export default async function OrdersPage() {
             한 해에 남긴 것을 <strong>책으로 묶으면</strong> 그 책을 주문할 수 있습니다.
           </p>
           <Link href="/" className="btn">
+            <BookPlus />
             책 묶으러 가기
           </Link>
         </div>

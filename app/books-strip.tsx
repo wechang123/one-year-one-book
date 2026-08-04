@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createBook, type BookActionState } from "./book/actions";
-import { BookOpen } from "./icons";
+import { BookOpen, BookPlus } from "./icons";
 
 const INITIAL: BookActionState = {};
 
@@ -114,7 +114,7 @@ function MakeButton() {
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="btn btn--ghost" disabled={pending}>
-      <BookOpen />
+      <BookPlus />
       {pending ? "묶는 중…" : "책으로 묶기"}
     </button>
   );

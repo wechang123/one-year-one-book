@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { resetDemo, type ResetState } from "./actions";
+import { RotateCcw } from "../icons";
 
 const INITIAL: ResetState = {};
 
@@ -20,7 +21,10 @@ export function DemoResetButton() {
 
   return (
     <details className="reset">
-      <summary className="reset__toggle">처음 상태로 되돌리기</summary>
+      <summary className="reset__toggle">
+        <RotateCcw />
+        처음 상태로 되돌리기
+      </summary>
 
       <div className="reset__body">
         {state.error ? (

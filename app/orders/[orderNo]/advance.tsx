@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { advanceOrder, type AdvanceState } from "./actions";
 import { STATUS, type OrderStatus } from "@/lib/order-status";
+import { ArrowRight } from "../../icons";
 
 const INITIAL: AdvanceState = {};
 
@@ -58,6 +59,7 @@ function SubmitButton({ label }: { label: string }) {
   return (
     <button type="submit" className="btn" disabled={pending}>
       {pending ? "바꾸는 중…" : label}
+      <ArrowRight />
     </button>
   );
 }

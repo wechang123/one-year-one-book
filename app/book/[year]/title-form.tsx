@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { renameBook, type BookActionState } from "../actions";
+import { SquarePen } from "../../icons";
 
 const INITIAL: BookActionState = {};
 
@@ -24,7 +25,10 @@ export function BookTitleForm({ year, title }: { year: number; title: string }) 
 
   return (
     <details className="titleedit">
-      <summary className="titleedit__toggle">표지 제목 고치기</summary>
+      <summary className="titleedit__toggle">
+        <SquarePen />
+        표지 제목 고치기
+      </summary>
 
       <form action={formAction} className="titleedit__form" noValidate>
         <input type="hidden" name="year" value={year} />
