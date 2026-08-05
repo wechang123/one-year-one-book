@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { parseDateInputValue, todayInputValue } from "@/lib/date";
@@ -92,6 +93,16 @@ export async function updateChild(_prev: ChildState, formData: FormData): Promis
     logError("updateChild", e);
     return { error: "저장하지 못했습니다. 잠시 뒤 다시 시도해주세요.", values };
   }
+
+  /**
+   * 🔴 redirect만 있었다. 이름을 바꾸면 홈 머리말은 "위창의 기록"이 되는데
+   *   **사이드바는 "하늘의 기록"으로 남았다**(직접 밟힘). 이름을 읽는 곳이
+   *   페이지가 아니라 **레이아웃**(lib/owner.ts → app/layout.tsx)이라서다 —
+   *   redirect는 페이지만 새로 그리고, 레이아웃은 클라이언트 캐시에 남는다.
+   *   데모 초기화가 "layout"으로 재검증하는 것과 같은 이유로 여기도 그렇게 한다:
+   *   이 액션이 바꾸는 값(이름·생일)은 전부 레이아웃과 모든 화면에 걸쳐 있다.
+   */
+  revalidatePath("/", "layout");
 
   /**
    * 목록으로 보낸다. 이 값이 바뀌면 **목록의 모든 카드에 붙은 시간 축이 같이 바뀌므로**,
