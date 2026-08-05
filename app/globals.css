@@ -328,8 +328,11 @@ a {
     bottom: 0;
     width: var(--side-w);
     padding: var(--gap-section) var(--gap-title);
-    background: #fff;
-    border-right: 1px solid var(--line);
+    /*
+     * 🔴 흰 배경 + 오른쪽 테두리였다. 걷었다.
+     *   메뉴가 **자기 판을 깔고 앉아 있으면** 본문과 다른 층에 있는 것으로 읽힌다.
+     *   같은 종이 위에 글자만 얹혀 있는 편이 조용하다 — 그레인도 여기까지 이어진다.
+     */
     overflow-y: auto;
   }
 
@@ -2001,142 +2004,142 @@ a.recall:hover {
   color: var(--ink-soft);
 }
 
-/* ═══════════════════ v2 — 타임라인 ═══════════════════
+/* ═══════════════════ 타임라인 ═══════════════════
  *
- * 세로 축 하나에 기록이 매달린다. 왜 이게 첫 화면인지는 app/page.tsx에 있다.
+ * 🔴 v2에서 이 화면은 **세 칸짜리 가로 줄**이었다 — 점 16px · 썸네일 56px · 나머지 글.
+ *   그 결과 **사진이 화면에서 가장 작았고 옆 글자가 더 컸다.**
+ *   이 서비스가 받아두는 것이 사진인데 그러면 그건 사진 목록이 아니라
+ *   **사진이 붙은 활동 로그**다. v3에서 활자와 바탕만 갈아입혔더니 그 사실이 더 또렷해졌다.
+ *
+ * 🔑 사물이 화면을 차지하게 한다. 사진이 480px까지 커지고 나머지가 그 둘레로 물러난다.
+ *   축을 그리던 세로선도 지웠다 — **항목이 작을 때 순서를 말해주던 장치**였는데,
+ *   항목이 커지면 순서는 항목이 말한다. 선은 그때부터 관리 화면의 표시가 된다.
  */
 
 .tl {
   list-style: none;
   margin: 0;
   padding: 0;
-  position: relative;
 }
 
-/*
- * 🔑 축은 가상 요소 하나로 그린다. 항목마다 선 조각을 그리면
- *   항목 사이 여백에서 선이 끊긴다 — 끊긴 축은 축이 아니다.
- */
-.tl::before {
-  content: "";
-  position: absolute;
-  left: 7px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--line);
-}
-
-.tl__item {
-  position: relative;
-}
-
-/* 띠가 갈아타는 자리의 표. 축 위에 얹혀서 선을 끊는다 — 여기서 단위가 바뀐다는 뜻이다. */
+/* 띠가 갈아타는 자리. 이 화면에서 유일한 구조 표시라 크게 세운다. */
 .tl__mark {
-  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 var(--s-3);
-  margin: var(--gap-section) 0 var(--gap-title);
-  padding: var(--s-2) 0 var(--s-2) var(--s-7);
-  background: var(--paper);
+  gap: 0 var(--gap-title);
+  margin: var(--s-9) 0 var(--gap-section);
+  padding-bottom: var(--gap-title);
+  border-bottom: 1px solid var(--line);
 }
 
-.tl__mark::before {
-  content: "";
-  position: absolute;
-  left: 2px;
-  top: 50%;
-  width: 12px;
-  height: 12px;
-  margin-top: -6px;
-  border-radius: 50%;
-  background: currentColor;
+.tl__item:first-child .tl__mark {
+  margin-top: 0;
 }
 
 .tl__mark-title {
-  font-weight: 700;
-  font-size: 0.9375rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
 }
 
 .tl__mark-note {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
   color: var(--ink-soft);
 }
 
-/* 항목 하나. 점 · 썸네일 · 글 세 칸이다. */
+/* 항목 하나가 세로로 선다. 언제 → 무엇 → 뭐라고 했나. */
 .tl__row {
-  display: grid;
-  grid-template-columns: 16px 56px 1fr;
-  align-items: start;
-  gap: var(--gap-title);
-  padding: var(--gap-repeat) 0;
+  display: block;
+  padding: var(--gap-section) 0;
   text-decoration: none;
-  border-radius: var(--radius);
 }
 
-.tl__row:hover {
-  background: #fff;
+.tl__when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--s-3);
+  margin-bottom: var(--gap-title);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 
 .tl__dot {
-  width: 8px;
-  height: 8px;
-  margin: 6px 0 0 4px;
+  width: 7px;
+  height: 7px;
+  flex: none;
+  margin-right: var(--s-2);
   border-radius: 50%;
   background: var(--ink-soft);
-  /* 축 위에 얹혀야 하므로 배경을 덮는 테두리를 두른다. */
-  box-shadow: 0 0 0 4px var(--paper);
 }
 
 .tl__row--before .tl__dot { background: var(--t-before); }
 .tl__row--infant .tl__dot { background: var(--t-infant); }
 .tl__row--child  .tl__dot { background: var(--t-child); }
 
-.tl__thumb {
-  display: block;
-  aspect-ratio: 1 / 1;
-  border-radius: var(--s-3);
-  overflow: hidden;
-  background: var(--t-none-fill);
-}
-
-.tl__row--before .tl__thumb { background: var(--t-before-fill); }
-.tl__row--infant .tl__thumb { background: var(--t-infant-fill); }
-.tl__row--child  .tl__thumb { background: var(--t-child-fill); }
-
-.tl__thumb img {
-  width: 100%;
-  height: 100%;
-  /* 목록 격자와 같은 규칙 — 자르지 않는다. */
-  object-fit: contain;
-  display: block;
-}
-
-.tl__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  min-width: 0;
-}
-
-.tl__when {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--s-3);
-  font-size: 0.8125rem;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-
 .tl__age {
   font-weight: 600;
 }
 
+/*
+ * 🔑 사진이 주인공이다. 폭은 24rem까지, 높이는 화면의 40%까지.
+ *
+ * 🔴 처음에 `img`에 `width: auto`를 걸었다가 **사진이 전부 점으로 접혔다.**
+ *   마크업의 `width`/`height` 속성은 CSS에서 `width: auto`가 **덮어쓴다** —
+ *   속성이 잡아둔 자리를 CSS가 취소한 것이다. `loading="lazy"`와 겹쳐서
+ *   화면에 점 열둘만 남았다.
+ *
+ * 🔑 그래서 비율을 **틀**이 든다. 사진의 원본 비율(`--ar`)로 틀이 먼저 자리를 잡고
+ *   사진은 그 안에 `contain`으로 들어온다. 카드 격자가 정사각 틀로 푼 것과 같은 방식이고,
+ *   여기는 틀이 **사진마다 다른 비율**이라는 것만 다르다 — 실물이 원래 제각각이다.
+ */
+.tl__figure {
+  display: block;
+  width: min(100%, 24rem);
+  aspect-ratio: var(--ar, 4 / 3);
+  max-height: 40vh;
+  padding: var(--s-3);
+  border-radius: var(--s-3);
+  background: var(--t-none-fill);
+  box-shadow:
+    0 1px 2px rgba(28, 26, 23, 0.05),
+    0 8px 22px rgba(28, 26, 23, 0.05);
+}
+
+.tl__row--before .tl__figure { background: var(--t-before-fill); }
+.tl__row--infant .tl__figure { background: var(--t-infant-fill); }
+.tl__row--child  .tl__figure { background: var(--t-child-fill); }
+
+.tl__figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 자르지 않는다. 잘려나간 자리에 아이가 설명한 것이 있을 수 있다. */
+  object-fit: contain;
+  border-radius: var(--s-2);
+}
+
+.tl__row:hover .tl__figure {
+  box-shadow:
+    0 2px 4px rgba(28, 26, 23, 0.08),
+    0 14px 32px rgba(28, 26, 23, 0.09);
+}
+
+
+
+/*
+ * 아이 말. 사진 아래에서 읽는 글이라 크기를 올렸다 —
+ * v2에서 15px였는데 사진이 56px일 때는 그게 컸고, 사진이 480px가 되니 작다.
+ */
 .tl__quote {
-  font-size: 0.9375rem;
-  line-height: 1.55;
+  display: block;
+  max-width: 34rem;
+  margin-top: var(--gap-title);
+  font-size: 1.0625rem;
+  line-height: 1.75;
   color: var(--ink);
 }
 
@@ -2145,11 +2148,95 @@ a.recall:hover {
   font-style: italic;
 }
 
-/* 🔴 `.tl__end` 한 줄이 있던 자리. 꼬리(`.tl__tail`)가 대신한다. */
+/* ── 타임라인 꼬리 — 마지막 기록에서 오늘까지 ──────────── */
+
+.tl__tail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-title);
+  align-items: flex-start;
+  padding-top: var(--s-9);
+  border-top: 1px dashed var(--line);
+  margin-top: var(--gap-section);
+}
+
+.tl__gap {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.tl__gap strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.tl__today {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--gap-title);
+  margin: 0;
+}
+
+.tl__today .tl__dot {
+  width: 10px;
+  height: 10px;
+  align-self: center;
+  background: var(--ink-soft);
+}
+
+.tl__today--before .tl__dot { background: var(--t-before); }
+.tl__today--infant .tl__dot { background: var(--t-infant); }
+.tl__today--child  .tl__dot { background: var(--t-child); }
+
+.tl__today-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--gap-title);
+}
+
+.tl__today-label {
+  font-size: 1.5rem;
+}
 
 @media (min-width: 700px) {
+  .tl__mark-title { font-size: 2rem; }
+  .tl__today-label { font-size: 2rem; }
+  .tl__quote { font-size: 1.125rem; }
+}
+
+/*
+ * 🔴 세로로만 세웠더니 **한 항목이 580px이 되고 오른쪽 900px이 통째로 비었다.**
+ *   스크롤하다 보면 사진과 다음 라벨 사이에서 **화면에 아무것도 없는 구간**이 나온다.
+ *   재보고 알았다 — 문서 높이 7,447px, 한 화면당 1.33항목.
+ *
+ * 🔑 사물을 키운 것은 맞았고, **키운 사물을 세로로만 쌓은 것이 틀렸다.**
+ *   넓은 화면에서는 사진 옆에 말이 선다. 사진은 그대로 크고 폭은 다 쓴다.
+ */
+@media (min-width: 1000px) {
   .tl__row {
-    grid-template-columns: 16px 88px 1fr;
+    display: grid;
+    grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+    gap: 0 var(--gap-section);
+    align-items: start;
+  }
+
+  .tl__when {
+    grid-column: 1 / -1;
+  }
+
+  .tl__quote {
+    margin-top: 0;
+    /* 사진 윗변과 첫 줄의 기준선을 맞춘다. 위에서 시작해야 둘이 한 짝으로 읽힌다. */
+    padding-top: var(--s-3);
+  }
+
+  .tl__figure img {
+    /* 세로로 쌓을 때보다 낮춘다 — 한 화면에 두 항목쯤 들어와야 훑을 수 있다. */
+    max-height: 38vh;
   }
 }
 
@@ -2369,9 +2456,7 @@ a.recall:hover {
   font-size: 0.9375rem;
 }
 
-.tl__end-btn {
-  margin-left: var(--s-7);
-}
+/* 🔴 `margin-left: var(--s-7)`가 있었다. 축을 그리던 세로선에 맞춘 값인데 선이 사라졌다. */
 
 /* ═══════════════════ v3 — 이름을 부르는 활자 ═══════════════════
  *
