@@ -36,6 +36,29 @@ const pretendard = localFont({
   adjustFontFallback: false,
 });
 
+/**
+ * 표제 글꼴 — Gowun Batang(SIL OFL), 같은 방식으로 잘라낸 200KB.
+ *
+ * 🔑 **왜 두 벌인가.** 화면이 *"읽는 곳"*과 *"부르는 곳"*으로 갈린다.
+ *   아이 말과 날짜는 읽는 글이고, `타임라인`·`2026년`·`하늘의 2020년`은 그 글에 붙는 **이름**이다.
+ *   이름이 본문과 같은 활자면 이름 노릇을 못 한다.
+ *   v1·v2가 그 구별을 **굵기와 크기로만** 했는데, 그건 같은 목소리를 크게 낸 것이지
+ *   다른 목소리가 아니다.
+ *
+ * 🔑 굵기가 하나(Regular)다. 표제에만 쓰고 강조는 크기와 색이 하므로
+ *   Bold를 같이 실으면 200KB가 두 배가 된다. **명조를 굵게 만들면 명조가 아니게 되기도 한다.**
+ *
+ * 🔑 `display: "swap"` — 표제가 늦게 바뀌는 것은 괜찮지만 안 보이면 안 된다.
+ */
+const gowun = localFont({
+  src: "./fonts/gowun-subset.woff2",
+  weight: "400",
+  style: "normal",
+  display: "swap",
+  variable: "--font-serif",
+  adjustFontFallback: false,
+});
+
 const DESCRIPTION =
   "아이가 남긴 것을 그때의 말과 함께 받아두고, 한 해가 지나면 한 권으로 묶습니다. 그래서 실물을 마음 편히 정리할 수 있게 합니다.";
 
@@ -64,7 +87,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const owner = await getOwnerName();
 
   return (
-    <html lang="ko" className={pretendard.variable}>
+    <html lang="ko" className={`${pretendard.variable} ${gowun.variable}`}>
       <body>
         {/*
           🔑 건너뛰기 링크. 상단 바가 생기면서 키보드 사용자는 **매 화면마다** 링크 셋을

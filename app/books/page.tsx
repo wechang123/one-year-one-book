@@ -59,7 +59,7 @@ export default async function BooksPage() {
     <div className="page">
       <header className="masthead">
         <div className="masthead__text">
-          <p className="masthead__meta">한 해가 한 권</p>
+          <p className="masthead__meta meta--label">한 해가 한 권</p>
           <h1 className="masthead__title">책</h1>
           <p className="masthead__lede">
             남긴 것은 <strong>만든 날의 연도</strong>를 보고 그 해의 책에 저절로 담깁니다.
