@@ -29,6 +29,7 @@
 | [`11-demo-reset.md`](./11-demo-reset.md) | 데모 초기화 | Lv3 |
 | [`12-self-explaining.md`](./12-self-explaining.md) | 자기설명 UI — 업로드 자리 · 빈 상태 전수 · CTA 사슬 · 격자 비율 | Lv3 |
 | [`13-taste-audit.md`](./13-taste-audit.md) | 외부 디자인 스킬로 자기 화면 감사 — 따른 것 12 / 안 따른 것 6 / 좁혀 적용한 것 2 | Lv3 |
+| [`14-v2.md`](./14-v2.md) | **v2 뼈대** — 사이드바 · 타임라인 · 캘린더. 규칙 둘과 부딪힌 것을 어떻게 갈랐나 | Lv3 |
 
 각 문서의 구성은 같다.
 
