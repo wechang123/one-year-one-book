@@ -21,7 +21,13 @@ export function readQuoteBy(raw: FormDataEntryValue | null): Speaker {
  * 🔑 화면에서 막은 것은 방어가 아니다. 서버 액션은 폼을 거치지 않고도 호출된다.
  *   그리고 이건 앱이 **확실히 아는** 사실이라 서버가 정해도 된다 —
  *   반대로 *"태어난 뒤에 이 아이가 말을 하는가"*는 앱이 모르므로 건드리지 않는다.
+ *
+ * 🔑 보는 날짜는 **만든 날이 아니라 편지를 쓴 날**(writtenOn)이다.
+ *   말이 작품당 한 통이던 때는 만든 날이 곧 말한 날이라 구별이 없었다.
+ *   편지가 늦게 도착할 수 있게 되면서 둘이 갈라진다 — 초음파 사진(임신 24주)에
+ *   7살이 편지를 쓰면 **그건 아이의 말일 수 있다.** 말을 할 수 있었는가는
+ *   물건이 생긴 날이 아니라 **말한 날**의 사실이다.
  */
-export function settleQuoteBy(picked: Speaker, madeOn: Date, birth: Birth): Speaker {
-  return couldHaveSpoken(madeOn, birth) ? picked : "PARENT";
+export function settleQuoteBy(picked: Speaker, writtenOn: Date, birth: Birth): Speaker {
+  return couldHaveSpoken(writtenOn, birth) ? picked : "PARENT";
 }
