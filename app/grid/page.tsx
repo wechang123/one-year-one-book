@@ -4,10 +4,10 @@ import { formatMadeOn } from "@/lib/date";
 import { subjectParticle } from "@/lib/korean";
 import { couldHaveSpoken, describeAge, describeSpan, timeBand } from "@/lib/age";
 import { groupByYear } from "@/lib/group";
-import { scatterSpot } from "@/lib/scatter";
 import { SaidBy, emptyQuoteText } from "../artwork/said-by";
 import { Camera, Search } from "../icons";
-import { Space3D } from "./space";
+import { highlight } from "./highlight";
+import { LetterSphere, type SphereItem } from "./space";
 
 /**
  * 작품 목록 — 이 서비스의 첫 화면.
@@ -19,30 +19,6 @@ import { Space3D } from "./space";
 
 // 등록·편집한 결과가 바로 보여야 한다. 캐시된 목록을 보여주면 방금 한 일이 사라진 것처럼 보인다.
 export const dynamic = "force-dynamic";
-
-/**
- * 검색어에서 매칭된 부분을 강조한다.
- *
- * 🔑 강조가 없으면 **왜 찾혔는지 모른다.**
- *   말이 두세 문장짜리라 결과만 보면 어느 낱말이 걸렸는지 안 보이고,
- *   그러면 사용자는 검색이 제대로 동작했는지 판단할 수 없다.
- */
-function highlight(text: string, q: string) {
-  if (!q) return text;
-  const lower = text.toLowerCase();
-  const needle = q.toLowerCase();
-  const out: React.ReactNode[] = [];
-  let from = 0;
-  for (;;) {
-    const at = lower.indexOf(needle, from);
-    if (at === -1) break;
-    if (at > from) out.push(text.slice(from, at));
-    out.push(<mark key={at}>{text.slice(at, at + q.length)}</mark>);
-    from = at + q.length;
-  }
-  out.push(text.slice(from));
-  return out;
-}
 
 /**
  * 검색어를 문장의 주어 자리에 놓는다. `"공룡"이` · `"이불"이` · `"바다"가`.
@@ -250,7 +226,8 @@ export default async function GridPage({
 
 
   return (
-    <div className="page">
+    /* page--space: ≥900px에서 화면을 잠근다(페이지 스크롤 0) — 휠은 구의 당겨보기만. */
+    <div className="page page--space">
       <header className="masthead">
         <div className="masthead__text">
           {/*
@@ -472,94 +449,36 @@ export default async function GridPage({
             🔑 같은 데이터가 두 벌로 그려진다 — 공간(≥900px)과 격자(<900px).
               어느 쪽이 보일지는 CSS 미디어 쿼리가 정한다.
               폰의 한 손 사용자에게 궤도·줌은 장난감이라 격자를 유지하고,
-              노트북(5분 구경)에는 봉투가 떠 있는 공간을 연다.
+              노트북(5분 구경)에는 봉투들이 한 몸으로 도는 구(sphere)를 연다.
               두 벌 렌더의 대가는 마크업 중복이고, 데이터 조회는 한 번뿐이다.
           */}
-          <Space3D>
-            <ol className="space__list">
-              {artworks.map((artwork) => {
-                const when = describeAge(artwork.madeOn, birth);
-                const band = timeBand(when.scale);
-                const spot = scatterSpot(artwork.id);
-                const first = artwork.letters[0] ?? null;
-                return (
-                  <li
-                    key={artwork.id}
-                    className="spot"
-                    /*
-                      🔑 자리는 서버가 id 해시에서 계산해 인라인으로 박는다(lib/scatter.ts).
-                        랜덤이 아니라서 새로고침해도 같은 봉투는 같은 자리다.
-                        z(깊이)는 li에 두고 기울기는 변수로 넘긴다 — hover 확대가
-                        자리 변환을 덮어쓰면 봉투가 제자리로 튄다(변환은 한 원소에 하나).
-                    */
-                    style={
-                      {
-                        left: `calc(50% + ${spot.x}%)`,
-                        top: `calc(50% + ${spot.y}%)`,
-                        transform: `translate(-50%, -50%) translateZ(${spot.z}px)`,
-                        "--rot": `${spot.rot}deg`,
-                      } as React.CSSProperties
-                    }
-                  >
-                    <Link
-                      href={`/artwork/${artwork.id}`}
-                      className={[
-                        "fenv",
-                        band ? `fenv--${band}` : "",
-                        // 상반부 봉투는 미리보기를 아래로 편다. 위로 펴면 공간 위 모서리에 잘린다
-                        // (-18 문턱으로 뒀다가 y=-11 봉투의 사진 윗단이 잘리는 걸 캡처로 확인했다).
-                        spot.y < 0 ? "fenv--peekdown" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      <span className="fenv__flap" aria-hidden />
-                      <span className="fenv__seal" aria-hidden />
-                      <span className="fenv__label">
-                        {band ? (
-                          <span className={`age--${band}`}>{when.label}</span>
-                        ) : (
-                          formatMadeOn(artwork.madeOn)
-                        )}
-                      </span>
-                      {/*
-                        미리보기 — 봉투에 커서를 대면(또는 초점이 오면) 사진과 첫 통이 뜬다.
-                        CSS :hover/:focus-within뿐이라 JS 없이도 열린다.
-                      */}
-                      <span className="fenv__peek">
-                        <img
-                          src={`/api/photo/${artwork.id}`}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          style={
-                            artwork.photo?.width && artwork.photo?.height
-                              ? { aspectRatio: `${artwork.photo.width} / ${artwork.photo.height}` }
-                              : undefined
-                          }
-                        />
-                        {first ? (
-                          <span className="fenv__quote">
-                            <SaidBy by={first.writtenBy} />
-                            {highlight(first.body, q)}
-                          </span>
-                        ) : (
-                          <span className="fenv__quote fenv__quote--empty">
-                            {emptyQuoteText(
-                              couldHaveSpoken(artwork.madeOn, birth) ? "CHILD" : "PARENT",
-                            )}
-                          </span>
-                        )}
-                        {artwork.letters.length > 1 ? (
-                          <span className="fenv__more">편지 {artwork.letters.length}통</span>
-                        ) : null}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ol>
-          </Space3D>
+          {/*
+            🔑 구는 항목 자체가 아니라 **항목의 재료**를 받는다(직렬화 가능한 값만).
+              클라이언트 컴포넌트의 props 경계다 — JSX를 넘기면 직렬화가 안 된다.
+              평소에는 첫 통(그때의 말), 검색 중에는 걸린 통들(쿼리가 걸린 것만 준다).
+          */}
+          <LetterSphere
+            q={q}
+            items={artworks.map((artwork): SphereItem => {
+              const when = describeAge(artwork.madeOn, birth);
+              const band = timeBand(when.scale);
+              const shown = searching ? artwork.letters : artwork.letters.slice(0, 1);
+              return {
+                id: artwork.id,
+                band,
+                label: band ? when.label : formatMadeOn(artwork.madeOn),
+                quotes: shown.map((l) => ({ id: l.id, body: l.body, by: l.writtenBy })),
+                emptyText: emptyQuoteText(
+                  couldHaveSpoken(artwork.madeOn, birth) ? "CHILD" : "PARENT",
+                ),
+                count: artwork.letters.length,
+                photo:
+                  artwork.photo?.width && artwork.photo?.height
+                    ? { w: artwork.photo.width, h: artwork.photo.height }
+                    : null,
+              };
+            })}
+          />
           {/*
             🔴 여기 `남긴 것 12점 · 되짚어보기` 한 줄이 있었다. 지웠다.
               세 조각이 전부 다른 곳으로 갔기 때문이다 —

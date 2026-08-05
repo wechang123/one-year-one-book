@@ -1,79 +1,165 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { depthCue, rotate, sphereVec } from "@/lib/sphere";
+import { highlight } from "./highlight";
+import { SaidBy } from "../artwork/said-by";
 
 /**
- * 편지 공간의 손잡이 — 끌면 기울고(궤도), 스크롤하면 당겨진다(줌).
+ * 편지 구(sphere) — 봉투들이 한 몸으로 도는 공간.
  *
- * 🔑 이 컴포넌트가 하는 일은 CSS 변수 세 개를 바꾸는 것뿐이다.
- *   봉투의 자리·색·hover 미리보기는 전부 서버가 렌더한 마크업과 CSS다.
- *   그래서 JS가 꺼져도 공간이 뜬다 — 잃는 것은 궤도와 줌, 이 손맛 둘뿐이다.
- *   (README의 "JS 없이 동작" 실측이 이 경계 위에 서 있다. 여기 로직을 늘릴 때마다
- *    그 경계가 뒤로 밀리는 것이다.)
+ * 🔴 전신은 "자리가 고정된 흩어짐"이었다. *"편지가 너무 고정값"*을 받고
+ *   구로 갈아엎었다 — 분포·회전·깊이의 근거는 lib/sphere.ts 머리말에 있다.
  *
- * 🔑 각도를 좁게 잠근다(±12°/±16°). typo.love는 화면이 하나라 뒤집혀도 돌아올 수 있지만,
- *   우리 공간은 목록이다 — 뒤집힌 목록은 목록이 아니다. 기울여 보는 정도까지만 연다.
+ * 🔑 회전은 **잠금이 없다.** 지구본처럼 끝까지 돈다. 놓으면 관성으로 돌다 잦아든다 —
+ *   관성도 손이 시킨 움직임의 꼬리다. 스스로 도는 자동 회전은 넣지 않았다:
+ *   *"스스로 움직이는 화면은 없다"*(13-taste-audit)는 선은 그대로다.
+ *   reduced-motion에서는 관성 없이 손을 떼면 바로 선다.
+ *
+ * 🔑 이 컴포넌트는 클라이언트지만 **첫 화면은 서버가 그린다**(rx=ry=0의 투영).
+ *   JS가 없으면 정면이 보이는 정지된 구다 — 링크·hover 미리보기는 그대로 동작한다.
  */
-export function Space3D({ children }: { children: React.ReactNode }) {
-  const [view, setView] = useState({ rx: 0, ry: 0, zoom: 1 });
+
+export type SphereItem = {
+  id: string;
+  band: "before" | "infant" | "child" | null;
+  label: string;
+  /** 카드에 실을 편지들(평소 첫 통, 검색 중엔 걸린 통들). 없으면 빈 문구. */
+  quotes: { id: string; body: string; by: "CHILD" | "PARENT" }[];
+  emptyText: string;
+  /** 전체 통 수. 1 초과면 봉투가 말한다. */
+  count: number;
+  photo: { w: number; h: number } | null;
+};
+
+export function LetterSphere({ items, q }: { items: SphereItem[]; q: string }) {
+  const [view, setView] = useState({ rx: -8, ry: 0, zoom: 1 });
   const drag = useRef<{ x: number; y: number; rx: number; ry: number } | null>(null);
   const moved = useRef(0);
+  /** 마지막 드래그 속도(deg/frame). 관성의 씨앗이다. */
+  const velocity = useRef({ rx: 0, ry: 0 });
+  const raf = useRef(0);
+
+  // 관성 — 감쇠 0.94/프레임. 손을 뗀 방향으로 돌다 잦아든다.
+  const glide = () => {
+    velocity.current.rx *= 0.94;
+    velocity.current.ry *= 0.94;
+    const { rx: vx, ry: vy } = velocity.current;
+    if (Math.abs(vx) < 0.02 && Math.abs(vy) < 0.02) return;
+    setView((s) => ({ ...s, rx: s.rx + vx, ry: s.ry + vy }));
+    raf.current = requestAnimationFrame(glide);
+  };
+
+  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+
+  const n = items.length;
 
   return (
     <div
       className="space"
       onPointerDown={(e) => {
-        // 봉투 위에서 시작한 드래그도 궤도다. 클릭(이동 없는 down-up)은 링크가 가져간다.
+        cancelAnimationFrame(raf.current);
         drag.current = { x: e.clientX, y: e.clientY, rx: view.rx, ry: view.ry };
         moved.current = 0;
+        velocity.current = { rx: 0, ry: 0 };
       }}
       onPointerMove={(e) => {
-        /**
-         * 🔴 값을 지역 상수로 먼저 잡는다. setView의 업데이터는 **나중에**(배치로) 실행되는데,
-         *   그 전에 pointerup이 drag.current를 null로 만들면 업데이터가 null을 읽고 죽는다 —
-         *   실제로 드래그를 놓는 순간 화면 전체가 오류 경계로 떨어졌다(콘솔 캡처).
-         */
         const d = drag.current;
         if (!d) return;
         const dx = e.clientX - d.x;
         const dy = e.clientY - d.y;
         moved.current = Math.max(moved.current, Math.abs(dx) + Math.abs(dy));
-        setView((s) => ({
-          ...s,
-          ry: Math.max(-16, Math.min(16, d.ry + dx * 0.06)),
-          rx: Math.max(-12, Math.min(12, d.rx - dy * 0.06)),
-        }));
+        setView((s) => {
+          const next = { ...s, ry: d.ry + dx * 0.35, rx: d.rx - dy * 0.35 };
+          // 프레임 간 변화량이 곧 속도다. 마지막 값이 관성으로 이어진다.
+          velocity.current = { rx: next.rx - s.rx, ry: next.ry - s.ry };
+          return next;
+        });
       }}
-      onPointerUp={() => (drag.current = null)}
+      onPointerUp={() => {
+        drag.current = null;
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          raf.current = requestAnimationFrame(glide);
+        }
+      }}
       onPointerLeave={() => (drag.current = null)}
       onClickCapture={(e) => {
-        // 끌고 나서 손을 뗀 자리가 봉투면 브라우저는 그걸 클릭으로 본다.
-        // 6px 넘게 움직였으면 궤도였지 클릭이 아니다 — 링크로 새지 않게 막는다.
+        // 끌고 나서 손을 뗀 자리가 봉투면 브라우저는 클릭으로 본다. 6px 넘었으면 회전이었다.
         if (moved.current > 6) {
           e.preventDefault();
           e.stopPropagation();
         }
       }}
       onWheel={(e) => {
-        // 페이지 스크롤을 잡아먹는 대가가 있다. 이 화면(≥900px)에서 공간이 화면을
-        // 거의 다 차지해서, 여기서의 스크롤 의도는 "당겨보기"라고 판단했다.
+        // 이 화면(≥900px)은 페이지 스크롤이 없다 — 휠의 일은 당겨보기 하나뿐이다.
         e.preventDefault();
-        const next = Math.max(0.55, Math.min(1.7, view.zoom - e.deltaY * 0.0012));
-        setView((s) => ({ ...s, zoom: next }));
+        setView((s) => ({ ...s, zoom: Math.max(0.55, Math.min(1.8, s.zoom - e.deltaY * 0.0012)) }));
       }}
     >
-      <div
-        className="space__world"
-        style={{
-          transform: `rotateX(${view.rx}deg) rotateY(${view.ry}deg) scale(${view.zoom})`,
-          // 드래그 중에는 전이를 끈다. 손을 따라오는 것이 전이보다 빠르다.
-          transition: drag.current ? "none" : undefined,
-        }}
-      >
-        {children}
-      </div>
+      <ol className="space__stage" style={{ transform: `scale(${view.zoom})` }}>
+        {items.map((item, i) => {
+          const p = rotate(sphereVec(i, n), view.rx, view.ry);
+          const cue = depthCue(p.z);
+          return (
+            <li
+              key={item.id}
+              className="spot"
+              style={
+                {
+                  /*
+                    투영 결과만 스타일로 나간다. 반지름은 CSS 변수(--sph-r)라
+                    화면 크기 대응은 CSS가 맡고, 수학은 단위 구 안에서 끝난다.
+                  */
+                  transform: `translate(-50%, -50%) translate(calc(${p.x.toFixed(4)} * var(--sph-rx)), calc(${p.y.toFixed(4)} * var(--sph-ry))) scale(${cue.scale.toFixed(3)})`,
+                  opacity: cue.opacity,
+                  "--z": cue.zIndex,
+                } as React.CSSProperties
+              }
+            >
+              <Link
+                href={`/artwork/${item.id}`}
+                className={[
+                  "fenv",
+                  item.band ? `fenv--${item.band}` : "",
+                  // 위쪽에 투영된 봉투는 미리보기를 아래로 편다. 위로 펴면 잘린다.
+                  p.y < -0.15 ? "fenv--peekdown" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <span className="fenv__flap" aria-hidden />
+                <span className="fenv__seal" aria-hidden />
+                <span className="fenv__label">
+                  {item.band ? <span className={`age--${item.band}`}>{item.label}</span> : item.label}
+                </span>
+                <span className="fenv__peek">
+                  <img
+                    src={`/api/photo/${item.id}`}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    style={item.photo ? { aspectRatio: `${item.photo.w} / ${item.photo.h}` } : undefined}
+                  />
+                  {item.quotes.length > 0 ? (
+                    item.quotes.map((quote) => (
+                      <span className="fenv__quote" key={quote.id}>
+                        <SaidBy by={quote.by} />
+                        {highlight(quote.body, q)}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="fenv__quote fenv__quote--empty">{item.emptyText}</span>
+                  )}
+                  {item.count > 1 ? <span className="fenv__more">편지 {item.count}통</span> : null}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
       <p className="space__hint" aria-hidden>
-        끌어서 기울이기 · 스크롤로 당겨보기
+        끌어서 돌리기 · 스크롤로 당겨보기
       </p>
     </div>
   );

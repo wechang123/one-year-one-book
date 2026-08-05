@@ -257,27 +257,47 @@ export default async function CalendarPage({
       ) : null}
 
       {/* 지나간 창과 앞으로의 창을 한 번에 보는 목록. 달력은 한 달만 보여준다. */}
-      {windows.length > 0 ? (
-        <section className="cal__all">
-          <h2 className="cal__note-title">검진 창 전체</h2>
-          <ul className="cal__all-list">
-            {windows.map((w) => {
-              const state = windowState(w, today);
-              return (
-                <li key={`${w.kind}-${w.round}`} className={`cal__all-row cal__all-row--${state}`}>
-                  <span className="cal__all-label">{w.label}</span>
-                  <span className="cal__all-when">
-                    {key(w.start).replace(/-/g, ".")} ~ {key(w.end).replace(/-/g, ".")}
-                  </span>
-                  <span className="cal__all-state">
-                    {state === "open" ? "열려 있음" : state === "future" ? "아직" : "지남"}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
+      {windows.length > 0
+        ? (() => {
+            /*
+              🔴 열두 줄을 전부 펴놨었다. 시드의 아이(만 7세)는 창이 다 지나서
+                **"지남" 열두 줄짜리 벽**이 됐다 — 같은 상태가 반복되는 목록은 정보가 아니라 소음이다.
+              🔑 지금 볼 일이 있는 창(열려 있음·아직)만 펴고, 지난 창은 접는다.
+                숨기지 않는다 — <details>라 한 번 누르면 다 나오고 JS도 없다.
+                "지나갔다"는 사실 자체는 요약 줄이 개수로 말한다.
+            */
+            const rows = windows.map((w) => ({ w, state: windowState(w, today) }));
+            const current = rows.filter((r) => r.state !== "past");
+            const past = rows.filter((r) => r.state === "past");
+            const row = ({ w, state }: (typeof rows)[number]) => (
+              <li key={`${w.kind}-${w.round}`} className={`cal__all-row cal__all-row--${state}`}>
+                <span className="cal__all-label">{w.label}</span>
+                <span className="cal__all-when">
+                  {key(w.start).replace(/-/g, ".")} ~ {key(w.end).replace(/-/g, ".")}
+                </span>
+                <span className="cal__all-state">
+                  {state === "open" ? "열려 있음" : state === "future" ? "아직" : "지남"}
+                </span>
+              </li>
+            );
+            return (
+              <section className="cal__all">
+                <h2 className="cal__note-title">검진 창 전체</h2>
+                {current.length > 0 ? (
+                  <ul className="cal__all-list">{current.map(row)}</ul>
+                ) : (
+                  <p className="cal__all-none">지금 열려 있거나 다가오는 검진 창은 없습니다.</p>
+                )}
+                {past.length > 0 ? (
+                  <details className="cal__past">
+                    <summary className="cal__past-toggle">지난 창 {past.length}개 보기</summary>
+                    <ul className="cal__all-list">{past.map(row)}</ul>
+                  </details>
+                ) : null}
+              </section>
+            );
+          })()
+        : null}
     </div>
   );
 }

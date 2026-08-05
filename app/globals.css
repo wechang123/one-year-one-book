@@ -969,54 +969,64 @@ a {
     display: none;
   }
 
+  /*
+   * 🔴 스크롤이 두 가지 일을 하고 있었다 — 페이지를 내리는 것과 구를 당겨보는 것.
+   *   같은 손동작이 커서 위치에 따라 다른 일을 하면 어느 쪽도 믿을 수 없다.
+   *   구가 보이는 화면에서는 **페이지 스크롤을 없앤다**: 화면이 100dvh에 잠기고
+   *   구가 남는 높이를 다 가진다. 휠의 일은 당겨보기 하나뿐이다.
+   *   (폰은 격자라 해당 없음 — 이 잠금 전체가 900px 미디어 쿼리 안이다.)
+   */
+  .page--space {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  /* 창이 낮아도 줄어드는 것은 구 하나다. 머리말·검색·침이 짜부라지면 읽을 수 없다. */
+  .page--space > :not(.space) {
+    flex-shrink: 0;
+  }
+
+  /*
+   * 🔴 v1 공간은 CSS preserve-3d + translateZ였고 두 가지를 실측으로 밟았다 —
+   *   z=0 평면이 히트를 먹는 것, 기울기 잠금(±12°)이 "고정값"으로 읽히는 것.
+   *   구는 투영을 JS 수학(lib/sphere.ts)이 끝내고 CSS에는 2D 결과만 온다.
+   *   perspective도, preserve-3d도, 히트 보정도 더는 없다.
+   */
   .space {
     display: block;
     position: relative;
-    height: max(520px, calc(100vh - 360px));
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
-    perspective: 1100px;
     cursor: grab;
     touch-action: none;
-    /* 끌면 궤도지 선택이 아니다 — 드래그마다 라벨이 파랗게 칠해졌다(캡처로 확인). */
+    /* 끌면 회전이지 선택이 아니다 — 드래그마다 라벨이 파랗게 칠해졌다(캡처로 확인). */
     user-select: none;
+    /*
+     * 🔴 반지름을 vmin으로 잡았더니 구가 **자기 상자가 아니라 창** 크기를 따라가서
+     *   아래가 잘렸다(캡처로 확인). 컨테이너 쿼리 단위(cq*)로 상자 자신에게 묶는다.
+     * 🔑 가로·세로 반지름이 따로다 — 상자가 넓적하므로 구도 넓적하게 돈다.
+     *   봉투 반쪽(75×48px)과 여백만큼 빼서 어느 각도에서도 잘리지 않는다.
+     */
+    container-type: size;
+    --sph-rx: calc(50cqw - 130px);
+    --sph-ry: calc(50cqh - 90px);
   }
 
   .space:active {
     cursor: grabbing;
   }
 
-  .space__world,
-  .space__list {
+  .space__stage {
     position: absolute;
     inset: 0;
-    transform-style: preserve-3d;
-  }
-
-  .space__world {
-    transition: transform 0.25s ease;
-  }
-
-  .space__list {
     list-style: none;
     margin: 0;
     padding: 0;
-  }
-
-  /*
-   * 🔴 봉투에 커서를 대도 아무 일도 없었다. elementFromPoint로 재보니
-   *   히트가 전부 `.space__list`에 먹혔다 — 이 평면은 z=0에 있고
-   *   translateZ가 음수인 봉투는 그 **뒤**라, 3D 히트 테스트에서 평면이 이긴다.
-   *   평면(world·list·spot)은 히트에서 빼고 봉투만 받는다. 배경 드래그는
-   *   .space가 그대로 받으므로 궤도는 잃지 않는다.
-   */
-  .space__world,
-  .space__list,
-  .spot {
-    pointer-events: none;
-  }
-
-  .fenv {
-    pointer-events: auto;
+    transition: transform 0.2s ease;
   }
 
   .space__hint {
@@ -1032,21 +1042,20 @@ a {
     pointer-events: none;
   }
 
+  /* 자리·크기·흐림은 투영이 인라인으로 준다. 여기는 기준점과 쌓임 순서만. */
   .spot {
     position: absolute;
-    transform-style: preserve-3d;
+    left: 50%;
+    top: 50%;
+    z-index: var(--z, 0);
   }
 
-  /* hover한 봉투가 이웃 위로 올라온다. 겹침은 공간의 성질이고, 순간의 위가 있으면 된다. */
+  /* hover한 봉투가 이웃 위로. 겹침은 구의 성질이고, 순간의 위가 있으면 된다. */
   .spot:hover,
   .spot:focus-within {
-    z-index: 30;
+    z-index: 300;
   }
 
-  /*
-   * 봉투. 자리 변환(translate·translateZ)은 li(.spot)에 있고 여기는 기울기만 —
-   * hover 확대가 자리 변환을 덮어쓰면 봉투가 제자리로 튄다. 변환은 한 원소에 하나.
-   */
   .fenv {
     position: relative;
     display: block;
@@ -1058,7 +1067,6 @@ a {
     box-shadow:
       0 2px 6px rgba(28, 26, 23, 0.1),
       0 12px 28px rgba(28, 26, 23, 0.08);
-    transform: rotate(var(--rot, 0deg));
     transition: transform 0.25s ease, box-shadow 0.25s ease;
     text-decoration: none;
   }
@@ -1069,7 +1077,7 @@ a {
 
   .fenv:hover,
   .fenv:focus-visible {
-    transform: rotate(0deg) scale(1.08);
+    transform: scale(1.08);
     box-shadow:
       0 4px 10px rgba(28, 26, 23, 0.14),
       0 18px 40px rgba(28, 26, 23, 0.14);
@@ -2950,6 +2958,32 @@ a.recall:hover {
 .cal__all-row--open { font-weight: 700; }
 .cal__all-row--open .cal__all-state { color: var(--accent); }
 .cal__all-row--past { opacity: 0.55; }
+
+/* 지금 볼 창이 없다는 것도 상태다. 빈 자리로 두면 목록이 고장 난 것처럼 읽힌다. */
+.cal__all-none {
+  margin: 0 0 var(--s-3);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+/* 지난 창은 접는다 — 지웠다는 게 아니라 한 번 눌러야 나온다는 것. 개수는 요약이 말한다. */
+.cal__past {
+  margin-top: var(--s-3);
+}
+
+.cal__past-toggle {
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.cal__past-toggle:hover {
+  color: var(--ink);
+}
+
+.cal__past[open] .cal__past-toggle {
+  margin-bottom: var(--s-3);
+}
 
 /* 폰에서는 칸이 좁아 글자가 안 들어간다. 띠와 점만 남기고 글자를 숨긴다. */
 @media (max-width: 699px) {
