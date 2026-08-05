@@ -173,6 +173,33 @@ export function describeSpan(
 }
 
 /**
+ * 두 날 사이가 얼마나 벌어졌나. `17일` · `4개월` · `2년 3개월`
+ *
+ * 🔑 `describeAge`와 다른 일을 한다. 저쪽은 **아이가 몇 살이었나**를 부르고
+ *   여기는 **그냥 얼마나 지났나**를 센다. 기준점이 생일이 아니라 아무 날이다.
+ *
+ * 🔴 그런데 **경계는 저쪽 것을 그대로 쓴다**(100일 · 24개월).
+ *   그 값들은 *"백일 전에는 날로 세고, 두 돌쯤부터 나이로 부른다"*는
+ *   한국어 관습에서 왔다(위 상수 주석). 관습이 아이 나이에만 걸리는 게 아니라
+ *   **얼마나 지났는지를 말할 때도 같은 자리에서 단위가 갈린다** — 세 달 지난 것을
+ *   `92일`이라고 부르는 사람은 없다. 새 경계를 발명하지 않고 있는 것을 쓴다.
+ *
+ * ⛔ 0일이면 `null`이다. `0일 지났습니다`는 화면이 할 말이 아니다.
+ */
+export function describeGap(from: Date, to: Date): string | null {
+  const days = daysBetween(from, to);
+  if (days <= 0) return null;
+  if (days < DAYS_UNTIL_MONTHS) return `${days}일`;
+
+  const months = monthsBetween(from, to);
+  if (months < MONTHS_UNTIL_YEARS) return `${months}개월`;
+
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  return rest === 0 ? `${years}년` : `${years}년 ${rest}개월`;
+}
+
+/**
  * 이 시점에 말을 할 수 있었나.
  *
  * 🔑 앱이 아는 것은 **태어났는가** 하나다. 그건 날짜가 확정한다.

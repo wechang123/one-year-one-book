@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
-import { describeAge, timeBand, type TimeBand } from "@/lib/age";
+import { getNow } from "@/lib/now";
+import { describeAge, describeGap, timeBand, type TimeBand } from "@/lib/age";
 import { SaidBy, emptyQuoteText } from "./artwork/said-by";
 import { Camera } from "./icons";
 import { DemoResetButton } from "./demo/reset-button";
@@ -49,6 +50,15 @@ export default async function TimelinePage() {
 
   const birth = { dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null };
   const owner = profile?.childName ?? null;
+
+  /*
+    🔑 `madeOn`이 전부 UTC 자정이라 오늘도 같은 규칙으로 깎는다.
+      지역 시간 그대로 빼면 하루가 밀어서 `1일`이 `0일`이 되기도 한다.
+  */
+  const now = getNow();
+  const today = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
 
   if (artworks.length === 0) {
     return (
@@ -168,16 +178,49 @@ export default async function TimelinePage() {
       </ol>
 
       {/*
-        🔑 축이 여기서 끝나지 않는다는 표시. 마지막 기록 아래에 오늘이 있고,
-          그 사이가 비어 있다는 것 자체가 **다음에 할 일**을 말한다.
-          재촉하는 문구는 쓰지 않는다 — 비어 있는 자리가 이미 그 말을 한다.
+        🔴 전에는 여기가 `여기까지가 지금입니다` 한 줄이었다. 축이 **마지막 기록에서 뚝 끊겼다.**
+          이 서비스는 *"손에 실물이 들려 있는 순간"*이 트리거라, **그 순간이 한동안 없었다는
+          사실 자체**가 사용자가 알아야 할 것이다. 나중에 되짚을 때 가장 아쉬운 자리가 거기다.
+
+        ⛔ 그렇다고 **재촉 장치를 만들지 않는다.** 붉은색도, 느낌표도, `N일째 비어 있습니다`도 없다.
+          `주기·마감·창 규칙을 만들지 않는다`가 이 자리에서 가장 어기기 쉽다.
+          화면은 **얼마나 지났는지만 세고 판단은 하지 않는다.**
+
+        🔑 그래서 그리는 것은 **점선 한 토막**이다. 실선이면 기록이 이어진 것처럼 읽히고,
+          없으면 축이 마지막 기록에서 끝난 것처럼 읽힌다. 점선은 *"여기는 비어 있다"*만 말한다.
       */}
-      <p className="tl__end">
-        여기까지가 지금입니다.
-        <Link href="/artwork/new" className="btn btn--ghost tl__end-btn">
-          <Camera />한 점 더 남기기
-        </Link>
-      </p>
+      {(() => {
+        const gap = describeGap(last.madeOn, today);
+        const nowWhen = describeAge(today, birth);
+        const nowBand = timeBand(nowWhen.scale);
+        return (
+          <div className="tl__tail">
+            <p className="tl__gap">
+              {gap ? (
+                <>
+                  마지막으로 남긴 뒤로 <strong>{gap}</strong>
+                </>
+              ) : (
+                "오늘 남기셨습니다"
+              )}
+            </p>
+
+            <p className={nowBand ? `tl__today tl__today--${nowBand}` : "tl__today"}>
+              <span className="tl__dot" aria-hidden />
+              <span className="tl__today-body">
+                <span className="tl__today-label">오늘</span>
+                {nowBand ? (
+                  <span className={`tl__age age--${nowBand}`}>{nowWhen.label}</span>
+                ) : null}
+              </span>
+            </p>
+
+            <Link href="/artwork/new" className="btn btn--ghost tl__end-btn">
+              <Camera />한 점 더 남기기
+            </Link>
+          </div>
+        );
+      })()}
 
       {/*
         🔴 이 구역은 v1의 홈(지금의 `/grid`)에 있었다. 첫 화면이 바뀌면서 따라왔다.
