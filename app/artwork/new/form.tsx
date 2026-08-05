@@ -55,6 +55,9 @@ export function NewArtworkForm({
   const [tooBig, setTooBig] = useState<string | null>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  /** 마지막으로 고른 파일. 서버가 거절하고 돌아왔을 때 입력칸에 되돌려 넣는다. */
+  const pickedFile = useRef<File | null>(null);
 
   /**
    * 🔑 만든 날을 폼이 들고 있어야 하는 이유
@@ -70,11 +73,36 @@ export function NewArtworkForm({
   const madeOn = parseDateInputValue(madeOnValue);
   const when = madeOn ? describeAge(madeOn, birth) : null;
 
-  // 오류가 나면 문제가 된 칸으로 초점을 옮긴다. 폼이 길어지면 오류 문구만으로는
-  // 어디를 고쳐야 하는지 찾아야 하고, 폰에서는 그게 스크롤이다.
+  /**
+   * 오류가 나면 ① 배너가 보이는 곳까지 스크롤하고 ② 문제가 된 칸에 초점을 준다.
+   *
+   * 🔴 초점만 옮겼었다. 저장 버튼은 폼 맨 아래, 배너는 맨 위라 **사진 누락 오류가
+   *   화면 밖에서 조용히 떠 있었다** — 버튼이 무반응으로 읽혔다(직접 밟았다).
+   *   날짜 오류에서만 동작해 보였던 이유: 날짜 칸이 마침 화면 안에 있었고,
+   *   프로그램으로 준 초점은 :focus-visible 링을 안 그려서 파일 칸은 표시도 없었다.
+   *   스크롤이 먼저다 — 초점은 키보드 사용자의 몫이고, 눈에는 배너가 답이다.
+   */
   useEffect(() => {
-    if (state.field === "photo") photoRef.current?.focus();
-    if (state.field === "madeOn") dateRef.current?.focus();
+    if (!state.error) return;
+    errorRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (state.field === "photo") photoRef.current?.focus({ preventScroll: true });
+    if (state.field === "madeOn") dateRef.current?.focus({ preventScroll: true });
+  }, [state]);
+
+  /**
+   * 🔴 서버가 거절하고 돌아오면 React가 폼을 초기화해 **파일 입력만 비워졌다.**
+   *   미리보기(클라이언트 상태)는 남아서 화면에는 사진이 붙어 있는 것처럼 보였고,
+   *   날짜만 고쳐 다시 누르면 "사진을 골라주세요"가 떴다 — 30초 사용자에게 제일 비싼 실패다.
+   *   브라우저는 파일 입력을 스크립트로 "채워달라"고 할 수는 없지만,
+   *   **사용자가 이미 고른 File 객체를 DataTransfer로 되돌려 넣는 것**은 된다.
+   *   화면이 보여주는 것(미리보기)과 실제로 제출될 것(input.files)을 다시 일치시킨다.
+   */
+  useEffect(() => {
+    const input = photoRef.current;
+    if (!state.error || !input || input.files?.length || !pickedFile.current) return;
+    const restore = new DataTransfer();
+    restore.items.add(pickedFile.current);
+    input.files = restore.files;
   }, [state]);
 
   // 미리보기용 objectURL은 브라우저가 자동으로 놓아주지 않는다. 바꿀 때마다 직접 회수한다.
@@ -88,6 +116,7 @@ export function NewArtworkForm({
     const file = event.target.files?.[0];
     setSize(null);
     setTooBig(null);
+    pickedFile.current = file ?? null;
 
     if (!file) {
       setPreview(null);
@@ -116,7 +145,7 @@ export function NewArtworkForm({
         role="alert"이라 스크린리더가 즉시 읽는다.
       */}
       {state.error ? (
-        <p className="form__error" role="alert">
+        <p ref={errorRef} className="form__error" role="alert">
           {state.error}
         </p>
       ) : null}
