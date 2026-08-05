@@ -128,7 +128,7 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
           </Link>
         )}
         <Link href={`/artwork/${artwork.id}`} className="btn btn--ghost">
-          이 한 점 보기
+          이 한 장 보기
         </Link>
       </div>
     </div>

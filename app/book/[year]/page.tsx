@@ -92,11 +92,11 @@ export default async function BookPage({
                   🔑 아직 안 끝난 해다. "10점이 실린 책"이라고 쓰면 그게 최종본처럼 읽힌다.
                     지금 주문해도 되지만, 그게 올해의 전부는 아니라는 걸 화면이 말해야 한다.
                 */}
-                <strong>아직 진행 중인 해</strong>입니다. 지금까지 {artworks.length}점이 모였고, 앞으로
+                <strong>아직 진행 중인 해</strong>입니다. 지금까지 {artworks.length}장이 모였고, 앞으로
                 등록하는 것도 이 책에 담깁니다.
               </>
             ) : (
-              <>{artworks.length > 0 ? `${artworks.length}점이 담긴 한 권입니다.` : "아직 담긴 것이 없습니다."}</>
+              <>{artworks.length > 0 ? `${artworks.length}장이 담긴 한 권입니다.` : "아직 담긴 것이 없습니다."}</>
             )}
           </p>
         </div>
@@ -140,15 +140,15 @@ export default async function BookPage({
         <div className="blank">
           <h2 className="blank__title">{year}년에 남긴 것이 아직 없어요.</h2>
           <p className="blank__body">
-            한 점 남기면 <strong>만든 날의 연도</strong>를 보고 이 책에 저절로 담깁니다.
+            한 장 남기면 <strong>만든 날의 연도</strong>를 보고 이 책에 저절로 담깁니다.
           </p>
           <Link href="/artwork/new" className="btn">
-            한 점 남기기
+            한 장 남기기
           </Link>
         </div>
       ) : (
         <>
-          <p className="tally">1월부터 순서대로 {artworks.length}점</p>
+          <p className="tally">1월부터 순서대로 {artworks.length}장</p>
 
           <ul className="grid">
             {artworks.map((artwork) => {

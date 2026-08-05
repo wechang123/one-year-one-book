@@ -43,7 +43,7 @@ export default async function EditArtworkPage({
       <nav className="detail__nav">
         <Link href={`/artwork/${artwork.id}`} className="btn btn--ghost">
           <ArrowLeft />
-          이 한 점으로
+          이 한 장으로
         </Link>
       </nav>
 

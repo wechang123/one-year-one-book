@@ -33,7 +33,7 @@ async function main() {
   const prisma = getPrisma();
   const count = await applySeed(prisma);
 
-  console.log(`[seed] 아이 "${CHILD_NAME}" · 남긴 것 ${count}점`);
+  console.log(`[seed] 아이 "${CHILD_NAME}" · 남긴 것 ${count}장`);
   console.log("[seed] 책 0권 · 주문 0건 — 직접 만들어보시라고 비워둔 상태다");
   console.log("[seed] 화면 맨 아래 [처음 상태로 되돌리기]로 언제든 이 상태로 돌아온다");
 

@@ -60,7 +60,7 @@ export default async function NewArtworkPage() {
       </nav>
 
       <header className="form__head">
-        <h1 className="form__title">한 점 남기기</h1>
+        <h1 className="form__title">한 장 남기기</h1>
         <p className="form__lede">
           {/*
             여기서 이미 목적을 말해둔다. 저장 후에 처음 듣는 것보다,

@@ -66,7 +66,7 @@ export function BooksStrip({ rows }: { rows: YearRow[] }) {
                   🔑 진행 중인 해에 "10점"이라고만 쓰면 그게 그 해의 전부처럼 읽힌다.
                     지어낸 완결감을 만들지 않는다.
                 */}
-                {row.ongoing ? `진행 중 · 지금까지 ${row.count}점` : `${row.count}점`}
+                {row.ongoing ? `진행 중 · 지금까지 ${row.count}장` : `${row.count}장`}
               </span>
               {row.bookTitle ? <span className="books__title">{row.bookTitle}</span> : null}
             </div>

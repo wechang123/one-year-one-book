@@ -86,9 +86,9 @@ export default async function GridPage({
              *   대상을 넓힐수록 그 근거가 흐려진다 — "3월"로 찾히면 그건 달력이 만든 색인이고,
              *   아이 이름으로 찾히면 그건 프로필이 만든 색인이다.
              *
-             * 🔑 걸러지는 단위는 **작품(점)**이다. `letters: { some }`이라
+             * 🔑 걸러지는 단위는 **실물 사진(장)**이다. `letters: { some }`이라
              *   편지 여러 통이 걸려도 작품은 한 번만 나온다 — 격자의 칸이 실물이라
-             *   같은 실물이 두 칸으로 불어나면 "N점"이 거짓이 된다.
+             *   같은 실물이 두 칸으로 불어나면 "N장"이 거짓이 된다.
              *   몇 통이 걸렸는지는 아래 결과 줄이 통 단위로 따로 센다.
              *
              * 🔑 왜 full-text가 아니라 ILIKE인가 — 한국어에서 full-text가 안 먹는다.
@@ -171,7 +171,7 @@ export default async function GridPage({
 
   /**
    * 🔑 걸린 편지 수. 작품 수와 단위가 다르다 — 한 점에 두 통이 걸릴 수 있다.
-   *   "N점"만 말하면 통이 몇인지 아무도 안 세고, "N통"만 말하면 격자의 칸 수와 어긋난다.
+   *   "N장"만 말하면 통이 몇인지 아무도 안 세고, "N통"만 말하면 격자의 칸 수와 어긋난다.
    *   둘 다 세고 둘 다 말한다. 단위가 흐려지는 것보다 숫자 두 개가 낫다.
    */
   const matchedLetters = searching ? artworks.reduce((n, a) => n + a.letters.length, 0) : 0;
@@ -252,7 +252,7 @@ export default async function GridPage({
               {owner && !nothingYet ? " · " : null}
               {nothingYet ? null : (
                 <>
-                  {firstYear}년부터 <strong>{allMadeOn.length}점</strong>
+                  {firstYear}년부터 <strong>{allMadeOn.length}장</strong>
                 </>
               )}
             </p>
@@ -352,7 +352,7 @@ export default async function GridPage({
           <>
             <p className="field__help" id="search-help">
               그림이 아니라 <strong>남긴 말</strong>에서 찾습니다.
-              {wordless > 0 ? ` 말이 비어 있는 ${wordless}점은 여기서 찾을 수 없습니다.` : null}
+              {wordless > 0 ? ` 말이 비어 있는 ${wordless}장은 여기서 찾을 수 없습니다.` : null}
             </p>
             {/*
               🔑 찾은 총량은 여기다. 해 제목은 그 해 안에서 몇 점인지만 말하므로
@@ -361,8 +361,8 @@ export default async function GridPage({
             {artworks.length > 0 ? (
               <p className="search__result">
                 <QuotedSubject q={q} /> 들어간 편지 <strong>{matchedLetters}통</strong>
-                {/* 통과 점이 다를 때만 점을 덧붙인다. 같으면 같은 수를 두 번 말하는 것이다. */}
-                {matchedLetters !== artworks.length ? <> · {artworks.length}점에서</> : null}
+                {/* 통과 장이 다를 때만 장을 덧붙인다. 같으면 같은 수를 두 번 말하는 것이다. */}
+                {matchedLetters !== artworks.length ? <> · {artworks.length}장에서</> : null}
               </p>
             ) : null}
           </>
@@ -424,7 +424,7 @@ export default async function GridPage({
             {wordless > 0 ? (
               <>
                 {" "}
-                <strong>말이 비어 있는 {wordless}점</strong>은 검색에 걸리지 않으니,
+                <strong>말이 비어 있는 {wordless}장</strong>은 검색에 걸리지 않으니,
                 거기 있던 말일 수도 있습니다.
               </>
             ) : null}
@@ -548,11 +548,11 @@ export default async function GridPage({
                     `진행 중 · 지금까지 6점`으로 이미 센다. **같은 수를 두 번 말하고 있었다.**
 
                   🔑 검색 중에는 다르다. 화면에 보이는 것이 그 해 전부가 아니라서
-                    몇 점이 걸린 것인지 여기가 아니면 아무도 말하지 않는다.
+                    몇 장이 걸린 것인지 여기가 아니면 아무도 말하지 않는다.
                     구분자를 또 쓰지 않으려고 괄호로 붙인다.
                 */}
                 {searching ? (
-                  <span className="span__count">(찾은 것 {items.length}점)</span>
+                  <span className="span__count">(찾은 것 {items.length}장)</span>
                 ) : null}
               </h2>
 
@@ -696,7 +696,7 @@ function EmptyList() {
       </p>
       <Link href="/artwork/new" className="btn">
         <Camera />
-        첫 한 점 남기기
+        첫 한 장 남기기
       </Link>
     </div>
   );

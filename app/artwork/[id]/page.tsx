@@ -273,7 +273,7 @@ export default async function ArtworkDetailPage({
            *   대신 지금 줄 수 있는 것을 준다 — 방금 한 일이 무엇이었는지.
            */
           <p className="recall recall--first">
-            <span className="recall__label">이게 첫 점입니다</span>
+            <span className="recall__label">이게 첫 장입니다</span>
             <span className="recall__quote">
               실물은 사진으로 남고, <strong>그때 한 말은 지금만 받을 수 있습니다.</strong>
             </span>
