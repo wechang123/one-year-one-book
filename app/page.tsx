@@ -45,7 +45,21 @@ export default async function TimelinePage() {
     where: profile ? { profileId: profile.id } : undefined,
     // 🔑 오래된 것부터. 이 화면은 걸어 내려오는 화면이다.
     orderBy: [{ madeOn: "asc" }, { createdAt: "asc" }],
-    select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
+    /*
+      🔴 사진의 **치수만** 같이 읽는다. 바이트는 안 읽는다 — `<img>`가 /api/photo로 따로 받는다.
+        v3.1에서 사진을 크게 키우면서 틀의 비율 고정을 뺐는데,
+        그러면 **사진이 도착하기 전에 칸 높이가 0**이 된다. `loading="lazy"`와 겹치면
+        칸이 접힌 채로 화면에 남는다 — 실제로 점만 남은 화면이 나왔다.
+        이 저장소는 v1에서 이미 같은 것을 배웠다(`.card__frame`의 비율 고정).
+        거기는 정사각으로 풀었고 여기는 **원본 비율**로 푼다.
+    */
+    select: {
+      id: true,
+      childQuote: true,
+      quoteBy: true,
+      madeOn: true,
+      photo: { select: { width: true, height: true } },
+    },
   });
 
   const birth = { dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null };
@@ -142,35 +156,53 @@ export default async function TimelinePage() {
                 </p>
               ) : null}
 
+              {/*
+                🔴 세 칸(점·썸네일 56px·글)짜리 가로 줄이었다. 세로로 세웠다.
+                  **사진이 56px이고 그 옆 글자가 더 컸다.** 이 서비스가 받아두는 것이
+                  사진인데 화면에서 사진이 가장 작았다 — 그러면 그건 사진 목록이 아니라
+                  **사진이 붙은 활동 로그**다.
+
+                🔑 순서: 언제 → 무엇 → 뭐라고 했나.
+                  라벨이 위에 있는 이유는 **사진을 보기 전에 언제인지 알아야** 하기 때문이다.
+                  말은 사진을 본 뒤에 온다 — 아이가 그림을 내밀고 나서 말한 순서 그대로다.
+              */}
               <Link
                 href={`/artwork/${row.id}`}
                 className={row.band ? `tl__row tl__row--${row.band}` : "tl__row"}
               >
-                <span className="tl__dot" aria-hidden />
-
-                <span className="tl__thumb">
-                  <img src={`/api/photo/${row.id}`} alt="" loading="lazy" decoding="async" />
+                <span className="tl__when">
+                  <span className="tl__dot" aria-hidden />
+                  {row.band ? (
+                    <span className={`tl__age age--${row.band}`}>{row.when.label}</span>
+                  ) : null}
+                  <time dateTime={row.madeOn.toISOString()}>{formatMadeOn(row.madeOn)}</time>
                 </span>
 
-                <span className="tl__body">
-                  <span className="tl__when">
-                    {row.band ? (
-                      <span className={`tl__age age--${row.band}`}>{row.when.label}</span>
-                    ) : null}
-                    <time dateTime={row.madeOn.toISOString()}>{formatMadeOn(row.madeOn)}</time>
+                <span
+                  className="tl__figure"
+                  /*
+                    🔑 사진의 원본 비율을 CSS 변수로 넘긴다. 틀이 이 비율로 **먼저 자리를 잡고**
+                      사진이 그 안에 들어온다. 치수를 모르는 옛 기록은 4/3으로 떨어진다.
+                  */
+                  style={
+                    row.photo?.width && row.photo?.height
+                      ? ({ "--ar": `${row.photo.width} / ${row.photo.height}` } as React.CSSProperties)
+                      : undefined
+                  }
+                >
+                                    <img src={`/api/photo/${row.id}`} alt="" loading="lazy" decoding="async" />
+                </span>
+
+                {row.childQuote ? (
+                  <span className="tl__quote">
+                    <SaidBy by={row.quoteBy} />
+                    {row.childQuote}
                   </span>
-
-                  {row.childQuote ? (
-                    <span className="tl__quote">
-                      <SaidBy by={row.quoteBy} />
-                      {row.childQuote}
-                    </span>
-                  ) : (
-                    <span className="tl__quote tl__quote--empty">
-                      {emptyQuoteText(row.quoteBy)}
-                    </span>
-                  )}
-                </span>
+                ) : (
+                  <span className="tl__quote tl__quote--empty">
+                    {emptyQuoteText(row.quoteBy)}
+                  </span>
+                )}
               </Link>
             </li>
           );
