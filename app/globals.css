@@ -101,11 +101,16 @@
   --side-w: 15rem;
 
   /*
-   * 이름을 부르는 활자. 본문(`--font-sans`)과 갈라 쓴다 — 왜인지는 app/layout.tsx에 있다.
-   * 대체 글꼴을 여기 적어두는 이유: 200KB가 오기 전에도 **세리프로는 보여야** 한다.
-   * `swap`이라 그 사이 몇 백 ms 동안 이 목록이 실제로 화면에 뜬다.
+   * 🔴 `var(--font-serif), "Batang", "Nanum Myeongjo", serif`였다. **generic 하나로 줄였다.**
+   *   웹폰트(고운바탕 200KB)를 걷은 근거는 app/layout.tsx에 — serif가 한글에서
+   *   실제 명조로 해상된다는 실측이다. 이름을 앞에 적으면 그 이름이 있는 기기에서만
+   *   다른 글꼴이 나와, 이름 목록이 곧 "기기마다 다르게 갈리는 스위치"가 된다.
+   *   generic 하나면 각 OS가 자기 명조를 낸다. 그 다양함이 이 판단의 대가이자 전부다.
    */
-  --serif: var(--font-serif), "Apple SD Gothic Neo", "Batang", "Nanum Myeongjo", serif;
+  --serif: serif;
+
+  /* 앱이 말하는 활자. 편지 속 빈 상태 문구가 명조 상속을 벗을 때도 이걸 입는다. */
+  --sans: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 
   --radius: 12px;
   --page-max: 1400px;
@@ -120,13 +125,13 @@ body {
   background: var(--paper);
   color: var(--ink);
   /*
-   * 🔴 전에는 시스템 글꼴만 있었다. macOS는 Apple SD Gothic Neo, Windows는 맑은 고딕이라
-   *   **보는 사람마다 다른 화면**이었고, 그래서 README에 적어둔 px 값들이
-   *   재는 사람의 OS에 달려 있었다. 앞은 Pretendard 서브셋(layout.tsx),
-   *   뒤는 그대로 둔다 — KS X 1001 밖의 희귀 음절은 여기로 떨어진다.
+   * 🔴 시스템 → Pretendard 서브셋 → 다시 시스템. 두 번 뒤집혔다.
+   *   서브셋을 실었던 근거("보는 사람마다 다른 화면이면 px 실측이 재현 안 된다")는
+   *   지금도 맞다. 그런데 웹폰트를 걷는 판단(app/layout.tsx)이 그보다 크다 —
+   *   다운로드 0바이트가 원칙이 되면 본문만 예외로 둘 수 없다.
+   *   실측값에는 "macOS 기준"을 명시하는 것으로 재현 문제를 문서 쪽에서 진다.
    */
-  font-family: var(--font-sans), system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic",
-    sans-serif;
+  font-family: var(--sans);
   line-height: 1.6;
   /* 폰에서 가로로 밀리는 것을 원천 차단한다. 한 손으로 쓰는 화면이다. */
   overflow-wrap: break-word;
@@ -3051,6 +3056,34 @@ a.recall:hover {
   /* 명조는 굵기가 하나뿐이다. 무게를 흉내 내면 획이 뭉개진다 — 크기와 자간이 대신한다. */
   font-weight: 400;
   letter-spacing: -0.01em;
+}
+
+/*
+ * 🔑 편지 본문도 명조다 — 사람이 남긴 말이 앱이 하는 말(chrome)과 다른 목소리여야 한다.
+ *   표제의 명조가 "부르는 곳"이었다면 여기는 "남긴 곳"이고, 산세리프로 남는 것은
+ *   앱 자신의 문장(라벨·날짜·안내)뿐이다. 화면의 세 목소리: 부르는 명조 / 남긴 명조 / 앱의 고딕.
+ */
+.quote,
+.tl__quote,
+.detail__quote,
+.saidlist__quote,
+.recallone__quote,
+.fenv__quote,
+.recall__quote {
+  font-family: var(--serif);
+}
+
+/*
+ * 빈 상태 문구("아직 안 물어봤어요")는 편지가 아니라 **앱의 말**이다.
+ * 편지 자리를 빌려 쓰고 있을 뿐이라 명조 상속을 벗는다 — 명조로 두면
+ * 앱의 안내가 남긴 말처럼 읽힌다. 이탤릭+흐림에 활자까지 갈라 세 겹으로 말한다.
+ */
+.quote--empty,
+.tl__quote--empty,
+.saidlist__quote--empty,
+.detail__quote--empty,
+.fenv__quote--empty {
+  font-family: var(--sans);
 }
 
 /*
