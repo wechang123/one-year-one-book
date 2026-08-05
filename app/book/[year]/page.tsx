@@ -49,7 +49,16 @@ export default async function BookPage({
       where: { profileId: profile.id, madeOn: range },
       orderBy: [{ madeOn: "asc" }, { createdAt: "asc" }],
       // 여기서도 사진 바이트는 안 읽는다. <img>가 /api/photo로 따로 받는다.
-      select: { id: true, childQuote: true, madeOn: true },
+      // 책 카드도 한 통만 싣는 자리 — 첫 통(그때의 말)이 대표다. (lib/letter.ts)
+      select: {
+        id: true,
+        madeOn: true,
+        letters: {
+          orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+          take: 1,
+          select: { body: true },
+        },
+      },
     }),
     // 이 책에 주문이 몇 건인지. 한 권에 여러 건이 가능하므로 "이미 주문함"이 아니라 건수로 말한다.
     prisma.order.count({ where: { collection: { profileId: profile.id, year } } }),
@@ -168,10 +177,10 @@ export default async function BookPage({
                     />
                   </div>
                   <div className="card__body">
-                    {artwork.childQuote ? (
-                      <p className="quote">{artwork.childQuote}</p>
+                    {artwork.letters[0] ? (
+                      <p className="quote">{artwork.letters[0].body}</p>
                     ) : (
-                      <p className="quote quote--empty">아직 안 물어봤어요</p>
+                      <p className="quote quote--empty">말이 남지 않았어요</p>
                     )}
                     <time className="card__date" dateTime={artwork.madeOn.toISOString()}>
                       {formatMadeOn(artwork.madeOn)}

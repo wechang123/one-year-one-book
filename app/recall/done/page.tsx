@@ -28,7 +28,9 @@ export default async function RecallDonePage() {
   const [total, withQuote] = await Promise.all([
     prisma.artwork.count({ where: profile ? { profileId: profile.id } : undefined }),
     prisma.artwork.count({
-      where: profile ? { profileId: profile.id, childQuote: { not: null } } : { childQuote: { not: null } },
+      where: profile
+        ? { profileId: profile.id, letters: { some: {} } }
+        : { letters: { some: {} } },
     }),
   ]);
 

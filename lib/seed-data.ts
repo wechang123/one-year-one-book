@@ -23,7 +23,7 @@ import type { PrismaClient } from "../generated/prisma/client";
  *   $transaction·$connect 같은 것이 빠져 있어서 PrismaClient와 타입이 다르다.
  *   여기서 필요한 건 profile·artwork 두 개뿐이라 그것만 요구하면 둘 다 들어온다.
  */
-export type SeedClient = Pick<PrismaClient, "profile" | "artwork">;
+export type SeedClient = Pick<PrismaClient, "profile" | "artwork" | "letter">;
 
 /** 시드가 만든 아이는 언제나 한 명이다. id를 고정해 upsert 한 번으로 멱등해진다. */
 export const SEED_PROFILE_ID = "seed-profile";
@@ -47,12 +47,18 @@ export type SeedArtwork = {
   file: string;
   madeOn: string;
   /**
-   * 아이가 한 말. **null일 수 있다.**
+   * 그때 받은 말. **null일 수 있다.**
    *
    * 🔑 스키마와 문서가 "말 없는 사진은 나중에 채울 수 있다"고 세 곳에 적어놨는데,
    *   시드 10점이 전부 말을 갖고 있어서 **그 판단이 화면에 한 번도 렌더된 적이 없었다.**
    *   설명만 있고 증거가 없으면, 읽는 사람은 그게 실제로 동작하는지 알 수 없다.
    *   그래서 두 점을 비워 그 상태를 시드에 넣는다 — 결손이 아니라 **상태**다.
+   *
+   * 🔑 Letter로 옮겨간 뒤에도 시드는 **작품당 한 통**이다.
+   *   전부 "그것을 내밀던 순간에 오간 말"이라 writtenOn = madeOn이고,
+   *   나중에 도착한 편지(둘째 통부터)는 심사자가 직접 만들어보는 몫으로 비워둔다 —
+   *   책·주문을 비워둔 것과 같은 이유다. 남이 만든 것을 구경하는 것보다
+   *   직접 만든 편지에 간격("N년 뒤에 쓴 편지")이 붙는 것을 보는 편이 강하다.
    */
   quote: string | null;
   /**
@@ -191,6 +197,14 @@ export function seedArtworkId(file: string): string {
 }
 
 /**
+ * 시드 편지의 id. **마이그레이션이 옮긴 행과 같은 규칙**('l-' || 작품id)이다.
+ * 규칙이 다르면 첫 [데모 초기화] 때 같은 편지가 두 통으로 불어난다.
+ */
+export function seedLetterId(file: string): string {
+  return `l-${seedArtworkId(file)}`;
+}
+
+/**
  * 시드를 적용한다. 몇 번을 돌려도 같은 상태가 된다.
  *
  * 부르는 곳이 둘이다.
@@ -221,6 +235,18 @@ export async function applySeed(prisma: SeedClient): Promise<number> {
     where: { origin: "SEED", id: { notIn: ARTWORKS.map((a) => seedArtworkId(a.file)) } },
   });
 
+  /**
+   * 🔑 시드 목록에 없는 SEED 편지도 같이 지운다. 위의 작품 정리와 같은 이유다 —
+   *   시드에서 말을 빼거나 바꾸면 옛 편지가 SEED로 남아 [처음 상태로 되돌리기]에도 안 사라진다.
+   *   (USER 편지는 건드리지 않는다. 그건 [데모 초기화]의 일이다.)
+   */
+  await prisma.letter.deleteMany({
+    where: {
+      origin: "SEED",
+      id: { notIn: ARTWORKS.filter((a) => a.quote !== null).map((a) => seedLetterId(a.file)) },
+    },
+  });
+
   for (const item of ARTWORKS) {
     const id = seedArtworkId(item.file);
     const bytes = readFileSync(join(seedDir, item.file));
@@ -236,8 +262,6 @@ export async function applySeed(prisma: SeedClient): Promise<number> {
       create: {
         id,
         profileId: profile.id,
-        childQuote: item.quote,
-        quoteBy: item.by ?? "CHILD",
         // "2026-01-08"은 UTC 자정으로 해석된다. 컬럼이 date라 시각은 잘려나가고
         // 날짜만 남는다. 어느 시간대에서 읽어도 같은 날짜다.
         madeOn: new Date(item.madeOn),
@@ -245,10 +269,8 @@ export async function applySeed(prisma: SeedClient): Promise<number> {
         photo: { create: photoData },
       },
       // 🔑 update가 비어 있지 않은 이유가 [데모 초기화]다.
-      //   심사자가 고친 설명·날짜를 여기서 원래 값으로 되돌린다.
+      //   심사자가 고친 날짜를 여기서 원래 값으로 되돌린다.
       update: {
-        childQuote: item.quote,
-        quoteBy: item.by ?? "CHILD",
         madeOn: new Date(item.madeOn),
         // 바이트는 다시 쓰지 않는다 — 같은 파일이라 쓸 이유가 없다.
         // 그래도 upsert인 이유: 사진만 없는 작품이 남았을 때 스스로 복구한다.
@@ -260,6 +282,25 @@ export async function applySeed(prisma: SeedClient): Promise<number> {
         },
       },
     });
+
+    /**
+     * 🔑 그때의 말은 편지 한 통으로 들어간다. writtenOn = madeOn —
+     *   시드의 말은 전부 "내밀던 순간에 오간 말"이라 만든 날이 곧 말한 날이다.
+     *   upsert의 update가 body·writtenBy·writtenOn을 전부 되돌린다.
+     *   심사자가 시드 편지를 고쳤어도 [처음 상태로 되돌리기]가 원문을 복구한다.
+     */
+    if (item.quote !== null) {
+      const letterData = {
+        body: item.quote,
+        writtenBy: item.by ?? ("CHILD" as const),
+        writtenOn: new Date(item.madeOn),
+      };
+      await prisma.letter.upsert({
+        where: { id: seedLetterId(item.file) },
+        create: { id: seedLetterId(item.file), artworkId: id, origin: "SEED", ...letterData },
+        update: letterData,
+      });
+    }
   }
 
   return prisma.artwork.count({ where: { origin: "SEED" } });

@@ -776,6 +776,17 @@ a {
 }
 
 /*
+ * 편지가 더 있다는 표시. 칸은 첫 통만 싣고, 나머지는 수만 말한다 —
+ * 다 실으면 칸 높이가 통 수를 따라가 격자가 무너진다.
+ */
+.card__more {
+  margin: var(--s-2) 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+/*
  * 시간 축과 날짜를 한 줄에 둔다. 축이 앞이다 —
  * 부모가 그 시절을 부르는 단위가 "임신 24주"이지 "2018년 9월 12일"이 아니다.
  * 생일을 안 넣었으면 축이 없고 날짜만 남는다.
@@ -1329,6 +1340,15 @@ mark {
   line-height: 1.55;
 }
 
+/* 편지 여러 통이면 통 사이를 벌린다. 날짜 줄과의 간격보다 커야 통이 묶여 읽힌다. */
+.saidlist__quote + .saidlist__quote {
+  margin-top: var(--s-3);
+}
+
+.saidlist__quote .letter__timing {
+  display: block;
+}
+
 /* 빈 줄. 흐리게 두되 지우지 않는다 — 남지 않은 것을 보여주는 자리다. */
 .saidlist__quote--empty {
   color: var(--ink-soft);
@@ -1564,6 +1584,48 @@ a.recall:hover {
   font-size: 1.0625rem;
   color: var(--ink-soft);
   font-style: italic;
+}
+
+/* ── 편지 — 한 점에 도착한 말들 ─────────────────────────
+ *
+ * 🔑 통 사이 간격이 통 안 간격보다 커야 한다.
+ *   머리(누가·언제) + 본문 + 날짜가 한 통이고, 그 묶음이 여러 개다.
+ *   간격이 고르면 어느 날짜가 어느 말의 것인지 눈이 묶지 못한다.
+ */
+.letters {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+}
+
+.letter__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-3);
+  margin: 0 0 var(--s-2);
+}
+
+/*
+ * "7년 뒤에 쓴 편지" — 이 표식이 Letter 테이블을 만든 이유다.
+ * 간격이 없으면(그때 받은 말) 아예 안 붙는다. 붙었을 때만 정보다.
+ */
+.letter__timing {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.letter__date {
+  display: block;
+  margin-top: var(--s-2);
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 
 .detail__hint {
@@ -2148,6 +2210,16 @@ a.recall:hover {
   font-style: italic;
 }
 
+/* 편지 여러 통이 세로로 쌓인다. 통 안의 표식(letter__timing)은 본문 위에 선다. */
+.tl__letters {
+  display: block;
+}
+
+.tl__letters .letter__timing {
+  display: block;
+  margin-bottom: var(--s-1);
+}
+
 /* ── 타임라인 꼬리 — 마지막 기록에서 오늘까지 ──────────── */
 
 .tl__tail {
@@ -2232,6 +2304,18 @@ a.recall:hover {
     margin-top: 0;
     /* 사진 윗변과 첫 줄의 기준선을 맞춘다. 위에서 시작해야 둘이 한 짝으로 읽힌다. */
     padding-top: var(--s-3);
+  }
+
+  /* 여러 통이면 묶음이 그 자리를 이어받고, 통 사이만 벌린다. */
+  .tl__letters {
+    padding-top: var(--s-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-title);
+  }
+
+  .tl__letters .tl__quote {
+    padding-top: 0;
   }
 
   .tl__figure img {

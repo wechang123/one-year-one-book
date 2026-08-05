@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
-import { describeAge, timeBand } from "@/lib/age";
+import { couldHaveSpoken, describeAge, timeBand } from "@/lib/age";
+import { letterTiming } from "@/lib/letter";
 import { SaidBy, emptyQuoteText } from "../artwork/said-by";
 import { ArrowLeft } from "../icons";
 
@@ -31,7 +32,18 @@ export default async function RecallPage() {
     where: profile ? { profileId: profile.id } : undefined,
     orderBy: [{ madeOn: "asc" }, { createdAt: "asc" }],
     // 사진 테이블을 아예 건드리지 않는다. 이 화면에는 사진이 없다.
-    select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
+    select: {
+      id: true,
+      madeOn: true,
+      /**
+       * 🔑 여기는 편지를 **전부** 싣는다. 이 화면의 주제가 "버리면 무엇이 남나"인데
+       *   남는 것이 이제 여러 통일 수 있다 — 한 통만 실으면 남은 것을 줄여 말하는 셈이다.
+       */
+      letters: {
+        orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+        select: { id: true, body: true, writtenBy: true, writtenOn: true },
+      },
+    },
   });
 
   const first = artworks[0];
@@ -69,11 +81,17 @@ export default async function RecallPage() {
             {artworks.map((a) => (
               <li key={a.id} className="saidlist__item">
                 <Link href={`/recall/${a.id}`} className="saidlist__link">
-                  {a.childQuote ? (
-                    <span className="saidlist__quote">
-                      <SaidBy by={a.quoteBy} />
-                      {a.childQuote}
-                    </span>
+                  {a.letters.length > 0 ? (
+                    a.letters.map((letter) => {
+                      const timing = letterTiming(a.madeOn, letter.writtenOn);
+                      return (
+                        <span className="saidlist__quote" key={letter.id}>
+                          {timing ? <span className="letter__timing">{timing} 쓴 편지</span> : null}
+                          <SaidBy by={letter.writtenBy} />
+                          {letter.body}
+                        </span>
+                      );
+                    })
                   ) : (
                     /*
                      * 🔑 말이 빈 것도 남긴다. 빼지 않는다.
@@ -83,7 +101,7 @@ export default async function RecallPage() {
                      *   "다 잘 남았다"는 거짓말이 된다.
                      */
                     <span className="saidlist__quote saidlist__quote--empty">
-                      {emptyQuoteText(a.quoteBy)}
+                      {emptyQuoteText(couldHaveSpoken(a.madeOn, birth) ? "CHILD" : "PARENT")}
                     </span>
                   )}
                   <time className="saidlist__date" dateTime={a.madeOn.toISOString()}>

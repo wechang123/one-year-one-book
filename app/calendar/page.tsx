@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
+import { getNow } from "@/lib/now";
 import { describeAge, timeBand } from "@/lib/age";
 import {
   cadenceForWeek,
@@ -63,7 +64,8 @@ export default async function CalendarPage({
   searchParams: Promise<{ m?: string }>;
 }) {
   const { m } = await searchParams;
-  const today = utcDay(new Date());
+  // 앱의 "지금"은 한 곳(lib/now.ts)에서만 나온다. 여기만 new Date()면 데모 시각이 갈라진다.
+  const today = utcDay(getNow());
 
   /*
     🔑 보고 있는 달은 주소가 정한다(`?m=2026-08`). 상태를 안 쓰는 이유:
@@ -85,7 +87,16 @@ export default async function CalendarPage({
       madeOn: { gte: cursor, lt: new Date(Date.UTC(year, month + 1, 1)) },
     },
     orderBy: [{ madeOn: "asc" }],
-    select: { id: true, madeOn: true, childQuote: true },
+    select: {
+      id: true,
+      madeOn: true,
+      // 달력 칸은 한 통만 싣는 자리다 — 첫 통(그때의 말)이 대표다. (lib/letter.ts)
+      letters: {
+        orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+        take: 1,
+        select: { body: true },
+      },
+    },
   });
 
   const byDay = new Map<string, typeof artworks>();
@@ -201,10 +212,10 @@ export default async function CalendarPage({
                             key={a.id}
                             href={`/artwork/${a.id}`}
                             className={band ? `cal__mark age--${band}` : "cal__mark"}
-                            title={a.childQuote ?? "남긴 것"}
+                            title={a.letters[0]?.body ?? "남긴 것"}
                           >
                             <span className="cal__mark-dot" aria-hidden />
-                            <span className="cal__mark-text">{a.childQuote ?? "남긴 것"}</span>
+                            <span className="cal__mark-text">{a.letters[0]?.body ?? "남긴 것"}</span>
                           </Link>
                         ))}
                       </span>

@@ -49,6 +49,13 @@ export async function resetDemo(): Promise<ResetState> {
          */
         await tx.artwork.deleteMany({ where: { origin: "USER" } });
         await tx.collection.deleteMany({ where: { origin: "USER" } });
+        /**
+         * 🔑 편지만은 따로 지운다. cascade가 못 잡는 경우가 하나 있다 —
+         *   **시드 작품에 심사자가 얹은 편지**다. 작품은 SEED라 안 지워지고,
+         *   그 밑의 USER 편지는 cascade를 탈 부모 삭제가 없다.
+         *   (USER 작품의 편지는 위 삭제가 cascade로 이미 데려간다. 이 줄은 그 나머지다.)
+         */
+        await tx.letter.deleteMany({ where: { origin: "USER" } });
 
         /**
          * 🔑 시드 재적용을 같은 트랜잭션 안에 둔다.
