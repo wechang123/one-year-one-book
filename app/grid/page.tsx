@@ -476,26 +476,45 @@ export default async function GridPage({
                       <div className="card__body">
                         {artwork.letters.length > 0 ? (
                           /*
-                            🔑 카드는 한 통만 싣는 자리다 — 평소에는 첫 통(그때의 말).
-                              검색 중에는 걸린 편지들이다(쿼리가 걸린 것만 실어 보낸다).
-                              나머지가 몇 통인지는 꼬리가 센다. 칸 높이를 지키면서
-                              "더 있다"는 사실은 숨기지 않는 최소한이다.
+                            🔑 봉투다. 커서를 대면(또는 Tab으로 초점이 오면) 뚜껑이 젖혀지고
+                              안의 편지가 올라온다 — 여는 것이 그때로 돌아가는 행위가 된다.
+
+                            🔑 봉투에 들어가는 것은 **말이지 사진이 아니다.**
+                              사진은 보라고 있는 것이라(15-v3 §5) 가리지 않는다.
+                              말은 원래 "꺼내 보는 것"이라 은유가 콘텐츠와 맞는다.
+
+                            🔑 hover 없는 기기·reduced-motion에서는 처음부터 열려 있다(CSS).
+                              마크업은 항상 편지가 먼저다 — 스크린리더는 봉투를 안 거친다.
+
+                            카드는 한 통만 싣는다 — 평소에는 첫 통(그때의 말),
+                            검색 중에는 걸린 편지들(쿼리가 걸린 것만 실어 보낸다).
                           */
-                          <>
-                            {(searching ? artwork.letters : artwork.letters.slice(0, 1)).map(
-                              (letter) => (
-                                <p className="quote" key={letter.id}>
-                                  <SaidBy by={letter.writtenBy} />
-                                  {highlight(letter.body, q)}
-                                </p>
-                              ),
-                            )}
-                            {!searching && artwork.letters.length > 1 ? (
-                              <p className="card__more">편지 {artwork.letters.length}통</p>
+                          <span
+                            className={
+                              artwork.letters.length > 1 ? "env env--stack" : "env"
+                            }
+                          >
+                            <span className="env__letter">
+                              {(searching ? artwork.letters : artwork.letters.slice(0, 1)).map(
+                                (letter) => (
+                                  <span className="quote" key={letter.id}>
+                                    <SaidBy by={letter.writtenBy} />
+                                    {highlight(letter.body, q)}
+                                  </span>
+                                ),
+                              )}
+                            </span>
+                            <span className="env__flap" aria-hidden />
+                            <span className="env__pocket" aria-hidden />
+                            {/* 여러 통이면 봉투가 말한다. 한 통은 봉투 모양이 이미 말한다.
+                                포켓 밖에 두는 이유: 포켓 안(z2)에 두면 닫힌 뚜껑(z3)이 덮는다. */}
+                            {artwork.letters.length > 1 ? (
+                              <span className="env__count">편지 {artwork.letters.length}통</span>
                             ) : null}
-                          </>
+                          </span>
                         ) : (
-                          /* 빈 문구는 시기에서 나온다 — 저장된 주인이 더는 없다. (app/page.tsx) */
+                          /* 빈 문구는 시기에서 나온다 — 저장된 주인이 더는 없다. (app/page.tsx)
+                             편지가 없으면 봉투도 없다 — 열어봤자 빈 봉투인 것을 만들지 않는다. */
                           <p className="quote quote--empty">
                             {emptyQuoteText(couldHaveSpoken(artwork.madeOn, birth) ? "CHILD" : "PARENT")}
                           </p>
