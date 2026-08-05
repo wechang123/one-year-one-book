@@ -3005,6 +3005,25 @@ a.recall:hover {
   justify-content: space-between;
   gap: var(--gap-action);
   margin-bottom: var(--gap-title);
+  /* 폰에서는 점프 폼이 다음 줄로 내려간다. 한 줄에 욱여넣으면 44px 표적이 깨진다. */
+  flex-wrap: wrap;
+}
+
+/* 연·월 점프 — ←→만으로 8년을 건너려면 88번이라 생겼다. */
+.cal__jump {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.cal__jump-label {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.cal__jump-input {
+  width: auto;
+  padding: var(--s-2) var(--s-3);
 }
 
 .cal__title {
