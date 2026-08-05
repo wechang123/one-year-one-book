@@ -65,31 +65,79 @@ export async function updateArtwork(
 
   const prisma = getPrisma();
 
-  /**
-   * 🔑 말의 주인을 여기서도 다시 확정한다.
-   *   등록에만 두면 **편집으로 우회해 "태아가 한 말"을 만들 수 있다.**
-   *   미래 날짜 검사를 두 액션에 똑같이 둔 것과 같은 이유다.
-   */
   const profile = await prisma.profile.findFirst({
     orderBy: { createdAt: "asc" },
     select: { dueOn: true, bornOn: true },
   });
-  const quoteBy = settleQuoteBy(pickedBy, madeOn, profile ?? { dueOn: null, bornOn: null });
+  const birth = profile ?? { dueOn: null, bornOn: null };
 
   /**
-   * 없는 id면 update가 예외를 던진다. 그걸 잡아 화면 문구로 바꾼다.
-   * 여기서 findUnique로 먼저 확인하지 않는 이유: 확인과 수정 사이에 지워질 수 있고,
-   * 그러면 같은 오류를 두 곳에서 처리하게 된다. 한 번의 update가 답을 다 준다.
+   * 🔑 이 폼이 고치는 편지는 **첫 통(그때의 말)**이다.
+   *   말이 작품당 한 통이던 시절의 폼이라 칸이 하나뿐이고, 그 칸의 상대는
+   *   1:N이 된 지금 "가장 그때에 가까운 한 통"이어야 한다. 둘째 통부터는
+   *   상세 화면의 편지 목록에서 통별로 다룬다.
+   *
+   * 🔑 쓴 날이 만든 날을 따라가는 조건이 하나 있다 —
+   *   **첫 통의 writtenOn이 옛 madeOn과 같을 때**다. 그 편지는 "내밀던 순간에
+   *   받은 말"이라 두 날짜가 같은 순간을 가리키고 있고, 날짜 오타를 고치는 것은
+   *   그 순간을 옮기는 것이지 편지를 딴 날로 보내는 것이 아니다.
+   *   이미 갈라져 있던 writtenOn(나중에 쓴 편지)은 건드리지 않는다.
    */
   try {
-    await prisma.artwork.update({
-      where: { id },
-      data: {
-        childQuote: quote === "" ? null : quote,
-        quoteBy,
-        madeOn,
-      },
-      select: { id: true },
+    await prisma.$transaction(async (tx) => {
+      /**
+       * 옛 madeOn이 필요해서 **고치기 전에 읽는다.** update는 새 값만 돌려주므로
+       * "첫 통이 옛 만든 날에 쓰인 것이었나"를 update 뒤에는 판정할 수 없다.
+       * 같은 트랜잭션 안이라 읽기와 쓰기 사이에 다른 손이 끼지 않는다.
+       */
+      const before = await tx.artwork.findUniqueOrThrow({
+        where: { id },
+        select: {
+          madeOn: true,
+          letters: {
+            orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+            take: 1,
+            select: { id: true, writtenOn: true },
+          },
+        },
+      });
+
+      await tx.artwork.update({ where: { id }, data: { madeOn }, select: { id: true } });
+
+      const first = before.letters[0];
+
+      if (quote === "") {
+        /**
+         * 칸을 비우면 첫 통을 지운다 — 옛 childQuote = null과 같은 뜻이다.
+         * 시드 편지였다면 [처음 상태로 되돌리기]가 원문을 복구한다(lib/seed-data.ts).
+         */
+        if (first) await tx.letter.delete({ where: { id: first.id } });
+        return;
+      }
+
+      if (first) {
+        const wasThatMoment = first.writtenOn.getTime() === before.madeOn.getTime();
+        const writtenOn = wasThatMoment ? madeOn : first.writtenOn;
+        /**
+         * 🔑 말의 주인을 여기서도 다시 확정한다 — 기준은 **쓴 날**이다.
+         *   등록에만 두면 편집으로 우회해 "태아가 한 말"을 만들 수 있다.
+         */
+        await tx.letter.update({
+          where: { id: first.id },
+          data: { body: quote, writtenBy: settleQuoteBy(pickedBy, writtenOn, birth), writtenOn },
+        });
+      } else {
+        // 비어 있던 자리에 채우는 말은 그때의 말이다 — 쓴 날 = 만든 날.
+        await tx.letter.create({
+          data: {
+            artworkId: id,
+            body: quote,
+            writtenBy: settleQuoteBy(pickedBy, madeOn, birth),
+            writtenOn: madeOn,
+            origin: "USER",
+          },
+        });
+      }
     });
   } catch (e) {
     /**

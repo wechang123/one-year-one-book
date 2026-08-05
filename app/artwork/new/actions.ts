@@ -123,23 +123,35 @@ export async function createArtwork(
     return { error: "아이 정보를 찾지 못했습니다. 컨테이너를 다시 시작하면 초기 데이터가 만들어집니다.", values };
   }
 
-  // 태어나기 전이면 화면이 무엇을 보냈든 부모의 말이다. (lib/speaker.ts)
+  /**
+   * 태어나기 전이면 화면이 무엇을 보냈든 부모의 말이다. (lib/speaker.ts)
+   *
+   * 🔑 기준 날짜가 madeOn인 것은 **여기 등록되는 말이 그때 받은 말이라서다** —
+   *   이 폼의 말은 내밀던 순간에 오간 것이니 만든 날이 곧 쓴 날(writtenOn)이다.
+   *   나중에 도착하는 편지는 상세 화면에서 자기 writtenOn으로 따로 판정받는다.
+   */
   const quoteBy = settleQuoteBy(pickedBy, madeOn, profile);
 
   /**
-   * 🔑 작품과 사진을 한 번의 create로 만든다.
+   * 🔑 작품·사진·편지를 한 번의 create로 만든다.
    *   따로 만들면 사진 저장이 실패했을 때 사진 없는 작품이 남고,
    *   그건 목록에서 깨진 이미지로 렌더된다. 중첩 create는 한 트랜잭션이라
-   *   둘 다 생기거나 둘 다 안 생긴다 — "사진 없는 작품"이 발생 자체를 못 한다.
+   *   전부 생기거나 전부 안 생긴다 — "사진 없는 작품"이 발생 자체를 못 한다.
    */
   const artwork = await prisma.artwork.create({
     data: {
       profileId: profile.id,
-      childQuote: quote === "" ? null : quote,
-      quoteBy,
       madeOn,
       // [데모 초기화]가 지울 대상. 시드는 남고 직접 만든 것만 사라진다.
       origin: "USER",
+      // 말이 있으면 첫 편지가 된다. 빈 편지는 만들지 않는다 — 0통이 "아직 없다"를 말한다.
+      ...(quote === ""
+        ? {}
+        : {
+            letters: {
+              create: { body: quote, writtenBy: quoteBy, writtenOn: madeOn, origin: "USER" as const },
+            },
+          }),
       photo: {
         create: {
           bytes,

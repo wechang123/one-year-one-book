@@ -27,10 +27,23 @@ export default async function EditArtworkPage({
   const artwork = await prisma.artwork.findUnique({
     where: { id },
     // 여기서도 사진 바이트는 안 읽는다. 썸네일은 <img>가 따로 받아온다.
-    select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
+    select: {
+      id: true,
+      madeOn: true,
+      /**
+       * 🔑 이 폼의 칸 하나가 상대하는 것은 **첫 통(그때의 말)**이다. (./actions.ts)
+       *   둘째 통부터는 상세 화면의 편지 목록이 통별로 다룬다.
+       */
+      letters: {
+        orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+        take: 1,
+        select: { body: true, writtenBy: true },
+      },
+    },
   });
 
   if (!artwork) notFound();
+  const first = artwork.letters[0] ?? null;
 
   const profile = await prisma.profile.findFirst({
     orderBy: { createdAt: "asc" },
@@ -63,8 +76,8 @@ export default async function EditArtworkPage({
 
       <EditArtworkForm
         id={artwork.id}
-        childQuote={artwork.childQuote ?? ""}
-        quoteBy={artwork.quoteBy}
+        childQuote={first?.body ?? ""}
+        quoteBy={first?.writtenBy ?? "CHILD"}
         madeOn={toDateInputValue(artwork.madeOn)}
         today={todayInputValue(getNow())}
         birth={{ dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null }}

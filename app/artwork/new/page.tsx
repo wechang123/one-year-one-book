@@ -42,10 +42,11 @@ export default async function NewArtworkPage() {
    *   한 번 고르면 그 뒤로는 대체로 같고, 바뀌는 날에만 한 번 더 고르면 된다.
    */
   const last = profile
-    ? await prisma.artwork.findFirst({
-        where: { profileId: profile.id },
+    ? await prisma.letter.findFirst({
+        // 직전 선택은 이제 마지막 **편지**에 남아 있다. 말을 안 남긴 등록은 선택도 안 남긴 것이다.
+        where: { artwork: { profileId: profile.id } },
         orderBy: { createdAt: "desc" },
-        select: { quoteBy: true },
+        select: { writtenBy: true },
       })
     : null;
 
@@ -72,7 +73,7 @@ export default async function NewArtworkPage() {
       <NewArtworkForm
         today={today}
         birth={{ dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null }}
-        lastQuoteBy={last?.quoteBy ?? "CHILD"}
+        lastQuoteBy={last?.writtenBy ?? "CHILD"}
       />
     </div>
   );
