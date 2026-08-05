@@ -4,8 +4,10 @@ import { formatMadeOn } from "@/lib/date";
 import { subjectParticle } from "@/lib/korean";
 import { couldHaveSpoken, describeAge, describeSpan, timeBand } from "@/lib/age";
 import { groupByYear } from "@/lib/group";
+import { scatterSpot } from "@/lib/scatter";
 import { SaidBy, emptyQuoteText } from "../artwork/said-by";
 import { Camera, Search } from "../icons";
+import { Space3D } from "./space";
 
 /**
  * 작품 목록 — 이 서비스의 첫 화면.
@@ -64,9 +66,9 @@ function QuotedSubject({ q }: { q: string }) {
 export default async function GridPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; y?: string; m?: string }>;
 }) {
-  const { q: qRaw } = await searchParams;
+  const { q: qRaw, y: yRaw, m: mRaw } = await searchParams;
   /**
    * 🔑 GET 폼 + searchParams다. 서버에서 처리하므로 **JS가 꺼져도 검색된다.**
    *   클라이언트에서 거르는 방법도 있지만, 그러면 목록을 통째로 받아야 하고
@@ -74,6 +76,15 @@ export default async function GridPage({
    */
   const q = (qRaw ?? "").trim();
   const searching = q !== "";
+
+  /**
+   * 🔑 클러스터도 주소다(`?y=2019&m=4`). 달력의 `?m=`과 같은 축 —
+   *   좁혀 본 상태가 주소로 남아야 뒤로가기가 동작하고, 침(chip)이 그냥 링크라
+   *   여기에도 JS가 없다. 편지가 많아지면 찾기 어렵다는 문제를 침과 검색이 나눠 푼다.
+   *   달은 연도를 골랐을 때만 뜻이 있다 — 연도 없는 "4월"은 여러 해에 걸친다.
+   */
+  const year = /^\d{4}$/.test(yRaw ?? "") ? Number(yRaw) : null;
+  const month = year !== null && /^([1-9]|1[0-2])$/.test(mRaw ?? "") ? Number(mRaw) : null;
 
   const prisma = getPrisma();
 
@@ -120,6 +131,18 @@ export default async function GridPage({
             ...(searching
               ? { letters: { some: { body: { contains: q, mode: "insensitive" as const } } } }
               : {}),
+            // 침이 좁힌 시기. date 컬럼이 전부 UTC 자정이라 경계도 UTC로 세운다.
+            ...(year !== null
+              ? {
+                  madeOn: {
+                    gte: new Date(Date.UTC(year, month !== null ? month - 1 : 0, 1)),
+                    lt:
+                      month !== null
+                        ? new Date(Date.UTC(year, month, 1))
+                        : new Date(Date.UTC(year + 1, 0, 1)),
+                  },
+                }
+              : {}),
           }
         : undefined,
       orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
@@ -141,6 +164,8 @@ export default async function GridPage({
             ? { where: { body: { contains: q, mode: "insensitive" as const } } }
             : {}),
         },
+        // 공간의 hover 미리보기가 원본 비율로 자리를 잡는 데 쓴다. 바이트는 여전히 안 읽는다.
+        photo: { select: { width: true, height: true } },
       },
     }),
     /**
@@ -194,6 +219,33 @@ export default async function GridPage({
   const firstYear = nothingYet
     ? null
     : Math.min(...allMadeOn.map((a) => a.madeOn.getUTCFullYear()));
+
+  /**
+   * 🔑 침 재료는 **전체(무필터) 기록**에서 센다. 걸러진 목록에서 세면
+   *   2019년을 고른 순간 다른 해의 침이 사라져 되돌아갈 길이 없어진다.
+   *   달 침은 기록이 있는 달만 만든다 — 빈 달 침은 눌러봤자 빈 화면이다.
+   */
+  const years = [...new Set(allMadeOn.map((a) => a.madeOn.getUTCFullYear()))].sort();
+  const monthsInYear =
+    year === null
+      ? []
+      : [
+          ...new Set(
+            allMadeOn
+              .filter((a) => a.madeOn.getUTCFullYear() === year)
+              .map((a) => a.madeOn.getUTCMonth() + 1),
+          ),
+        ].sort((a, b) => a - b);
+
+  /** 침 주소. 검색어는 유지한다 — 좁히기와 찾기는 겹쳐 쓸 수 있어야 한다. */
+  const hrefFor = (yy: number | null, mm: number | null) => {
+    const p = new URLSearchParams();
+    if (q) p.set("q", q);
+    if (yy !== null) p.set("y", String(yy));
+    if (yy !== null && mm !== null) p.set("m", String(mm));
+    const s = p.toString();
+    return s ? `/grid?${s}` : "/grid";
+  };
 
 
 
@@ -340,6 +392,44 @@ export default async function GridPage({
       </form>
       )}
 
+      {/*
+        🔑 클러스터 침. 전부 링크다 — 상태가 주소에 있어서 뒤로가기가 동작하고 JS가 없다.
+          편지가 쌓일수록 찾기 어려워지는 문제를 침(시기)과 검색(말)이 나눠 푼다.
+      */}
+      {nothingYet ? null : (
+        <nav className="chips" aria-label="시기로 좁히기">
+          <Link
+            href={hrefFor(null, null)}
+            className={year === null ? "chip chip--on" : "chip"}
+            aria-current={year === null ? "true" : undefined}
+          >
+            전체
+          </Link>
+          {years.map((yy) => (
+            <Link
+              key={yy}
+              href={hrefFor(yy, null)}
+              /* 달을 골라도 연도 침은 켜져 있다 — "2019년의 4월"이지 "4월"이 아니다. */
+              className={year === yy ? "chip chip--on" : "chip"}
+              aria-current={year === yy && month === null ? "true" : undefined}
+            >
+              {yy}년
+            </Link>
+          ))}
+          {/* 달 침은 연도를 고른 뒤에만. 연도 없는 "4월"은 여러 해에 걸쳐 뜻이 없다. */}
+          {monthsInYear.map((mm) => (
+            <Link
+              key={`m${mm}`}
+              href={hrefFor(year, mm)}
+              className={month === mm ? "chip chip--month chip--on" : "chip chip--month"}
+              aria-current={month === mm ? "true" : undefined}
+            >
+              {mm}월
+            </Link>
+          ))}
+        </nav>
+      )}
+
       {searching && artworks.length === 0 ? (
         /*
          * 🔑 0건 문구를 "아이가 그 말을 한 적이 없어요"로 쓰지 않는다.
@@ -365,10 +455,111 @@ export default async function GridPage({
             전체 보기
           </Link>
         </div>
+      ) : artworks.length === 0 && year !== null ? (
+        /* 침으로 좁혔는데 비어 있는 경우. 침은 기록 있는 시기만 만들지만,
+           주소는 손으로도 칠 수 있다 — 주소로 온 사람도 길을 잃지 않아야 한다. */
+        <div className="blank">
+          <h2 className="blank__title">이 시기엔 남긴 것이 없어요.</h2>
+          <Link href="/grid" className="btn">
+            전체 보기
+          </Link>
+        </div>
       ) : artworks.length === 0 ? (
         <EmptyList />
       ) : (
         <>
+          {/*
+            🔑 같은 데이터가 두 벌로 그려진다 — 공간(≥900px)과 격자(<900px).
+              어느 쪽이 보일지는 CSS 미디어 쿼리가 정한다.
+              폰의 한 손 사용자에게 궤도·줌은 장난감이라 격자를 유지하고,
+              노트북(5분 구경)에는 봉투가 떠 있는 공간을 연다.
+              두 벌 렌더의 대가는 마크업 중복이고, 데이터 조회는 한 번뿐이다.
+          */}
+          <Space3D>
+            <ol className="space__list">
+              {artworks.map((artwork) => {
+                const when = describeAge(artwork.madeOn, birth);
+                const band = timeBand(when.scale);
+                const spot = scatterSpot(artwork.id);
+                const first = artwork.letters[0] ?? null;
+                return (
+                  <li
+                    key={artwork.id}
+                    className="spot"
+                    /*
+                      🔑 자리는 서버가 id 해시에서 계산해 인라인으로 박는다(lib/scatter.ts).
+                        랜덤이 아니라서 새로고침해도 같은 봉투는 같은 자리다.
+                        z(깊이)는 li에 두고 기울기는 변수로 넘긴다 — hover 확대가
+                        자리 변환을 덮어쓰면 봉투가 제자리로 튄다(변환은 한 원소에 하나).
+                    */
+                    style={
+                      {
+                        left: `calc(50% + ${spot.x}%)`,
+                        top: `calc(50% + ${spot.y}%)`,
+                        transform: `translate(-50%, -50%) translateZ(${spot.z}px)`,
+                        "--rot": `${spot.rot}deg`,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <Link
+                      href={`/artwork/${artwork.id}`}
+                      className={[
+                        "fenv",
+                        band ? `fenv--${band}` : "",
+                        // 상반부 봉투는 미리보기를 아래로 편다. 위로 펴면 공간 위 모서리에 잘린다
+                        // (-18 문턱으로 뒀다가 y=-11 봉투의 사진 윗단이 잘리는 걸 캡처로 확인했다).
+                        spot.y < 0 ? "fenv--peekdown" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
+                      <span className="fenv__flap" aria-hidden />
+                      <span className="fenv__seal" aria-hidden />
+                      <span className="fenv__label">
+                        {band ? (
+                          <span className={`age--${band}`}>{when.label}</span>
+                        ) : (
+                          formatMadeOn(artwork.madeOn)
+                        )}
+                      </span>
+                      {/*
+                        미리보기 — 봉투에 커서를 대면(또는 초점이 오면) 사진과 첫 통이 뜬다.
+                        CSS :hover/:focus-within뿐이라 JS 없이도 열린다.
+                      */}
+                      <span className="fenv__peek">
+                        <img
+                          src={`/api/photo/${artwork.id}`}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          style={
+                            artwork.photo?.width && artwork.photo?.height
+                              ? { aspectRatio: `${artwork.photo.width} / ${artwork.photo.height}` }
+                              : undefined
+                          }
+                        />
+                        {first ? (
+                          <span className="fenv__quote">
+                            <SaidBy by={first.writtenBy} />
+                            {highlight(first.body, q)}
+                          </span>
+                        ) : (
+                          <span className="fenv__quote fenv__quote--empty">
+                            {emptyQuoteText(
+                              couldHaveSpoken(artwork.madeOn, birth) ? "CHILD" : "PARENT",
+                            )}
+                          </span>
+                        )}
+                        {artwork.letters.length > 1 ? (
+                          <span className="fenv__more">편지 {artwork.letters.length}통</span>
+                        ) : null}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          </Space3D>
           {/*
             🔴 여기 `남긴 것 12점 · 되짚어보기` 한 줄이 있었다. 지웠다.
               세 조각이 전부 다른 곳으로 갔기 때문이다 —
@@ -383,7 +574,8 @@ export default async function GridPage({
 
             🔑 묶는 단위를 해로 고른 이유는 lib/group.ts에 적었다 — 책의 단위와 같아진다.
           */}
-          {groupByYear(artworks).map(({ year, items }) => (
+          <div className="flatlist">
+          {groupByYear(artworks).map(({ year: gy, items }) => (
             <section
               className={
                 /*
@@ -396,16 +588,16 @@ export default async function GridPage({
                   return b ? `span span--${b}` : "span";
                 })()
               }
-              key={year}
-              aria-labelledby={`span-${year}`}
+              key={gy}
+              aria-labelledby={`span-${gy}`}
             >
               {/*
                 🔑 제목이 화면 위에 붙어 있는다(sticky). 격자를 내리는 동안
                   **지금 보고 있는 것이 어느 해인지**가 화면에서 사라지지 않아야
                   구분이 구분 구실을 한다. 한 번 지나가고 마는 제목은 표지판이 아니다.
               */}
-              <h2 className="span__head" id={`span-${year}`}>
-                <span className="span__year">{year}년</span>
+              <h2 className="span__head" id={`span-${gy}`}>
+                <span className="span__year">{gy}년</span>
                 {/*
                   🔑 그 해가 아이의 어느 시절이었는지. items가 만든 날 역순이라
                     **끝이 그 해의 처음**이다. 생일을 안 넣었으면 이 자리가 통째로 없다.
@@ -540,6 +732,7 @@ export default async function GridPage({
               </ul>
             </section>
           ))}
+          </div>
         </>
       )}
 

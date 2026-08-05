@@ -906,6 +906,288 @@ a {
   }
 }
 
+/* ── 클러스터 침 — 시기로 좁히는 링크들 ─────────────────────
+ *
+ * 전부 <a>다. 상태가 주소(?y=·?m=)에 있어 뒤로가기가 동작하고 JS가 없다.
+ * 켜진 침은 강조색 면 — "지금 이 시기를 보고 있다"는 유일한 상태 표시다.
+ */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0 0 var(--gap-section);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* 폰에서도 침이 손가락 표적이다. 버튼과 같은 규칙을 탄다. */
+  padding: 0 var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.chip--on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.chip--month {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 편지 공간 — 봉투가 떠 있는 3D (≥900px) ─────────────────
+ *
+ * 🔴 v3에서 "3D orbit은 안 가져온다"고 적었다(15-v3 §5). 그 판단을 뒤집는다.
+ *   그때 접은 이유는 ① WebGL 의존성 ② 사진이 공중에 뜨면 안 보인다는 것이었는데,
+ *   ① CSS 3D라 의존성이 0이고 ② 뜨는 것은 사진이 아니라 **봉투(편지)**다 —
+ *   사진은 hover 미리보기와 상세·타임라인에서 여전히 크게 보인다.
+ *
+ * 🔑 배치는 서버가 렌더한다(lib/scatter.ts의 결정적 해시 → 인라인 스타일).
+ *   JS가 하는 일은 궤도·줌 변수 세 개뿐이라, JS 없이도 공간과 hover 미리보기가 뜬다.
+ *
+ * 🔑 폰(<900px)은 격자를 유지한다. 한 손 30초 사용자에게 궤도는 장난감이고,
+ *   이 공간은 노트북(5분 구경)의 화면이다. 같은 데이터가 두 벌로 그려지고
+ *   미디어 쿼리가 한 벌만 보여준다.
+ */
+.space {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .flatlist {
+    display: none;
+  }
+
+  .space {
+    display: block;
+    position: relative;
+    height: max(520px, calc(100vh - 360px));
+    overflow: hidden;
+    perspective: 1100px;
+    cursor: grab;
+    touch-action: none;
+    /* 끌면 궤도지 선택이 아니다 — 드래그마다 라벨이 파랗게 칠해졌다(캡처로 확인). */
+    user-select: none;
+  }
+
+  .space:active {
+    cursor: grabbing;
+  }
+
+  .space__world,
+  .space__list {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+
+  .space__world {
+    transition: transform 0.25s ease;
+  }
+
+  .space__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /*
+   * 🔴 봉투에 커서를 대도 아무 일도 없었다. elementFromPoint로 재보니
+   *   히트가 전부 `.space__list`에 먹혔다 — 이 평면은 z=0에 있고
+   *   translateZ가 음수인 봉투는 그 **뒤**라, 3D 히트 테스트에서 평면이 이긴다.
+   *   평면(world·list·spot)은 히트에서 빼고 봉투만 받는다. 배경 드래그는
+   *   .space가 그대로 받으므로 궤도는 잃지 않는다.
+   */
+  .space__world,
+  .space__list,
+  .spot {
+    pointer-events: none;
+  }
+
+  .fenv {
+    pointer-events: auto;
+  }
+
+  .space__hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--s-3);
+    margin: 0;
+    text-align: center;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+
+  .spot {
+    position: absolute;
+    transform-style: preserve-3d;
+  }
+
+  /* hover한 봉투가 이웃 위로 올라온다. 겹침은 공간의 성질이고, 순간의 위가 있으면 된다. */
+  .spot:hover,
+  .spot:focus-within {
+    z-index: 30;
+  }
+
+  /*
+   * 봉투. 자리 변환(translate·translateZ)은 li(.spot)에 있고 여기는 기울기만 —
+   * hover 확대가 자리 변환을 덮어쓰면 봉투가 제자리로 튄다. 변환은 한 원소에 하나.
+   */
+  .fenv {
+    position: relative;
+    display: block;
+    width: 150px;
+    height: 96px;
+    background: var(--t-none-fill);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow:
+      0 2px 6px rgba(28, 26, 23, 0.1),
+      0 12px 28px rgba(28, 26, 23, 0.08);
+    transform: rotate(var(--rot, 0deg));
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    text-decoration: none;
+  }
+
+  .fenv--before { background: var(--t-before-fill); }
+  .fenv--infant { background: var(--t-infant-fill); }
+  .fenv--child  { background: var(--t-child-fill); }
+
+  .fenv:hover,
+  .fenv:focus-visible {
+    transform: rotate(0deg) scale(1.08);
+    box-shadow:
+      0 4px 10px rgba(28, 26, 23, 0.14),
+      0 18px 40px rgba(28, 26, 23, 0.14);
+  }
+
+  /* 뚜껑 — 닫힌 V. 이 화면의 봉투는 늘 닫혀 있고, 여는 것은 미리보기와 클릭이다. */
+  .fenv__flap {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 42px;
+    background: color-mix(in srgb, var(--t-none-fill) 78%, var(--ink));
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    border-radius: 6px 6px 0 0;
+  }
+
+  .fenv--before .fenv__flap { background: color-mix(in srgb, var(--t-before-fill) 82%, var(--t-before)); }
+  .fenv--infant .fenv__flap { background: color-mix(in srgb, var(--t-infant-fill) 82%, var(--t-infant)); }
+  .fenv--child  .fenv__flap { background: color-mix(in srgb, var(--t-child-fill) 82%, var(--t-child)); }
+
+  /* 봉인. 시기 색 점 하나 — 밀랍 도장의 자리에 우리 축이 앉는다. */
+  .fenv__seal {
+    position: absolute;
+    left: 50%;
+    top: 42px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--ink-soft);
+    box-shadow: 0 1px 2px rgba(28, 26, 23, 0.25);
+  }
+
+  .fenv--before .fenv__seal { background: var(--t-before); }
+  .fenv--infant .fenv__seal { background: var(--t-infant); }
+  .fenv--child  .fenv__seal { background: var(--t-child); }
+
+  .fenv__label {
+    position: absolute;
+    left: var(--s-2);
+    right: var(--s-2);
+    bottom: var(--s-2);
+    text-align: center;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 미리보기 — 사진과 첫 통. CSS :hover/:focus-visible뿐이라 JS 없이 열린다. */
+  .fenv__peek {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    width: 230px;
+    padding: var(--s-3);
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 6px 24px rgba(28, 26, 23, 0.18);
+    opacity: 0;
+    transform: translateX(-50%) scale(0.92);
+    transform-origin: bottom center;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+
+  .fenv:hover .fenv__peek,
+  .fenv:focus-visible .fenv__peek {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+
+  /* 위쪽에 뜬 봉투는 미리보기를 아래로 편다 — 위로 펴면 공간 밖으로 잘린다. */
+  .fenv--peekdown .fenv__peek {
+    bottom: auto;
+    top: calc(100% + 10px);
+    transform-origin: top center;
+  }
+
+  .fenv__peek img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 190px;
+    object-fit: contain;
+    background: var(--t-none-fill);
+    border-radius: 2px;
+  }
+
+  .fenv__quote {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: var(--s-2);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .fenv__quote--empty {
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  .fenv__more {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .space__world,
+  .fenv,
+  .fenv__peek {
+    transition: none;
+  }
+}
+
 /*
  * 시간 축과 날짜를 한 줄에 둔다. 축이 앞이다 —
  * 부모가 그 시절을 부르는 단위가 "임신 24주"이지 "2018년 9월 12일"이 아니다.
