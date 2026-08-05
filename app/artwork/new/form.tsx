@@ -251,7 +251,7 @@ export function NewArtworkForm({
         <p className="field__help" id="date-help">
           {/*
             사진 찍은 날이 아니라 만든 날이다. 벽에 붙어 있던 그림을 오늘 찍는 일이 흔하다.
-            그래서 EXIF에서 자동으로 채우지 않는다. (docs/03-feasibility.md §3-2)
+            그래서 EXIF에서 자동으로 채우지 않는다.
           */}
           오늘로 채워뒀습니다. 예전 것이면 바꿔주세요. <strong>초음파 사진처럼 몇 해 전 것도 됩니다.</strong>
           {/*

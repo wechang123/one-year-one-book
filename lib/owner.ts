@@ -14,7 +14,8 @@ import { getPrisma } from "./prisma";
  *   삼켜도 되는 이유가 있다: 이 값은 **꾸미는 값**이다. 이름이 없다고 못 하는 일이 없다.
  *   같은 처리를 데이터 조회에 하면 그건 오류를 숨기는 것이다. 여기만 그렇게 둔다.
  *
- * ⚠️ DB가 끊긴 상태를 실제로 만들어 확인해야 하는 자리다(docs/worklog).
+ * ⚠️ DB가 끊긴 상태를 실제로 만들어 확인한 자리다 — 컨테이너를 내리고 이 화면이
+ *   여전히 뜨는지 봤다.
  */
 export async function getOwnerName(): Promise<string | null> {
   try {

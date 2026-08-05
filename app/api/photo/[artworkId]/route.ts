@@ -9,7 +9,7 @@ import { getPrisma } from "@/lib/prisma";
  *
  * 🔑 왜 파일이 아니라 DB에서 읽나
  *   next start는 public/을 부팅 시점에 스캔한다. 실행 중에 쓴 파일은 재시작 전까지 404다.
- *   볼륨을 붙여도 안 고쳐진다. (docs/03-feasibility.md §2)
+ *   볼륨을 붙여도 안 고쳐진다.
  */
 export async function GET(
   _request: Request,

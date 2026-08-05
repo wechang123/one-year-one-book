@@ -31,8 +31,8 @@ import {
  *   **폰에서는 여는 동작을 안 만든다** — 사이드바가 하단 탭으로 바뀐다.
  *   접었다 펴는 햄버거는 여전히 안 만든다.
  *
- * 🔑 간격은 DESIGNNAS의 실무 스페이싱 가이드를 따랐다(docs/v2/spacing.md).
- *   탭 내부 상하 16px, 탭 사이 12px, 화면 좌우 24px.
+ * 🔑 간격에 자리 이름을 붙였다 — 탭 내부 상하 16px, 탭 사이 12px, 화면 좌우 24px.
+ *   값이 아니라 배치가 규칙이다: 같은 4px 격자 안에서 어느 자리에 어느 단계를 쓸지 고정했다.
  */
 
 type Item = { href: string; label: string; Icon: () => React.ReactElement; exact?: boolean };
