@@ -55,7 +55,7 @@ export default async function NewArtworkPage() {
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
           <ArrowLeft />
-          타임라인
+          모아보기
         </Link>
       </nav>
 

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { depthCue, rotate, sphereVec } from "@/lib/sphere";
 import { highlight } from "./highlight";
-import { SaidBy } from "../artwork/said-by";
+import { SaidBy } from "./artwork/said-by";
 
 /**
  * 편지 구(sphere) — 봉투들이 한 몸으로 도는 공간.

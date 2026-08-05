@@ -40,7 +40,7 @@ export default async function ChildPage() {
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
           <ArrowLeft />
-          타임라인
+          모아보기
         </Link>
       </nav>
 
@@ -92,7 +92,7 @@ export default async function ChildPage() {
           <h2 className="blank__title">아이 정보를 찾지 못했습니다.</h2>
           <p className="blank__body">컨테이너를 다시 시작하면 초기 데이터가 만들어집니다.</p>
           <Link href="/" className="btn">
-            타임라인
+            모아보기
           </Link>
         </div>
       )}

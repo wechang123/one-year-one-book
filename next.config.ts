@@ -18,6 +18,15 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "12mb",
     },
   },
+
+  /**
+   * 🔑 옛 주소를 죽이지 않는다. 모아보기가 /grid에서 홈(/)으로 올라오면서
+   *   문서·PR·북마크에 남은 /grid 링크가 전부 낡았다 — 주소는 약속이라
+   *   깨는 대신 새 자리로 보낸다. 쿼리(?q·?y·?m)는 리다이렉트가 그대로 들고 간다.
+   */
+  async redirects() {
+    return [{ source: "/grid", destination: "/", permanent: true }];
+  },
 };
 
 export default nextConfig;
