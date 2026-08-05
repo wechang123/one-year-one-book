@@ -2022,12 +2022,96 @@ a.recall:hover {
   color: var(--ink-soft);
 }
 
+.letter__foot {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-4);
+  margin: var(--s-2) 0 0;
+}
+
 .letter__date {
-  display: block;
-  margin-top: var(--s-2);
   font-size: 0.8125rem;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
+}
+
+/* 통마다 자기 문. 조용한 링크다 — 편지의 주인공은 본문이지 편집이 아니다. */
+.letter__edit {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.letter__edit:hover {
+  color: var(--ink);
+}
+
+/* ── 편지 더하기 — 언제나 열려 있는 문 ─────────────────── */
+.addletter {
+  margin-top: var(--gap-section);
+  border-top: 1px dashed var(--line);
+  padding-top: var(--s-4);
+}
+
+.addletter__toggle {
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.addletter__toggle:hover {
+  color: var(--ink);
+}
+
+.addletter[open] .addletter__toggle {
+  margin-bottom: var(--s-4);
+}
+
+.letterform {
+  margin: 0;
+}
+
+/* ── 편지 지우기 — 두 단계 확인 ────────────────────────── */
+.letteredit__del {
+  margin: var(--gap-section) 0 0;
+  padding-top: var(--s-4);
+  border-top: 1px dashed var(--line);
+}
+
+/* 위험을 면으로 칠하지 않는다 — 글자색 하나로 말하고, 확정 화면에서만 면이 된다. */
+.btn--danger-ghost {
+  color: #8a2a22;
+}
+
+.btn--danger {
+  background: #8a2a22;
+  border-color: #8a2a22;
+  color: #fff;
+}
+
+.delconfirm {
+  border: 1px solid #d8b5b0;
+  border-radius: var(--radius);
+  background: #faf3f1;
+  padding: var(--s-5);
+}
+
+.delconfirm__title {
+  margin: 0 0 var(--s-3);
+  font-size: 1.125rem;
+}
+
+.delconfirm__quote {
+  margin: 0 0 var(--s-3);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.delconfirm__note {
+  margin: 0 0 var(--s-4);
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
 }
 
 .detail__hint {
