@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
-import { formatMadeOn, toDateInputValue } from "@/lib/date";
+import { getNow } from "@/lib/now";
+import { formatMadeOn, toDateInputValue, todayInputValue } from "@/lib/date";
+import { LetterForm } from "./letter-form";
 import { couldHaveSpoken, describeAge, timeBand } from "@/lib/age";
 import { letterTiming } from "@/lib/letter";
 import { InlineQuoteForm } from "./inline-quote";
@@ -322,9 +324,15 @@ export default async function ArtworkDetailPage({
                       {timing ? <span className="letter__timing">{timing} 쓴 편지</span> : null}
                     </p>
                     <blockquote className="detail__quote">{letter.body}</blockquote>
-                    <time className="letter__date" dateTime={letter.writtenOn.toISOString()}>
-                      {formatMadeOn(letter.writtenOn)}
-                    </time>
+                    <p className="letter__foot">
+                      <time className="letter__date" dateTime={letter.writtenOn.toISOString()}>
+                        {formatMadeOn(letter.writtenOn)}
+                      </time>
+                      {/* 편집 단위는 통이다. 이 링크가 그 통 하나로 간다. */}
+                      <Link className="letter__edit" href={`/letter/${letter.id}/edit`}>
+                        고치기
+                      </Link>
+                    </p>
                   </li>
                 );
               })}
@@ -349,6 +357,25 @@ export default async function ArtworkDetailPage({
               </span>
             </p>
           )}
+
+          {/*
+            🔑 편지 더하기 — 언제나 열려 있다. 등록에 창 규칙이 없는 것과 같은 축이다.
+              3년 뒤에 다시 물어본 말, 오늘 문득 하고 싶은 말이 이 문으로 들어온다.
+              <details>라 JS 없이 여닫힌다. 등록 직후(?saved)에는 InlineQuoteForm이
+              이미 펼쳐져 있어서 이 문까지 열어두면 같은 문이 둘이 된다 — 그때는 접힌 채 둔다.
+          */}
+          <details className="addletter">
+            <summary className="addletter__toggle">편지 더하기</summary>
+            <LetterForm
+              mode="add"
+              artworkId={artwork.id}
+              madeOn={toDateInputValue(artwork.madeOn)}
+              birth={birth}
+              today={todayInputValue(getNow())}
+              defaultBy={couldHaveSpoken(getNow(), birth) ? "CHILD" : "PARENT"}
+              defaultWrittenOn={todayInputValue(getNow())}
+            />
+          </details>
 
           <dl className="detail__meta">
             <dt>만든 날</dt>
@@ -378,7 +405,7 @@ export default async function ArtworkDetailPage({
           <div className="detail__actions">
             <Link href={`/artwork/${artwork.id}/edit`} className="btn btn--ghost">
               <SquarePen />
-              {artwork.letters.length > 0 ? "설명 고치기" : "말 채우기"}
+              만든 날 고치기
             </Link>
           </div>
         </div>

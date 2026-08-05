@@ -5,22 +5,24 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { describeAge, type Birth } from "@/lib/age";
 import { parseDateInputValue } from "@/lib/date";
-import { QuoteField } from "../../quote-field";
 import { updateArtwork, type EditArtworkState } from "./actions";
 
 const INITIAL: EditArtworkState = {};
 
+/**
+ * 만든 날 폼.
+ *
+ * 🔴 여기 아이 말 칸(QuoteField)이 있었다. 편지가 통별 편집(/letter/[id]/edit)을
+ *   갖게 되면서 걷었다 — 같은 편지를 고치는 경로가 둘이면 갈라진다.
+ *   이 폼에 남은 것은 작품 자신의 값, 만든 날 하나다.
+ */
 export function EditArtworkForm({
   id,
-  childQuote,
-  quoteBy,
   madeOn,
   today,
   birth,
 }: {
   id: string;
-  childQuote: string;
-  quoteBy: "CHILD" | "PARENT";
   /** "2026-07-19" */
   madeOn: string;
   today: string;
@@ -33,7 +35,6 @@ export function EditArtworkForm({
     if (state.field === "madeOn") dateRef.current?.focus();
   }, [state]);
 
-  // 등록 폼과 같은 이유다 — 날짜가 말의 주인과 시간 축을 같이 정한다.
   const [madeOnValue, setMadeOnValue] = useState(state.values?.madeOn || madeOn);
   useEffect(() => {
     if (state.values?.madeOn) setMadeOnValue(state.values.madeOn);
@@ -52,7 +53,6 @@ export function EditArtworkForm({
         </p>
       ) : null}
 
-      {/* 등록 폼과 순서를 맞춘다. 날짜가 이 자리에 무엇을 적어야 하는지를 정한다. */}
       <div className="field">
         <label className="field__label" htmlFor="madeOn">
           만든 날
@@ -72,9 +72,9 @@ export function EditArtworkForm({
           {/*
             숨은 결과를 미리 말해준다. 수록작은 madeOn의 연도로 계산하므로
             (schema.prisma의 Collection) 연도를 고치면 담기는 책이 바뀐다.
-            화면이 말하지 않으면 나중에 책을 만들 때 왜 빠졌는지 알 수 없다.
+            그리고 그때 받은 말(쓴 날 = 만든 날인 편지)의 쓴 날도 같이 움직인다.
           */}
-          연도를 바꾸면 담기는 책이 바뀝니다. 책은 한 해에 한 권입니다.
+          연도를 바꾸면 담기는 책이 바뀝니다. 그때 받은 편지의 쓴 날도 함께 움직입니다.
           {when && when.scale !== "none" ? (
             <>
               <br />
@@ -83,13 +83,6 @@ export function EditArtworkForm({
           ) : null}
         </p>
       </div>
-
-      <QuoteField
-        birth={birth}
-        madeOn={madeOnDate}
-        defaultQuote={state.values?.childQuote ?? childQuote}
-        defaultQuoteBy={state.values?.quoteBy ?? quoteBy}
-      />
 
       <div className="form__actions">
         <SubmitButton />

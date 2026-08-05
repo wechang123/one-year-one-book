@@ -2,21 +2,21 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateArtwork, type EditArtworkState } from "./edit/actions";
+import { addLetter, type LetterState } from "./letter-actions";
 
-const INITIAL: EditArtworkState = {};
+const INITIAL: LetterState = {};
 
 /**
  * 등록 직후, 말이 비어 있을 때만 나오는 인라인 입력.
  *
  * 🔑 왜 여기에 입력칸을 두나
  *   말은 **그 자리에서 안 물어보면 영영 얻을 수 없다.** 등록 직후는 아이가 아직 옆에 있는
- *   유일한 순간이고, 편집 화면까지 두 번 더 눌러야 한다면 그 순간이 지나간다.
+ *   유일한 순간이고, 편지 더하기까지 한 번 더 눌러야 한다면 그 순간이 지나간다.
  *
- * 🔑 새 액션을 만들지 않는다
- *   updateArtwork를 그대로 쓴다. 검증·오류 처리·입력 보존이 이미 거기 있고,
- *   같은 일을 하는 경로가 둘이면 한쪽만 고쳤을 때 갈라진다.
- *   madeOn을 숨은 값으로 같이 보내는 이유도 그것이다 — 액션의 계약을 바꾸지 않는다.
+ * 🔴 전에는 updateArtwork로 작품의 말 컬럼을 덮어썼다. 지금은 **첫 편지를 만든다** —
+ *   같은 폼이 같은 자리에서 같은 일을 하지만, 이제 나중에 온 말을 덮어쓰지 않는다.
+ *   쓴 날을 만든 날로 고정해 보내는 것이 이 폼의 정체다: 여기서 받는 말은
+ *   "그때의 말"이고, 오늘 쓴 편지는 아래 [편지 더하기]가 받는다.
  *
  * 🔑 이 폼이 화면에서 갖는 무게
  *   "지금 적기"와 "그대로 두셔도 됩니다"를 **같은 크기**로 뒀다.
@@ -32,20 +32,20 @@ export function InlineQuoteForm({
   madeOn: string;
   /**
    * 🔑 여기서는 **고르게 하지 않는다.** 이 폼은 등록 직후 한 칸짜리다.
-   *   말의 주인은 방금 등록 화면에서 정해졌고, 그때 고른 값을 그대로 이어받는다.
-   *   바꾸려면 편집 화면으로 가면 된다 — 여기서 라디오까지 띄우면
+   *   말의 주인은 시기가 제안하고(태어나기 전이면 서버가 부모로 확정한다),
+   *   바꾸려면 저장 뒤 편지의 [고치기]로 가면 된다 — 여기서 라디오까지 띄우면
    *   "지금 한 줄만 적으면 된다"는 이 자리의 성질이 무너진다.
    */
   quoteBy: "CHILD" | "PARENT";
 }) {
-  const [state, formAction] = useActionState(updateArtwork, INITIAL);
+  const [state, formAction] = useActionState(addLetter, INITIAL);
 
   return (
     <form action={formAction} className="inlinequote" noValidate>
-      <input type="hidden" name="id" value={id} />
-      {/* 날짜는 바꾸지 않는다. 액션이 요구하는 값이라 그대로 되돌려 보낸다. */}
-      <input type="hidden" name="madeOn" value={madeOn} />
-      <input type="hidden" name="quoteBy" value={quoteBy} />
+      <input type="hidden" name="artworkId" value={id} />
+      {/* 그때의 말이다 — 쓴 날이 곧 만든 날. 오늘 쓴 편지는 [편지 더하기]가 받는다. */}
+      <input type="hidden" name="writtenOn" value={madeOn} />
+      <input type="hidden" name="writtenBy" value={quoteBy} />
 
       {state.error ? (
         <p className="form__error" role="alert">
@@ -58,10 +58,10 @@ export function InlineQuoteForm({
       </label>
       <textarea
         id="inline-quote"
-        name="childQuote"
+        name="body"
         rows={2}
         className="field__input"
-        defaultValue={state.values?.childQuote ?? ""}
+        defaultValue={state.values?.body ?? ""}
         placeholder={
           quoteBy === "CHILD"
             ? "아이가 한 말을 그대로 적어주세요"
