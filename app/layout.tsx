@@ -22,7 +22,7 @@ const DESCRIPTION =
   "아이가 남긴 것을 그때의 말과 함께 받아두고, 한 해가 지나면 한 권으로 묶습니다. 그래서 실물을 마음 편히 정리할 수 있게 합니다.";
 
 export const metadata: Metadata = {
-  title: "한 해, 한 권",
+  title: "한 장, 한 마디",
   description: DESCRIPTION,
   /*
    * 🔑 `openGraph`에 이미지도 URL도 넣지 않았다.
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    siteName: "한 해, 한 권",
-    title: "한 해, 한 권",
+    siteName: "한 장, 한 마디",
+    title: "한 장, 한 마디",
     description: DESCRIPTION,
   },
 };
