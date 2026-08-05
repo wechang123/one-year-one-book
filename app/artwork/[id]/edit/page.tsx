@@ -7,12 +7,12 @@ import { EditArtworkForm } from "./form";
 import { ArrowLeft } from "../../../icons";
 
 /**
- * 설명 편집.
+ * 작품 편집 — 만든 날.
  *
- * 🔑 여기서 고칠 수 있는 것은 아이 말과 만든 날뿐이다.
- *   등록이 30초 안에 끝나야 해서 아이 말은 비운 채로도 저장된다. 나중에 물어본 말을
- *   채우는 것과 날짜 오타를 고치는 것 — 이 둘이 실제로 나중에 바뀌는 값이다.
- *   사진은 아니다. 그 판단의 근거와 파급은 ./actions.ts 머리말에 적었다.
+ * 🔑 여기서 고칠 수 있는 것은 만든 날뿐이다.
+ *   사진은 원래 못 바꾼다(그 근거와 파급은 ./actions.ts 머리말에).
+ *   말은 편지가 되면서 통별 편집(/letter/[id]/edit)으로 나갔다 —
+ *   같은 편지를 고치는 경로가 둘이면 갈라진다.
  */
 export const dynamic = "force-dynamic";
 
@@ -27,23 +27,11 @@ export default async function EditArtworkPage({
   const artwork = await prisma.artwork.findUnique({
     where: { id },
     // 여기서도 사진 바이트는 안 읽는다. 썸네일은 <img>가 따로 받아온다.
-    select: {
-      id: true,
-      madeOn: true,
-      /**
-       * 🔑 이 폼의 칸 하나가 상대하는 것은 **첫 통(그때의 말)**이다. (./actions.ts)
-       *   둘째 통부터는 상세 화면의 편지 목록이 통별로 다룬다.
-       */
-      letters: {
-        orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
-        take: 1,
-        select: { body: true, writtenBy: true },
-      },
-    },
+    // 편지는 안 읽는다 — 말은 통별 편집(/letter/[id]/edit)의 몫이다.
+    select: { id: true, madeOn: true },
   });
 
   if (!artwork) notFound();
-  const first = artwork.letters[0] ?? null;
 
   const profile = await prisma.profile.findFirst({
     orderBy: { createdAt: "asc" },
@@ -60,7 +48,7 @@ export default async function EditArtworkPage({
       </nav>
 
       <header className="form__head">
-        <h1 className="form__title">설명 고치기</h1>
+        <h1 className="form__title">만든 날 고치기</h1>
       </header>
 
       {/*
@@ -76,8 +64,6 @@ export default async function EditArtworkPage({
 
       <EditArtworkForm
         id={artwork.id}
-        childQuote={first?.body ?? ""}
-        quoteBy={first?.writtenBy ?? "CHILD"}
         madeOn={toDateInputValue(artwork.madeOn)}
         today={todayInputValue(getNow())}
         birth={{ dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null }}
