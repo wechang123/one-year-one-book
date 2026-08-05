@@ -66,7 +66,7 @@ export default async function OrderDetailPage({
       </nav>
 
       <header className="form__head">
-        <p className="masthead__meta">주문번호 {order.orderNo}</p>
+        <p className="masthead__meta meta--label">주문번호 {order.orderNo}</p>
         <h1 className="form__title">{order.collection.title}</h1>
         <p className="form__lede">{order.collection.year}년 · 한 해가 한 권</p>
       </header>

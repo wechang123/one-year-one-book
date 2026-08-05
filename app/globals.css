@@ -100,6 +100,13 @@
   /* 사이드바 폭. 본문 여백 계산이 이 값을 참조한다. */
   --side-w: 15rem;
 
+  /*
+   * 이름을 부르는 활자. 본문(`--font-sans`)과 갈라 쓴다 — 왜인지는 app/layout.tsx에 있다.
+   * 대체 글꼴을 여기 적어두는 이유: 200KB가 오기 전에도 **세리프로는 보여야** 한다.
+   * `swap`이라 그 사이 몇 백 ms 동안 이 목록이 실제로 화면에 뜬다.
+   */
+  --serif: var(--font-serif), "Apple SD Gothic Neo", "Batang", "Nanum Myeongjo", serif;
+
   --radius: 12px;
   --page-max: 1400px;
 }
@@ -123,6 +130,16 @@ body {
   line-height: 1.6;
   /* 폰에서 가로로 밀리는 것을 원천 차단한다. 한 손으로 쓰는 화면이다. */
   overflow-wrap: break-word;
+  /*
+   * 🔑 종이 그레인. 화면 전체에 아주 옅게 깐다.
+   *   시드 이미지가 이미 종이에 그레인을 굽고 있고(scripts/seed-images.mjs의 grain()),
+   *   카드 그림자가 "책상 위에 놓였다"고 말한다. **바탕이 종이가 아니면 그 둘이 붕 뜬다.**
+   *
+   * ⛔ 그라데이션이 아니다. `feTurbulence`가 만드는 것은 **잡음**이고,
+   *   이 저장소가 금지한 것은 *"장식으로 쓰는 색의 번짐"*이다.
+   * 🔑 SVG를 데이터 URI로 인라인한다 — 외부 호출 0, 파일 0개.
+   */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
   /*
    * 🔑 마지막 줄에 낱말 하나만 남는 것을 막는다.
    *   카드 말이 `…밥 먹으래서 못` / `그린 거야.`처럼 끊기고 있었다.
@@ -2354,4 +2371,110 @@ a.recall:hover {
 
 .tl__end-btn {
   margin-left: var(--s-7);
+}
+
+/* ═══════════════════ v3 — 이름을 부르는 활자 ═══════════════════
+ *
+ * 참고: typo.love. 무엇을 가져오고 무엇을 안 가져왔는지는 docs/decisions/15-v3.md.
+ *
+ * 🔑 규칙 하나: **이름은 명조, 읽는 글은 산세리프.**
+ *   `타임라인` · `2026년` · `하늘의 2020년`은 콘텐츠에 붙는 **이름**이고,
+ *   아이 말과 날짜는 **읽는 글**이다. v1·v2는 그 구별을 굵기와 크기로만 했는데,
+ *   그건 같은 목소리를 크게 낸 것이지 다른 목소리가 아니다.
+ */
+
+.masthead__title,
+.form__title,
+.blank__title,
+.span__year,
+.books__year,
+.tl__mark-title,
+.tl__today-label,
+.cal__title,
+.side__brand {
+  font-family: var(--serif);
+  /* 명조는 굵기가 하나뿐이다. 무게를 흉내 내면 획이 뭉개진다 — 크기와 자간이 대신한다. */
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * 명조로 바뀌면 같은 px에서 작아 보인다. 세로 획이 가늘고 글자 속공간이 넓어서다.
+ * 표제만 한 단계 올린다 — 재보고 맞춘 값이다.
+ */
+.masthead__title {
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+@media (min-width: 700px) {
+  .masthead__title {
+    font-size: 2.125rem;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ── 대괄호 마이크로 라벨 ────────────────────────────────
+ *
+ * typo.love의 `[ INFO ]`. 영문은 대문자가 그 일을 하는데 **한글은 대문자가 없어서**
+ * 자간과 크기, 그리고 대괄호가 대신한다.
+ *
+ * 🔑 대괄호를 글자로 안 쓰고 `::before`/`::after`로 넣는다.
+ *   마크업의 문장은 `2018년부터 12점`이고 괄호는 **생김새**다.
+ *   글자로 박으면 스크린리더가 `대괄호 이천십팔년…`을 읽는다.
+ */
+/*
+ * 🔴 여기 `.books__h`가 같이 적혀 있었다. 그 마크업은 v2에서 지웠는데
+ *   (책 화면의 머리말이 같은 말을 두 번 하고 있었다) **선택자 목록에는 남아 있었다.**
+ *   목록 안에 섞인 죽은 선택자는 파일을 훑어서는 안 보인다.
+ */
+.masthead__meta,
+.tally,
+.cal__note-title {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+/*
+ * 🔴 처음에 `.masthead__meta`와 `.tally` 전부에 괄호를 씌웠다가 좁혔다.
+ *   화면에 이런 줄이 떴다 — `[ 하늘의 기록 · 임신 14주 5일부터 만 7세 4개월까지 12점 ]`.
+ *   **typo.love의 `[ INFO ]`는 이름표지 문장이 아니다.** 문장을 괄호로 묶으면
+ *   그건 마이크로 라벨이 아니라 그냥 괄호 친 문장이다.
+ *
+ * 🔑 규칙: **대괄호는 이름표에만.** 문장은 작은 크기와 자간까지만 가져간다.
+ */
+.meta--label::before {
+  content: "[";
+  margin-right: var(--s-2);
+  opacity: 0.55;
+}
+
+.meta--label::after {
+  content: "]";
+  margin-left: var(--s-2);
+  opacity: 0.55;
+}
+
+/* ── 크롬을 더 조용하게 ─────────────────────────────────
+ *
+ * 🔴 사이드바의 현재 화면 표시가 **배경을 채운 알약**이었다.
+ *   typo.love는 크롬이 귀퉁이의 마이크로 라벨뿐이다. 우리는 화면이 다섯이라
+ *   메뉴를 없앨 수 없지만, **채운 면을 걷고 선 하나로** 바꿀 수는 있다.
+ *   면은 시선을 끌고 선은 자리를 알린다.
+ */
+@media (min-width: 900px) {
+  .side__link[aria-current="page"],
+  .side__child[aria-current="page"] {
+    background: transparent;
+    box-shadow: inset 2px 0 0 var(--accent);
+    border-radius: 0;
+  }
+
+  .side__link:hover,
+  .side__child:hover {
+    background: transparent;
+    color: var(--ink);
+  }
 }

@@ -18,20 +18,52 @@
  *   원본을 같이 커밋하지 않은 이유: 2,009KB를 저장소에 두고 **한 번도 서빙하지 않는다.**
  *   대신 버전을 URL에 박아서(v1.3.9) 언제 돌려도 같은 입력이 들어오게 했다.
  *
- * 🔑 SIL OFL 1.1 — 자유롭게 서브셋·재배포할 수 있다. 다만 라이선스 전문을 같이 실어야 하고
- *   예약 글꼴 이름(Pretendard)을 바꾸지 않아야 한다. 전문은 `licenses/pretendard-OFL.txt`.
+ * 🔑 둘 다 SIL OFL 1.1이다 — 자유롭게 서브셋·재배포할 수 있고, 라이선스 전문을 같이 실어야 하며
+ *   예약 글꼴 이름을 바꾸지 않아야 한다.
+ *   전문: `licenses/pretendard-OFL.txt` · `licenses/gowun-batang-OFL.txt`
  */
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import subsetFont from "subset-font";
 
-/** 원본을 버전으로 고정한다. `main`을 쓰면 돌릴 때마다 다른 것이 들어올 수 있다. */
-const SOURCE =
-  "https://raw.githubusercontent.com/orioncactus/pretendard/v1.3.9" +
-  "/packages/pretendard/dist/web/variable/woff2/PretendardVariable.woff2";
-
-const OUT = path.join(process.cwd(), "app/fonts/pretendard-subset.woff2");
+/**
+ * 자를 글꼴 둘.
+ *
+ * 🔑 **본문은 산세리프, 표제는 명조다.** 둘을 섞는 이유는 v3의 전부다 —
+ *   화면이 *"읽는 곳"*과 *"부르는 곳"*으로 갈린다. 아이 말과 날짜는 읽는 글이고,
+ *   `타임라인`·`2026년`·`하늘의 2020년`은 그 글에 붙는 이름이다.
+ *   이름이 본문과 같은 활자면 이름 노릇을 못 한다.
+ *
+ * 🔴 원본을 버전/커밋으로 고정한다. `main`을 쓰면 돌릴 때마다 다른 것이 들어온다.
+ */
+const FONTS = [
+  {
+    name: "Pretendard",
+    role: "본문",
+    url:
+      "https://raw.githubusercontent.com/orioncactus/pretendard/v1.3.9" +
+      "/packages/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+    out: "app/fonts/pretendard-subset.woff2",
+    // 가변 글꼴이라 축을 좁힌다. 이 앱이 쓰는 굵기가 400·500·600·700이다.
+    variationAxes: { wght: { min: 400, max: 700 } },
+  },
+  {
+    name: "Gowun Batang",
+    role: "표제",
+    /*
+     * 🔑 명조 후보 둘을 재고 골랐다 — Gowun Batang **194KB** / Nanum Myeongjo 327KB.
+     *   작은 쪽이 마침 typo.love의 부드러운 세리프에 더 가깝다.
+     * 🔑 굵기가 하나(Regular)다. 표제에만 쓰고 강조는 크기와 색이 하므로
+     *   Bold를 같이 실을 이유가 없다 — 실으면 194KB가 두 배가 된다.
+     */
+    url:
+      "https://raw.githubusercontent.com/google/fonts/main" +
+      "/ofl/gowunbatang/GowunBatang-Regular.ttf",
+    out: "app/fonts/gowun-subset.woff2",
+    variationAxes: undefined,
+  },
+];
 
 /** 라틴·숫자·기본 문장부호. 날짜와 주문번호가 여기서 나온다. */
 const ASCII = Array.from({ length: 0x7e - 0x20 + 1 }, (_, i) => String.fromCharCode(0x20 + i)).join("");
@@ -69,42 +101,36 @@ function ksx1001Hangul() {
   return out.join("");
 }
 
-/**
- * 🔑 가변축을 400~700으로 좁힌다. **이 앱이 쓰는 굵기가 그 넷뿐**이기 때문이다
- *   (`globals.css` 전수: 400·500·600·700). 축 전체(45~920)를 들고 오면 309KB가 438KB가 된다.
- *   쓰지 않는 굵기를 위해 129KB를 얹지 않는다.
- */
-const WEIGHT_RANGE = { min: 400, max: 700 };
-
 const hangul = ksx1001Hangul();
 if (hangul.length !== 2350) {
   throw new Error(`KS X 1001 음절이 2350자가 아니라 ${hangul.length}자다. 구역 계산을 다시 봐라.`);
 }
 
-console.log(`원본 내려받는 중 …\n  ${SOURCE}`);
-const response = await fetch(SOURCE);
-if (!response.ok) throw new Error(`원본을 받지 못했다: HTTP ${response.status}`);
-const source = Buffer.from(await response.arrayBuffer());
-
 const text = ASCII + PUNCT + JAMO + hangul;
-const subset = await subsetFont(source, text, {
-  targetFormat: "woff2",
-  variationAxes: { wght: WEIGHT_RANGE },
-});
-
-await mkdir(path.dirname(OUT), { recursive: true });
-await writeFile(OUT, subset);
-
 const kb = (n) => `${Math.round(n / 1024)}KB`;
-console.log(`
-글자 수      ASCII ${ASCII.length} · 약물 ${PUNCT.length} · 낱자 ${JAMO.length} · 한글 ${hangul.length}
-굵기 축      ${WEIGHT_RANGE.min}~${WEIGHT_RANGE.max}
-원본         ${kb(source.length)}
-서브셋       ${kb(subset.length)}   (원본의 ${Math.round((subset.length / source.length) * 100)}%)
-→ ${path.relative(process.cwd(), OUT)}`);
+console.log(`글자 수  ASCII ${ASCII.length} · 약물 ${PUNCT.length} · 낱자 ${JAMO.length} · 한글 ${hangul.length}\n`);
+
+for (const font of FONTS) {
+  console.log(`${font.name} (${font.role}) 내려받는 중 …`);
+  const response = await fetch(font.url);
+  if (!response.ok) throw new Error(`${font.name}을 받지 못했다: HTTP ${response.status}`);
+  const source = Buffer.from(await response.arrayBuffer());
+
+  const subset = await subsetFont(source, text, {
+    targetFormat: "woff2",
+    ...(font.variationAxes ? { variationAxes: font.variationAxes } : {}),
+  });
+
+  const out = path.join(process.cwd(), font.out);
+  await mkdir(path.dirname(out), { recursive: true });
+  await writeFile(out, subset);
+
+  const pct = Math.round((subset.length / source.length) * 100);
+  console.log(`  원본 ${kb(source.length)} → 서브셋 ${kb(subset.length)} (${pct}%)  → ${font.out}\n`);
+}
 
 /**
  * 🔑 결과 크기를 여기서 못 박지 않는다. 원본이 바뀌면 값도 바뀌는데,
  *   스크립트에 숫자를 박아두면 **그 숫자가 언제 잰 것인지 알 수 없게 된다.**
- *   README에 적힌 309KB는 v1.3.9를 이 설정으로 돌려 나온 값이다.
+ *   README에 적힌 309KB·194KB는 이 설정으로 돌려 나온 값이다.
  */

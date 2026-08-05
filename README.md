@@ -669,11 +669,26 @@ ISC가 저작권·허가 고지를 모든 사본에 남길 것을 요구합니�
 > 🔑 **이 판정은 지금도 유효합니다.** 뒤집힌 것은 *"패키지를 깔지 말자"*이지
 > *"라이선스 전문을 읽은 것만 쓴다"*가 아닙니다. `lucide-react`도 ISC입니다.
 
-### 웹폰트 — 저장소 안의 코드가 잘라낸 309KB
+### 웹폰트 — 저장소 안의 코드가 잘라낸 두 벌, 508KB
 
-[Pretendard](https://github.com/orioncactus/pretendard)(SIL OFL)를 자체 호스팅합니다.
+**본문은 [Pretendard](https://github.com/orioncactus/pretendard), 표제는
+[Gowun Batang](https://github.com/yangheeryu/Gowun-Batang)**(둘 다 SIL OFL)을 자체 호스팅합니다.
 자르는 코드는 [`scripts/subset-font.mjs`](./scripts/subset-font.mjs), 라이선스 전문은
-[`licenses/pretendard-OFL.txt`](./licenses/pretendard-OFL.txt)에 있습니다.
+[`licenses/pretendard-OFL.txt`](./licenses/pretendard-OFL.txt) ·
+[`licenses/gowun-batang-OFL.txt`](./licenses/gowun-batang-OFL.txt)에 있습니다.
+
+| | 원본 | 서브셋 |
+|---|---|---|
+| Pretendard (본문) | 2,009KB | **309KB** |
+| Gowun Batang (표제) | 8,236KB | **200KB** |
+
+> 🔑 **왜 두 벌인가.** 화면이 *"읽는 곳"*과 *"부르는 곳"*으로 갈립니다.
+> 아이 말과 날짜는 읽는 글이고, `타임라인`·`2026년`·`하늘의 2020년`은 그 글에 붙는 **이름**입니다.
+> v1·v2는 그 구별을 **굵기와 크기로만** 했는데, 그건 같은 목소리를 크게 낸 것이지 다른 목소리가 아닙니다.
+> 명조는 **굵기가 하나(Regular)뿐**입니다 — 표제에만 쓰고 강조는 크기와 색이 하므로
+> Bold를 같이 실으면 200KB가 두 배가 됩니다.
+
+전말: [`docs/decisions/15-v3.md`](./docs/decisions/15-v3.md)
 
 ```
 원본 PretendardVariable.woff2                        2,009KB
