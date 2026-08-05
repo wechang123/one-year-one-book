@@ -27,7 +27,7 @@ export default function NotFound() {
           <strong>남기신 기록은 목록에 그대로 있습니다.</strong>
         </p>
         <Link href="/" className="btn">
-          타임라인
+          모아보기
         </Link>
       </div>
     </div>

@@ -36,13 +36,15 @@ type Item = { href: string; label: string; Icon: () => React.ReactElement; exact
 
 /**
  * 🔑 다섯 칸의 순서가 곧 이 서비스의 주장이다.
- *   **시간축이 첫째다** — 이 앱이 다루는 것이 8~9년이고, 그 8~9년을 한 줄로 보는 것이
- *   나머지 셋(달력·격자·말)이 잘라 보는 것보다 앞선다.
+ *
+ * 🔴 첫째가 타임라인이었다(v2 — "시간축이 첫째다"). **모아보기가 홈이 되면서 바뀌었다**:
+ *   편지 구가 이 서비스의 얼굴이 됐고, 얼굴과 첫 칸이 다르면 "지금 어디인가"가
+ *   켜자마자 어긋난다. 시간축 주장은 죽지 않았다 — 타임라인이 둘째 칸에서 그 일을 한다.
  */
 const NAV: Item[] = [
-  { href: "/", label: "타임라인", Icon: Milestone, exact: true },
+  { href: "/", label: "모아보기", Icon: LayoutGrid, exact: true },
+  { href: "/timeline", label: "타임라인", Icon: Milestone },
   { href: "/calendar", label: "캘린더", Icon: CalendarDays },
-  { href: "/grid", label: "모아보기", Icon: LayoutGrid },
   { href: "/recall", label: "되짚어보기", Icon: SpeechQuote },
   { href: "/books", label: "책", Icon: BookOpen },
 ];

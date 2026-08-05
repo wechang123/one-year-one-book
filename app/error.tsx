@@ -61,7 +61,7 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
             {pending ? "다시 불러오는 중…" : "다시 시도"}
           </button>
           <Link href="/" className="btn btn--ghost">
-            타임라인
+            모아보기
           </Link>
         </div>
       </div>

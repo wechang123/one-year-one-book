@@ -62,7 +62,7 @@ export default async function OrdersPage() {
       <nav className="detail__nav">
         <Link href="/" className="btn btn--ghost">
           <ArrowLeft />
-          타임라인
+          모아보기
         </Link>
       </nav>
 
@@ -85,7 +85,8 @@ export default async function OrdersPage() {
           <p className="blank__body">
             한 해에 남긴 것을 <strong>책으로 묶으면</strong> 그 책을 주문할 수 있습니다.
           </p>
-          <Link href="/" className="btn">
+          {/* 🔴 "/"를 가리키고 있었다 — 책 줄이 홈에 있던 v1의 잔재다. 묶는 자리는 /books다. */}
+          <Link href="/books" className="btn">
             <BookPlus />
             책 묶으러 가기
           </Link>
