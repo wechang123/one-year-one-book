@@ -2128,16 +2128,7 @@ a.recall:hover {
   font-style: italic;
 }
 
-.tl__end {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--gap-action);
-  margin: var(--gap-section) 0 0;
-  padding-left: var(--s-7);
-  font-size: 0.875rem;
-  color: var(--ink-soft);
-}
+/* 🔴 `.tl__end` 한 줄이 있던 자리. 꼬리(`.tl__tail`)가 대신한다. */
 
 @media (min-width: 700px) {
   .tl__row {
@@ -2287,4 +2278,80 @@ a.recall:hover {
   .cal__window { font-size: 0; padding: 0; height: 4px; margin-top: 3px; }
   .cal__mark-text { display: none; }
   .cal__marks { flex-direction: row; flex-wrap: wrap; }
+}
+
+/* ── 타임라인 꼬리 — 마지막 기록에서 오늘까지 ──────────── */
+
+.tl__tail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-title);
+  align-items: flex-start;
+  padding-top: var(--gap-section);
+}
+
+/*
+ * 🔑 이 구간만 축이 점선이다. 실선이면 기록이 이어진 것처럼 읽히고,
+ *   없으면 축이 마지막 기록에서 끝난 것처럼 읽힌다. 점선은 "비어 있다"만 말한다.
+ *   위쪽 `.tl::before`가 여기까지 안 오므로 이 조각을 따로 그린다.
+ */
+.tl__tail::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  height: calc(100% - 3.5rem);
+  border-left: 2px dashed var(--line);
+}
+
+.tl__gap {
+  margin: 0;
+  padding-left: var(--s-7);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.tl__gap strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 오늘. 축의 마지막 점이다 — 기록이 아니라 지금 서 있는 자리다. */
+.tl__today {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-title);
+  margin: 0;
+  padding-left: 0;
+}
+
+.tl__today .tl__dot {
+  /* 기록의 점보다 크다. 이 점만 "지금"이라서다. */
+  width: 12px;
+  height: 12px;
+  margin: 0 0 0 2px;
+  background: var(--ink-soft);
+  align-self: center;
+}
+
+.tl__today--before .tl__dot { background: var(--t-before); }
+.tl__today--infant .tl__dot { background: var(--t-infant); }
+.tl__today--child  .tl__dot { background: var(--t-child); }
+
+.tl__today-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--s-3);
+}
+
+.tl__today-label {
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.tl__end-btn {
+  margin-left: var(--s-7);
 }
