@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { describeAge, timeBand } from "@/lib/age";
+import { letterTiming } from "@/lib/letter";
 import { ArrowLeft } from "../../icons";
 
 /**
@@ -32,10 +33,12 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
     select: {
       id: true,
       profileId: true,
-      childQuote: true,
-      quoteBy: true,
       madeOn: true,
       createdAt: true,
+      letters: {
+        orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+        select: { id: true, body: true, writtenBy: true, writtenOn: true },
+      },
       photo: { select: { width: true, height: true } },
       profile: { select: { dueOn: true, bornOn: true } },
     },
@@ -58,7 +61,8 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
 
   const { width, height } = artwork.photo ?? {};
   const when = describeAge(artwork.madeOn, artwork.profile);
-  const child = artwork.quoteBy === "CHILD";
+  // 여닫는 문구는 첫 통(그때의 말)의 주인을 따른다. 통이 여럿이면 펴봐야 다 나온다.
+  const child = artwork.letters[0]?.writtenBy === "CHILD";
 
   return (
     <div className="page page--narrow">
@@ -89,12 +93,20 @@ export default async function RecallOnePage({ params }: { params: Promise<{ id: 
         <time dateTime={artwork.madeOn.toISOString()}>{formatMadeOn(artwork.madeOn)}</time>
       </p>
 
-      {artwork.childQuote ? (
+      {artwork.letters.length > 0 ? (
         <details className="recallone__said">
           <summary className="recallone__toggle">
             그때 뭐라고 {child ? "했는지" : "적었는지"} 보기
           </summary>
-          <blockquote className="recallone__quote">{artwork.childQuote}</blockquote>
+          {artwork.letters.map((letter) => {
+            const timing = letterTiming(artwork.madeOn, letter.writtenOn);
+            return (
+              <blockquote className="recallone__quote" key={letter.id}>
+                {timing ? <span className="letter__timing">{timing} 쓴 편지</span> : null}
+                {letter.body}
+              </blockquote>
+            );
+          })}
         </details>
       ) : (
         /*

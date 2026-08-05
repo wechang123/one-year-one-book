@@ -2,7 +2,8 @@ import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { getNow } from "@/lib/now";
-import { describeAge, describeGap, timeBand, type TimeBand } from "@/lib/age";
+import { couldHaveSpoken, describeAge, describeGap, timeBand, type TimeBand } from "@/lib/age";
+import { letterTiming } from "@/lib/letter";
 import { SaidBy, emptyQuoteText } from "./artwork/said-by";
 import { Camera } from "./icons";
 import { DemoResetButton } from "./demo/reset-button";
@@ -55,9 +56,15 @@ export default async function TimelinePage() {
     */
     select: {
       id: true,
-      childQuote: true,
-      quoteBy: true,
       madeOn: true,
+      /**
+       * 🔑 편지는 쓴 날 순이다(lib/letter.ts). 타임라인은 읽는 화면이라
+       *   한 점에 도착한 편지들도 도착한 순서로 읽혀야 한다.
+       */
+      letters: {
+        orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+        select: { id: true, body: true, writtenBy: true, writtenOn: true },
+      },
       photo: { select: { width: true, height: true } },
     },
   });
@@ -193,14 +200,33 @@ export default async function TimelinePage() {
                                     <img src={`/api/photo/${row.id}`} alt="" loading="lazy" decoding="async" />
                 </span>
 
-                {row.childQuote ? (
-                  <span className="tl__quote">
-                    <SaidBy by={row.quoteBy} />
-                    {row.childQuote}
+                {row.letters.length > 0 ? (
+                  <span className="tl__letters">
+                    {row.letters.map((letter) => {
+                      /*
+                        🔑 나중에 도착한 편지에만 간격이 붙는다 — "7년 뒤에 쓴 편지".
+                          그때 받은 말(쓴 날 = 만든 날)에는 아무 표식도 없다.
+                          지금까지의 모든 말이 그랬으므로, 표식은 간격이 생겼을 때만 정보다.
+                      */
+                      const timing = letterTiming(row.madeOn, letter.writtenOn);
+                      return (
+                        <span key={letter.id} className="tl__quote">
+                          {timing ? <span className="letter__timing">{timing} 쓴 편지</span> : null}
+                          <SaidBy by={letter.writtenBy} />
+                          {letter.body}
+                        </span>
+                      );
+                    })}
                   </span>
                 ) : (
+                  /*
+                    🔑 빈 문구의 말투는 이제 저장값이 아니라 시기에서 나온다.
+                      quoteBy 컬럼이 있던 때는 그 값으로 "안 물어봤어요/안 적었어요"를 갈랐는데,
+                      편지가 0통이면 물어볼 값 자체가 없다. 앱이 실제로 아는 사실 —
+                      **그때 말을 할 수 있었는가** — 로 가른다. 저장값보다 정직하다.
+                  */
                   <span className="tl__quote tl__quote--empty">
-                    {emptyQuoteText(row.quoteBy)}
+                    {emptyQuoteText(couldHaveSpoken(row.madeOn, birth) ? "CHILD" : "PARENT")}
                   </span>
                 )}
               </Link>

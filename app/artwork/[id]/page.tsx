@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn, toDateInputValue } from "@/lib/date";
-import { describeAge, timeBand } from "@/lib/age";
-import { settleQuoteBy } from "@/lib/speaker";
+import { couldHaveSpoken, describeAge, timeBand } from "@/lib/age";
+import { letterTiming } from "@/lib/letter";
 import { InlineQuoteForm } from "./inline-quote";
 import { SaidBy, emptyQuoteText } from "../said-by";
 import { ArrowLeft, SquarePen } from "../../icons";
@@ -45,11 +45,17 @@ export default async function ArtworkDetailPage({
     select: {
       id: true,
       profileId: true,
-      childQuote: true,
-      quoteBy: true,
       madeOn: true,
       // 같은 날 여러 점일 때 순서를 가르는 값. 홈 격자와 같은 축을 쓴다.
       createdAt: true,
+      /**
+       * 🔑 편지 전부를 쓴 날 순으로. 이 화면이 편지의 집이다 —
+       *   목록·책·달력은 첫 통만 싣지만 여기서는 도착한 지도가 통째로 보인다.
+       */
+      letters: {
+        orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+        select: { id: true, body: true, writtenBy: true, writtenOn: true },
+      },
       photo: { select: { width: true, height: true } },
       // 시간 축은 아이의 생일에서만 나온다. 한 번에 같이 읽는다.
       profile: { select: { dueOn: true, bornOn: true } },
@@ -87,14 +93,23 @@ export default async function ArtworkDetailPage({
       : await prisma.artwork.findFirst({
           where: {
             profileId: artwork.profileId,
-            childQuote: { not: null },
+            letters: { some: {} },
             OR: [
               { madeOn: { lt: artwork.madeOn } },
               { madeOn: artwork.madeOn, createdAt: { lt: artwork.createdAt } },
             ],
           },
           orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
-          select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
+          select: {
+            id: true,
+            madeOn: true,
+            // 돌려주는 말은 그 점의 첫 통(그때의 말)이다. 이 블록의 일이 말을 돌려주는 것이라서다.
+            letters: {
+              orderBy: [{ writtenOn: "asc" }, { createdAt: "asc" }],
+              take: 1,
+              select: { body: true, writtenBy: true },
+            },
+          },
         });
 
   /**
@@ -139,7 +154,15 @@ export default async function ArtworkDetailPage({
               },
               // 홈 격자와 같은 축. 화면마다 다르면 "앞"이 화면마다 달라진다.
               orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
-              select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
+              select: {
+                id: true,
+                madeOn: true,
+                letters: {
+                  orderBy: [{ writtenOn: "asc" as const }, { createdAt: "asc" as const }],
+                  take: 1,
+                  select: { body: true, writtenBy: true },
+                },
+              },
             }),
             prisma.artwork.findFirst({
               where: {
@@ -150,7 +173,15 @@ export default async function ArtworkDetailPage({
                 ],
               },
               orderBy: [{ madeOn: "asc" }, { createdAt: "asc" }],
-              select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
+              select: {
+                id: true,
+                madeOn: true,
+                letters: {
+                  orderBy: [{ writtenOn: "asc" as const }, { createdAt: "asc" as const }],
+                  take: 1,
+                  select: { body: true, writtenBy: true },
+                },
+              },
             }),
           ]);
           return { older, newer };
@@ -192,7 +223,7 @@ export default async function ArtworkDetailPage({
       {saved !== undefined ? (
         <p className="saved" role="status">
           <strong>남았습니다. 이제 원본은 정리하셔도 됩니다.</strong>
-          {artwork.childQuote ? (
+          {artwork.letters.length > 0 ? (
             <span className="saved__sub">그때의 말과 만든 날까지 같이 저장했습니다.</span>
           ) : (
             <span className="saved__sub">
@@ -203,12 +234,17 @@ export default async function ArtworkDetailPage({
       ) : null}
 
       {/* 말이 비어 있을 때만. 아이가 아직 옆에 있는 유일한 순간이다. */}
-      {saved !== undefined && !artwork.childQuote ? (
+      {saved !== undefined && artwork.letters.length === 0 ? (
         <InlineQuoteForm
           id={artwork.id}
           madeOn={toDateInputValue(artwork.madeOn)}
-          /* 태어나기 전이면 서버가 어차피 부모로 확정한다. 화면도 같은 말을 하게 맞춘다. */
-          quoteBy={settleQuoteBy(artwork.quoteBy, artwork.madeOn, birth)}
+          /*
+            🔑 말의 주인 제안이 이제 저장값이 아니라 시기에서 나온다.
+              quoteBy 컬럼이 있던 때는 등록 화면에서 고른 값이 남았지만, 편지 0통이면
+              남은 선택이 없다. 앱이 아는 사실 — 그때 말을 할 수 있었는가 — 로 제안하고,
+              태어나기 전이면 서버가 어차피 부모로 확정한다(lib/speaker.ts).
+          */
+          quoteBy={couldHaveSpoken(artwork.madeOn, birth) ? "CHILD" : "PARENT"}
         />
       ) : null}
 
@@ -216,12 +252,12 @@ export default async function ArtworkDetailPage({
         🔑 등록 직후에만 나오는 자리. 사진은 없다 — 위 문구를 배신하지 않기 위해서다.
       */}
       {saved !== undefined ? (
-        lastWords ? (
+        lastWords && lastWords.letters[0] ? (
           <Link href={`/artwork/${lastWords.id}`} className="recall">
             <span className="recall__label">
-              지난번엔 이렇게 남겼어요 <SaidBy by={lastWords.quoteBy} />
+              지난번엔 이렇게 남겼어요 <SaidBy by={lastWords.letters[0].writtenBy} />
             </span>
-            <span className="recall__quote">{lastWords.childQuote}</span>
+            <span className="recall__quote">{lastWords.letters[0].body}</span>
             <time className="recall__date" dateTime={lastWords.madeOn.toISOString()}>
               {formatMadeOn(lastWords.madeOn)}
             </time>
@@ -268,22 +304,41 @@ export default async function ArtworkDetailPage({
         </figure>
 
         <div className="detail__side">
-          {artwork.childQuote ? (
-            <>
-              {/* 한 점만 놓이는 자리라 아이 말에도 표식을 붙인다. said-by.tsx 참조. */}
-              <SaidBy by={artwork.quoteBy} always />
-              <blockquote className="detail__quote">{artwork.childQuote}</blockquote>
-            </>
+          {artwork.letters.length > 0 ? (
+            /*
+              🔑 편지를 전부, 쓴 날 순으로. 이 화면이 편지의 집이다.
+                한 통마다 누가 · 언제 썼는지가 붙고, 만든 날과 쓴 날이 다르면
+                그 간격을 화면이 말한다 — "7년 뒤에 쓴 편지". 그 간격이야말로
+                단일 컬럼이 담지 못해서 이 테이블을 만든 값이다.
+            */
+            <ol className="letters">
+              {artwork.letters.map((letter) => {
+                const timing = letterTiming(artwork.madeOn, letter.writtenOn);
+                return (
+                  <li key={letter.id} className="letter">
+                    <p className="letter__head">
+                      {/* 한 점만 놓이는 자리라 아이 말에도 표식을 붙인다. said-by.tsx 참조. */}
+                      <SaidBy by={letter.writtenBy} always />
+                      {timing ? <span className="letter__timing">{timing} 쓴 편지</span> : null}
+                    </p>
+                    <blockquote className="detail__quote">{letter.body}</blockquote>
+                    <time className="letter__date" dateTime={letter.writtenOn.toISOString()}>
+                      {formatMadeOn(letter.writtenOn)}
+                    </time>
+                  </li>
+                );
+              })}
+            </ol>
           ) : (
             /*
-             * 비어 있는 것을 숨기지 않는다. 이 서비스에서 아이 말이 비어 있다는 건
+             * 비어 있는 것을 숨기지 않는다. 이 서비스에서 말이 비어 있다는 건
              * 결함이 아니라 "아직 안 물어봤다"는 상태이고, 지금도 채울 수 있다.
              */
             <p className="detail__quote detail__quote--empty">
-              {emptyQuoteText(artwork.quoteBy)}.
+              {emptyQuoteText(couldHaveSpoken(artwork.madeOn, birth) ? "CHILD" : "PARENT")}.
               <br />
               <span className="detail__hint">
-                {artwork.quoteBy === "CHILD" ? (
+                {couldHaveSpoken(artwork.madeOn, birth) ? (
                   <>
                     지금 <strong>&ldquo;이거 무슨 얘기야?&rdquo;</strong>라고 물어봐도 늦지 않습니다.
                   </>
@@ -323,7 +378,7 @@ export default async function ArtworkDetailPage({
           <div className="detail__actions">
             <Link href={`/artwork/${artwork.id}/edit`} className="btn btn--ghost">
               <SquarePen />
-              {artwork.childQuote ? "설명 고치기" : "아이 말 채우기"}
+              {artwork.letters.length > 0 ? "설명 고치기" : "말 채우기"}
             </Link>
           </div>
         </div>
@@ -352,14 +407,16 @@ export default async function ArtworkDetailPage({
                   />
                   <span className="pair__body">
                     <span className="pair__when">이 앞에</span>
-                    {neighbors.older.childQuote ? (
+                    {neighbors.older.letters[0] ? (
                       <span className="pair__quote">
-                        <SaidBy by={neighbors.older.quoteBy} />
-                        {neighbors.older.childQuote}
+                        <SaidBy by={neighbors.older.letters[0].writtenBy} />
+                        {neighbors.older.letters[0].body}
                       </span>
                     ) : (
                       <span className="pair__quote pair__quote--empty">
-                        {emptyQuoteText(neighbors.older.quoteBy)}
+                        {emptyQuoteText(
+                          couldHaveSpoken(neighbors.older.madeOn, birth) ? "CHILD" : "PARENT",
+                        )}
                       </span>
                     )}
                     <time className="pair__date" dateTime={neighbors.older.madeOn.toISOString()}>
@@ -382,14 +439,16 @@ export default async function ArtworkDetailPage({
                   />
                   <span className="pair__body">
                     <span className="pair__when">이 뒤에</span>
-                    {neighbors.newer.childQuote ? (
+                    {neighbors.newer.letters[0] ? (
                       <span className="pair__quote">
-                        <SaidBy by={neighbors.newer.quoteBy} />
-                        {neighbors.newer.childQuote}
+                        <SaidBy by={neighbors.newer.letters[0].writtenBy} />
+                        {neighbors.newer.letters[0].body}
                       </span>
                     ) : (
                       <span className="pair__quote pair__quote--empty">
-                        {emptyQuoteText(neighbors.newer.quoteBy)}
+                        {emptyQuoteText(
+                          couldHaveSpoken(neighbors.newer.madeOn, birth) ? "CHILD" : "PARENT",
+                        )}
                       </span>
                     )}
                     <time className="pair__date" dateTime={neighbors.newer.madeOn.toISOString()}>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getPrisma } from "@/lib/prisma";
 import { formatMadeOn } from "@/lib/date";
 import { subjectParticle } from "@/lib/korean";
-import { describeAge, describeSpan, timeBand } from "@/lib/age";
+import { couldHaveSpoken, describeAge, describeSpan, timeBand } from "@/lib/age";
 import { groupByYear } from "@/lib/group";
 import { SaidBy, emptyQuoteText } from "../artwork/said-by";
 import { Camera, Search } from "../icons";
@@ -93,10 +93,15 @@ export default async function GridPage({
         ? {
             profileId: profile.id,
             /**
-             * 🔑 아이 말만 검색 대상이다. 날짜 텍스트도, 아이 이름도 아니다.
-             *   **이 서비스에서 색인을 만드는 사람은 아이여야 한다.**
+             * 🔑 편지만 검색 대상이다. 날짜 텍스트도, 아이 이름도 아니다.
+             *   **이 서비스에서 색인을 만드는 사람은 말을 남긴 사람이어야 한다.**
              *   대상을 넓힐수록 그 근거가 흐려진다 — "3월"로 찾히면 그건 달력이 만든 색인이고,
              *   아이 이름으로 찾히면 그건 프로필이 만든 색인이다.
+             *
+             * 🔑 걸러지는 단위는 **작품(점)**이다. `letters: { some }`이라
+             *   편지 여러 통이 걸려도 작품은 한 번만 나온다 — 격자의 칸이 실물이라
+             *   같은 실물이 두 칸으로 불어나면 "N점"이 거짓이 된다.
+             *   몇 통이 걸렸는지는 아래 결과 줄이 통 단위로 따로 센다.
              *
              * 🔑 왜 full-text가 아니라 ILIKE인가 — 한국어에서 full-text가 안 먹는다.
              *   Postgres에 한국어 형태소 분석 설정이 없어서 to_tsvector('simple')은 공백으로만 자른다.
@@ -109,15 +114,12 @@ export default async function GridPage({
              *   pg_trgm은 확장 설치가 필요한데, "docker compose up 1회 기동" 요건에
              *   설치 단계를 하나 더 얹을 근거가 지금 없다.
              *
-             * 🔑 인덱스를 만들지 않았다.
-             *   지금 데이터는 10~60점 규모다. 이 규모에서 ILIKE는 seq scan이고 **그게 옳다** —
-             *   행이 수십 개인 테이블에서 인덱스를 타는 건 오히려 느리다.
-             *   근거 없이 인덱스를 만드는 것은 이 저장소가 지금까지 거절해온 종류의 결정이다.
-             *   언제부터 필요해지나: 한 아이가 **수천 점**을 넘고 검색이 눈에 띄게 느려질 때.
-             *   그때 필요한 건 인덱스 하나가 아니라 pg_trgm 확장 + GIN 인덱스이고,
-             *   확장을 깔 근거가 그 시점에 비로소 생긴다.
+             * 🔑 인덱스를 만들지 않았다. 지금 규모(수십 통)에서 ILIKE는 seq scan이고 그게 옳다.
+             *   수천 통을 넘어 느려질 때 pg_trgm + GIN을 깔 근거가 비로소 생긴다.
              */
-            ...(searching ? { childQuote: { contains: q, mode: "insensitive" as const } } : {}),
+            ...(searching
+              ? { letters: { some: { body: { contains: q, mode: "insensitive" as const } } } }
+              : {}),
           }
         : undefined,
       orderBy: [{ madeOn: "desc" }, { createdAt: "desc" }],
@@ -125,8 +127,21 @@ export default async function GridPage({
        * 🔑 사진 테이블을 건드리지 않는다.
        *   사진 바이트는 <img src="/api/photo/[작품id]">가 따로 받아온다.
        *   목록 쿼리가 바이트를 끌고 오면 10점만 있어도 매 요청이 1.7MB가 된다.
+       *
+       * 🔑 검색 중에는 **걸린 편지만** 싣는다. 카드가 보여줄 것이 "왜 찾혔는가"라서다.
+       *   평소에는 전부 싣고 카드가 첫 통(그때의 말)을 대표로 보여준다(lib/letter.ts).
        */
-      select: { id: true, childQuote: true, quoteBy: true, madeOn: true },
+      select: {
+        id: true,
+        madeOn: true,
+        letters: {
+          orderBy: [{ writtenOn: "asc" as const }, { createdAt: "asc" as const }],
+          select: { id: true, body: true, writtenBy: true },
+          ...(searching
+            ? { where: { body: { contains: q, mode: "insensitive" as const } } }
+            : {}),
+        },
+      },
     }),
     /**
      * 🔴 연도 집계는 **검색과 무관한 별도 조회**다. 전에는 위 목록에서 셌는데,
@@ -146,9 +161,18 @@ export default async function GridPage({
     }),
     // 검색으로 영원히 못 찾는 것이 몇 점인지. 화면이 그 사실을 말하기 위해 센다.
     prisma.artwork.count({
-      where: profile ? { profileId: profile.id, childQuote: null } : { childQuote: null },
+      where: profile
+        ? { profileId: profile.id, letters: { none: {} } }
+        : { letters: { none: {} } },
     }),
   ]);
+
+  /**
+   * 🔑 걸린 편지 수. 작품 수와 단위가 다르다 — 한 점에 두 통이 걸릴 수 있다.
+   *   "N점"만 말하면 통이 몇인지 아무도 안 세고, "N통"만 말하면 격자의 칸 수와 어긋난다.
+   *   둘 다 세고 둘 다 말한다. 단위가 흐려지는 것보다 숫자 두 개가 낫다.
+   */
+  const matchedLetters = searching ? artworks.reduce((n, a) => n + a.letters.length, 0) : 0;
 
   const owner = profile?.childName;
   const birth = { dueOn: profile?.dueOn ?? null, bornOn: profile?.bornOn ?? null };
@@ -263,8 +287,8 @@ export default async function GridPage({
                 375px에서 입력칸이 224px이라 둘 다 넣으면 잘리기 때문이다.
                 무엇을 넣는 칸인지가 예시보다 앞선다.
             */
-            placeholder="아이가 한 말로 찾기"
-            aria-label="아이가 한 말로 찾기"
+            placeholder="남긴 말로 찾기"
+            aria-label="남긴 말로 찾기"
             aria-describedby={searching ? "search-help" : undefined}
           />
           {/*
@@ -297,7 +321,7 @@ export default async function GridPage({
         {searching ? (
           <>
             <p className="field__help" id="search-help">
-              그림이 아니라 <strong>아이가 한 말</strong>에서 찾습니다.
+              그림이 아니라 <strong>남긴 말</strong>에서 찾습니다.
               {wordless > 0 ? ` 말이 비어 있는 ${wordless}점은 여기서 찾을 수 없습니다.` : null}
             </p>
             {/*
@@ -306,7 +330,9 @@ export default async function GridPage({
             */}
             {artworks.length > 0 ? (
               <p className="search__result">
-                <QuotedSubject q={q} /> 들어간 말 <strong>{artworks.length}점</strong>
+                <QuotedSubject q={q} /> 들어간 편지 <strong>{matchedLetters}통</strong>
+                {/* 통과 점이 다를 때만 점을 덧붙인다. 같으면 같은 수를 두 번 말하는 것이다. */}
+                {matchedLetters !== artworks.length ? <> · {artworks.length}점에서</> : null}
               </p>
             ) : null}
           </>
@@ -326,7 +352,7 @@ export default async function GridPage({
             <QuotedSubject q={q} /> 들어간 말이 없어요.
           </h2>
           <p className="blank__body">
-            저장된 아이 말 중에는 없습니다.
+            저장된 말 중에는 없습니다.
             {wordless > 0 ? (
               <>
                 {" "}
@@ -448,13 +474,31 @@ export default async function GridPage({
                       </div>
 
                       <div className="card__body">
-                        {artwork.childQuote ? (
-                          <p className="quote">
-                            <SaidBy by={artwork.quoteBy} />
-                            {highlight(artwork.childQuote, q)}
-                          </p>
+                        {artwork.letters.length > 0 ? (
+                          /*
+                            🔑 카드는 한 통만 싣는 자리다 — 평소에는 첫 통(그때의 말).
+                              검색 중에는 걸린 편지들이다(쿼리가 걸린 것만 실어 보낸다).
+                              나머지가 몇 통인지는 꼬리가 센다. 칸 높이를 지키면서
+                              "더 있다"는 사실은 숨기지 않는 최소한이다.
+                          */
+                          <>
+                            {(searching ? artwork.letters : artwork.letters.slice(0, 1)).map(
+                              (letter) => (
+                                <p className="quote" key={letter.id}>
+                                  <SaidBy by={letter.writtenBy} />
+                                  {highlight(letter.body, q)}
+                                </p>
+                              ),
+                            )}
+                            {!searching && artwork.letters.length > 1 ? (
+                              <p className="card__more">편지 {artwork.letters.length}통</p>
+                            ) : null}
+                          </>
                         ) : (
-                          <p className="quote quote--empty">{emptyQuoteText(artwork.quoteBy)}</p>
+                          /* 빈 문구는 시기에서 나온다 — 저장된 주인이 더는 없다. (app/page.tsx) */
+                          <p className="quote quote--empty">
+                            {emptyQuoteText(couldHaveSpoken(artwork.madeOn, birth) ? "CHILD" : "PARENT")}
+                          </p>
                         )}
                         <p className="card__when">
                           {/*
