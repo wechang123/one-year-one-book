@@ -69,10 +69,10 @@ export default async function RecallPage() {
         <div className="blank">
           <h2 className="blank__title">아직 되짚어볼 것이 없어요.</h2>
           <p className="blank__body">
-            한 점 남기면서 <strong>그때의 말</strong>을 적어두면 여기에 쌓입니다.
+            한 장 남기면서 <strong>그때의 말</strong>을 적어두면 여기에 쌓입니다.
           </p>
           <Link href="/artwork/new" className="btn">
-            첫 한 점 남기기
+            첫 한 장 남기기
           </Link>
         </div>
       ) : (

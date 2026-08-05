@@ -49,7 +49,7 @@ export async function createBook(_prev: BookActionState, formData: FormData): Pr
     where: { profileId: profile.id, madeOn: yearRange(year) },
   });
   if (artworks === 0) {
-    return { error: `${year}년에 남긴 것이 없습니다. 한 점 먼저 남겨주세요.` };
+    return { error: `${year}년에 남긴 것이 없습니다. 한 장 먼저 남겨주세요.` };
   }
 
   const existing = await prisma.collection.findUnique({

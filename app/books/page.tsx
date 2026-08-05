@@ -78,10 +78,10 @@ export default async function BooksPage() {
         <div className="blank">
           <h2 className="blank__title">묶을 것이 아직 없어요.</h2>
           <p className="blank__body">
-            한 점 남기면 그 해의 책이 생깁니다. <strong>책이 먼저가 아니라 기록이 먼저입니다.</strong>
+            한 장 남기면 그 해의 책이 생깁니다. <strong>책이 먼저가 아니라 기록이 먼저입니다.</strong>
           </p>
           <Link href="/artwork/new" className="btn">
-            첫 한 점 남기기
+            첫 한 장 남기기
           </Link>
         </div>
       ) : (

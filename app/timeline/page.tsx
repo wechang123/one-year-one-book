@@ -101,7 +101,7 @@ export default async function TimelinePage() {
             받으면 영영 얻을 수 없습니다.
           </p>
           <Link href="/artwork/new" className="btn">
-            <Camera />첫 한 점 남기기
+            <Camera />첫 한 장 남기기
           </Link>
         </div>
       </div>
@@ -135,8 +135,8 @@ export default async function TimelinePage() {
           <p className="masthead__meta">
             {owner ? `${owner}의 기록 · ` : null}
             {first.when.scale === "none"
-              ? `${artworks.length}점`
-              : `${first.when.label}부터 ${last.when.label}까지 ${artworks.length}점`}
+              ? `${artworks.length}장`
+              : `${first.when.label}부터 ${last.when.label}까지 ${artworks.length}장`}
           </p>
           <h1 className="masthead__title">타임라인</h1>
           <p className="masthead__lede">
@@ -273,7 +273,7 @@ export default async function TimelinePage() {
             </p>
 
             <Link href="/artwork/new" className="btn btn--ghost tl__end-btn">
-              <Camera />한 점 더 남기기
+              <Camera />한 장 더 남기기
             </Link>
           </div>
         );

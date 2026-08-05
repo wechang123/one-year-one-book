@@ -46,7 +46,7 @@ export default async function NewOrderPage({ params }: { params: Promise<{ year:
       <header className="form__head">
         <h1 className="form__title">주문 넣기</h1>
         <p className="form__lede">
-          <strong>{book.title}</strong> · {year}년 {count}점
+          <strong>{book.title}</strong> · {year}년 {count}장
           {isOngoing(year) ? (
             <>
               {/*
@@ -55,7 +55,7 @@ export default async function NewOrderPage({ params }: { params: Promise<{ year:
               */}
               <br />
               <span className="form__note">
-                아직 진행 중인 해입니다. 지금 담긴 {count}점으로 주문됩니다.
+                아직 진행 중인 해입니다. 지금 담긴 {count}장으로 주문됩니다.
               </span>
             </>
           ) : null}

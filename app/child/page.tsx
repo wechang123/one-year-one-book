@@ -48,7 +48,7 @@ export default async function ChildPage() {
         <h1 className="form__title">아이 정보</h1>
         <p className="form__lede">
           여기 넣은 날짜로 <strong>임신 몇 주였는지, 생후 몇 개월이었는지</strong>를 부릅니다.
-          한 점마다 다시 묻지 않으려고 여기서 한 번만 받습니다.
+          한 장마다 다시 묻지 않으려고 여기서 한 번만 받습니다.
         </p>
       </header>
 

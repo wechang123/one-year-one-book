@@ -52,7 +52,7 @@ export default async function RecallDonePage() {
             사실이 아니면 허락 자체가 값을 잃는다. 지금은 **센 것만 말한다.**
         */}
         <p className="closing__lede">
-          남긴 것은 {total}점, 그중 <strong>{withQuote}점에 그때의 말이 남아 있습니다.</strong>
+          남긴 것은 {total}장, 그중 <strong>{withQuote}장에 그때의 말이 남아 있습니다.</strong>
         </p>
 
         <h1 className="closing__title">이제 정리하셔도 됩니다.</h1>
@@ -67,7 +67,7 @@ export default async function RecallDonePage() {
           {total > withQuote ? (
             <>
               {" "}
-              {total - withQuote}점은 말이 비어 있어 <strong>사진만 남습니다.</strong> 그게 이 서비스가
+              {total - withQuote}장은 말이 비어 있어 <strong>사진만 남습니다.</strong> 그게 이 서비스가
               말을 그 자리에서 받으려는 이유입니다.
             </>
           ) : null}

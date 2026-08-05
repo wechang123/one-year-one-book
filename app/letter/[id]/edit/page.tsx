@@ -61,7 +61,7 @@ export default async function EditLetterPage({
     <div className="page page--narrow">
       <nav className="detail__nav">
         <Link href={`/artwork/${letter.artwork.id}`} className="btn btn--ghost">
-          <ArrowLeft />이 한 점으로
+          <ArrowLeft />이 한 장으로
         </Link>
       </nav>
 
