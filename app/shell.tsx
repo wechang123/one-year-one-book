@@ -76,7 +76,7 @@ export function Shell({ owner }: { owner: string | null }) {
       {/* ── 데스크탑: 왼쪽에 상시로 서 있다 ───────────────────── */}
       <nav className="side" aria-label="주요 화면" aria-hidden={sideHidden || undefined}>
         <Link href="/" className="side__brand">
-          한 해, 한 권
+          한 장, 한 마디
         </Link>
 
         {/*
