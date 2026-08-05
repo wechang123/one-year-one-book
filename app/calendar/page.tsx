@@ -159,6 +159,28 @@ export default async function CalendarPage({
           {next.getUTCMonth() + 1}월
           <ArrowRight />
         </Link>
+
+        {/*
+          🔴 ← → 한 달씩만 있었다. 8~9년을 다루겠다는 서비스에서 2026년 8월 → 2019년 4월이
+            **88번 클릭**이었다(직접 세봤다). 달 입력 하나가 그 88번을 한 번으로 만든다.
+          🔑 GET 폼이다 — month 입력의 값 형식(YYYY-MM)이 이 화면의 주소(?m=)와 같아서
+            JS 없이 브라우저의 달 선택기가 그대로 점프가 된다.
+        */}
+        <form className="cal__jump" action="/calendar">
+          <label className="cal__jump-label" htmlFor="cal-month">
+            바로 가기
+          </label>
+          <input
+            id="cal-month"
+            className="field__input cal__jump-input"
+            type="month"
+            name="m"
+            defaultValue={`${year}-${String(month + 1).padStart(2, "0")}`}
+          />
+          <button type="submit" className="btn btn--ghost">
+            이동
+          </button>
+        </form>
       </nav>
 
       <table className="cal">
