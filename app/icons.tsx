@@ -11,6 +11,8 @@ import {
   Milestone as LMilestone,
   MessageSquareQuote as LMessageSquareQuote,
   Package as LPackage,
+  PanelLeftClose as LPanelLeftClose,
+  PanelLeftOpen as LPanelLeftOpen,
   RotateCcw as LRotateCcw,
   Search as LSearch,
   SquarePen as LSquarePen,
@@ -136,3 +138,7 @@ export const CalendarDays = wrap(LCalendarDays, "CalendarDays");
 
 /** 모아보기 — v1의 격자 화면. */
 export const LayoutGrid = wrap(LLayoutGrid, "LayoutGrid");
+
+/* 사이드바 접기/펴기. "어디로"의 변형이다 — 메뉴 자체가 어디 있는지를 다룬다. */
+export const PanelLeftClose = wrap(LPanelLeftClose, "PanelLeftClose");
+export const PanelLeftOpen = wrap(LPanelLeftOpen, "PanelLeftOpen");
