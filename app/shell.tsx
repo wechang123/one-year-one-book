@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Baby,
   BookOpen,
@@ -9,6 +10,8 @@ import {
   Camera,
   LayoutGrid,
   Milestone,
+  PanelLeftClose,
+  PanelLeftOpen,
   SpeechQuote,
 } from "./icons";
 
@@ -56,10 +59,22 @@ function isHere(pathname: string, item: Item): boolean {
 export function Shell({ owner }: { owner: string | null }) {
   const pathname = usePathname();
 
+  /**
+   * 🔑 사이드바 접기 — "사이드바가 본문을 해친다"는 피드백으로 생겼다.
+   *   편지 구 같은 화면은 폭이 곧 무대라, 240px을 돌려받을 길이 있어야 한다.
+   *   상태는 <html>의 data 속성으로 나간다 — 본문 여백(.page)이 셸 바깥에 있어서
+   *   CSS가 문서 루트에서 읽는 것이 컴포넌트 경계를 넘는 가장 얇은 길이다.
+   *   저장하지 않는다: 기본은 언제나 "보임"이고, 접는 것은 그 화면에서의 선택이다.
+   */
+  const [sideHidden, setSideHidden] = useState(false);
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-side-hidden", sideHidden);
+  }, [sideHidden]);
+
   return (
     <>
       {/* ── 데스크탑: 왼쪽에 상시로 서 있다 ───────────────────── */}
-      <nav className="side" aria-label="주요 화면">
+      <nav className="side" aria-label="주요 화면" aria-hidden={sideHidden || undefined}>
         <Link href="/" className="side__brand">
           한 해, 한 권
         </Link>
@@ -102,7 +117,31 @@ export function Shell({ owner }: { owner: string | null }) {
           <Baby />
           {owner ? `${owner}의 기록` : "아이 정보"}
         </Link>
+
+        {/* 접기는 메뉴의 일이 아니라 메뉴 자신에 대한 일이라 목록 밖, 맨 아래다. */}
+        <button
+          type="button"
+          className="side__collapse"
+          onClick={() => setSideHidden(true)}
+          aria-label="사이드바 접기"
+        >
+          <PanelLeftClose />
+          접기
+        </button>
       </nav>
+
+      {/*
+        접힌 동안의 유일한 흔적. 사이드바가 사라져도 돌아올 길은 화면에 남아야 한다 —
+        접기 전 위치(왼쪽 위)와 같은 자리라 눈이 헤매지 않는다.
+      */}
+      <button
+        type="button"
+        className="side__reopen"
+        onClick={() => setSideHidden(false)}
+        aria-label="사이드바 펴기"
+      >
+        <PanelLeftOpen />
+      </button>
 
       {/* ── 폰: 아래에 붙는다 ───────────────────────────────── */}
       <nav className="tabbar" aria-label="주요 화면">

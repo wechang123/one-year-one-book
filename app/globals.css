@@ -333,6 +333,8 @@ a {
     bottom: 0;
     width: var(--side-w);
     padding: var(--gap-section) var(--gap-title);
+    /* 접힘은 밀어내는 것이다 — 사라지는 게 아니라 왼쪽 밖으로 나가 있는 것. */
+    transition: transform 0.25s ease;
     /*
      * 🔴 흰 배경 + 오른쪽 테두리였다. 걷었다.
      *   메뉴가 **자기 판을 깔고 앉아 있으면** 본문과 다른 층에 있는 것으로 읽힌다.
@@ -423,6 +425,76 @@ a {
     /* 사이드바가 왼쪽을 차지한다. 아래 여백은 탭 바가 없으니 돌려받는다. */
     margin-left: var(--side-w);
     padding: var(--gap-section) var(--gap-section) var(--s-9);
+    transition: margin-left 0.25s ease;
+  }
+
+  /*
+   * 🔑 사이드바 접기. 상태는 <html>의 data 속성 하나다(app/shell.tsx) —
+   *   메뉴는 왼쪽 밖으로 밀려나고 본문이 240px을 돌려받는다.
+   *   편지 구처럼 폭이 곧 무대인 화면을 위해 생겼다("사이드바가 본문을 해친다"는 피드백).
+   */
+  html[data-side-hidden] .side {
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+
+  html[data-side-hidden] .page {
+    margin-left: 0;
+    /* 펴기 버튼(44px)이 머리말 첫 줄을 가리지 않게 그 폭만큼만 비켜 준다(캡처로 확인). */
+    padding-left: calc(var(--gap-section) + 2.75rem);
+  }
+
+  /* 접힌 동안의 유일한 흔적 — 접기 전과 같은 자리(왼쪽 위)라 눈이 헤매지 않는다. */
+  html[data-side-hidden] .side__reopen {
+    display: inline-flex;
+  }
+}
+
+.side__reopen {
+  display: none;
+  position: fixed;
+  top: var(--s-4);
+  left: var(--s-4);
+  z-index: 20;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(28, 26, 23, 0.08);
+}
+
+.side__reopen:hover {
+  color: var(--ink);
+}
+
+.side__collapse {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  background: none;
+  border: 0;
+  border-radius: var(--s-2);
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.side__collapse:hover {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side,
+  .page {
+    transition: none;
   }
 }
 
@@ -990,20 +1062,72 @@ a {
   }
 
   /*
-   * 🔴 데모 푸터가 홈을 따라오면서 구의 세로를 150px 먹어 지구본이 납작해졌다(캡처).
-   *   잠금 화면에서는 푸터를 한 줄로 접는다 — 안내와 토글이 옆으로 나란히.
-   *   폰(<900px)은 원래 모양 그대로다.
+   * 잠금 화면에서는 머리말·검색·침의 세로 여백을 줄인다.
+   * 스크롤이 없는 화면에서 위쪽 고정 요소의 여백은 전부 구에게서 빼앗는 높이다 —
+   * 실제로 미리보기가 공간 아래 모서리에 잘리는 것을 캡처로 확인하고 줄였다.
    */
+  .page--space .masthead {
+    margin-bottom: var(--s-4);
+  }
+
+  .page--space .search {
+    margin-bottom: var(--s-4);
+  }
+
+  .page--space .chips {
+    margin-bottom: var(--s-3);
+  }
+
+  /*
+   * 🔴 데모 푸터가 두 번 자리를 바꿨다. 홈을 따라와 구의 세로를 150px 먹었고(납작한 지구본),
+   *   한 줄로 접어도 **"타임라인에서 온 이물"로 읽혔다**(피드백). 잠금 화면에서는
+   *   푸터가 아니라 **공간 왼쪽 아래 귀퉁이의 마이크로 라벨**이 된다 — typo.love가
+   *   귀퉁이에 두던 그 자리다. 무엇이 지워지는지 설명하는 본문은 열면 위로 펼쳐진다.
+   *   폰(<900px)은 격자 아래 원래 모양 그대로다.
+   */
+  .page--space {
+    position: relative;
+  }
+
   .page--space .demo {
-    display: flex;
-    align-items: baseline;
-    gap: var(--s-5);
-    margin-top: var(--s-3);
-    padding-top: var(--s-4);
+    position: absolute;
+    left: var(--gap-section);
+    bottom: var(--s-4);
+    z-index: 6;
+    margin: 0;
+    padding: 0;
+    border-top: 0;
   }
 
   .page--space .demo__lede {
-    margin: 0;
+    display: none;
+  }
+
+  .page--space .reset {
+    position: relative;
+  }
+
+  .page--space .reset__toggle {
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  .page--space .reset__toggle:hover {
+    color: var(--ink);
+  }
+
+  /* 열면 귀퉁이에서 위로 펼쳐진다 — 아래로 펴면 화면 밖이다. */
+  .page--space .reset[open] .reset__body {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + var(--s-3));
+    width: 22rem;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: var(--s-4);
+    box-shadow: 0 8px 28px rgba(28, 26, 23, 0.14);
   }
 
   /*
@@ -1183,6 +1307,25 @@ a {
     object-fit: contain;
     background: var(--t-none-fill);
     border-radius: 2px;
+  }
+
+  /* 공간이 낮으면 미리보기도 낮아진다 — 반쪽 높이보다 큰 미리보기는 어느 쪽으로 펴도 잘린다.
+     사진은 엄지손톱만큼으로, 말은 한 줄로 줄이고 cqh 상한을 마지막 안전선으로 둔다.
+     (여기서 못 보여준 것은 클릭 한 번 뒤의 상세가 전부 크게 보여준다.) */
+  @container (max-height: 520px) {
+    .fenv__peek {
+      width: 200px;
+      max-height: 40cqh;
+      overflow: hidden;
+    }
+
+    .fenv__peek img {
+      max-height: max(16cqh, 72px);
+    }
+
+    .fenv__quote {
+      -webkit-line-clamp: 1;
+    }
   }
 
   .fenv__quote {

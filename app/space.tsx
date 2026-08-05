@@ -122,8 +122,9 @@ export function LetterSphere({ items, q }: { items: SphereItem[]; q: string }) {
                 className={[
                   "fenv",
                   item.band ? `fenv--${item.band}` : "",
-                  // 위쪽에 투영된 봉투는 미리보기를 아래로 편다. 위로 펴면 잘린다.
-                  p.y < -0.15 ? "fenv--peekdown" : "",
+                  // 상반부는 아래로, 하반부는 위로 — 언제나 남은 쪽이 넓은 방향으로 편다.
+                  // (-0.15 문턱으로 뒀다가 중심 근처 봉투가 좁은 쪽으로 펴져 잘렸다. 반이 맞다.)
+                  p.y < 0 ? "fenv--peekdown" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
